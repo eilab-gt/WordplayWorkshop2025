@@ -1,0 +1,186 @@
+# Literature Review Pipeline Configuration
+# Copy this file to config.yaml and customize for your needs
+
+# Search configuration
+search:
+  # Predefined search queries
+  queries:
+    preset1: '"LLM" AND ("wargaming" OR "wargame") AND ("AI" OR "artificial intelligence")'
+    preset2: '"Large Language Model" AND ("strategic game" OR "conflict simulation")'
+    preset3: '"GPT" AND ("military" OR "defense") AND ("simulation" OR "game")'
+    custom: ''  # Add your custom query here
+  
+  # Data sources configuration
+  sources:
+    google_scholar:
+      enabled: true
+      max_results: 100
+      rate_limit: 2  # seconds between requests
+    
+    arxiv:
+      enabled: true
+      max_results: 50
+      categories: ['cs.AI', 'cs.CL', 'cs.GT']  # AI, Computation & Language, Game Theory
+    
+    semantic_scholar:
+      enabled: true
+      max_results: 50
+      fields: ['title', 'abstract', 'authors', 'year', 'venue', 'citationCount', 'url', 'openAccessPdf']
+    
+    crossref:
+      enabled: true
+      max_results: 50
+
+# API keys (use environment variables for security)
+api_keys:
+  openai: ${OPENAI_API_KEY}  # Required for LLM extraction
+  semantic_scholar: ${SEMANTIC_SCHOLAR_API_KEY}  # Optional, improves rate limits
+  zenodo: ${ZENODO_API_KEY}  # Optional, for dataset publishing
+
+# LLM extraction settings
+extraction:
+  model: 'gpt-4'  # or 'gpt-3.5-turbo' for faster/cheaper extraction
+  temperature: 0.3  # Lower = more deterministic
+  max_tokens: 4000
+  extraction_prompt: |
+    Extract the following information from this academic paper about LLM wargaming:
+    - venue_type: conference, journal, workshop, or tech-report
+    - game_type: seminar, matrix, digital, or hybrid
+    - open_ended: yes or no (can players make unconstrained natural language moves?)
+    - quantitative: yes or no (does the game track numeric scores/payoffs?)
+    - llm_family: The LLM model family used (e.g., GPT-4, Claude, Llama-70B)
+    - llm_role: player, generator, or analyst
+    - eval_metrics: Evaluation metrics used (free text)
+    - failure_modes: List of documented failure modes
+    - code_release: GitHub URL or 'none'
+    - grey_lit_flag: true if grey literature, false otherwise
+    
+    Return as JSON.
+
+# Failure mode vocabularies for regex detection
+failure_vocabularies:
+  escalation:
+    - escalation
+    - nuclear
+    - escalate
+    - brinkmanship
+    - arms race
+    - conflict spiral
+  
+  bias:
+    - bias
+    - biased
+    - unfair
+    - skew
+    - prejudice
+    - discrimination
+  
+  hallucination:
+    - hallucination
+    - hallucinate
+    - confabulate
+    - fabricate
+    - false information
+    - made up
+  
+  prompt_sensitivity:
+    - prompt sensitivity
+    - prompt engineering
+    - fragile
+    - brittle
+    - sensitive to wording
+  
+  data_leakage:
+    - data leakage
+    - memorization
+    - training data
+    - overfitting
+    - contamination
+  
+  deception:
+    - deception
+    - deceive
+    - mislead
+    - manipulation
+    - dishonest
+
+# File paths
+paths:
+  data_dir: ./data
+  pdf_cache: ./pdf_cache
+  output_dir: ./outputs
+  log_db: ./logs/logging.db
+
+# Visualization settings
+viz:
+  charts:
+    timeline:
+      enabled: true
+      figsize: [10, 6]
+      style: 'seaborn'
+    
+    venue_dist:
+      enabled: true
+      figsize: [8, 6]
+      colors: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    
+    failure_modes:
+      enabled: true
+      figsize: [10, 8]
+      top_n: 10
+    
+    llm_families:
+      enabled: true
+      figsize: [8, 6]
+    
+    game_types:
+      enabled: true
+      figsize: [8, 6]
+    
+    awscale:
+      enabled: true
+      figsize: [10, 6]
+      bins: 5
+
+# Export settings
+export:
+  zenodo:
+    enabled: false  # Set to true to enable automatic Zenodo upload
+    title: 'LLM Wargaming Literature Review Dataset'
+    creators:
+      - name: 'Your Name'
+        affiliation: 'Your Institution'
+        orcid: '0000-0000-0000-0000'  # Optional
+    
+    description: |
+      Dataset of academic papers on LLM-powered wargaming, including
+      extracted metadata, failure mode analysis, and visualizations.
+      
+      This dataset was created using an automated literature review pipeline.
+    
+    keywords:
+      - 'large language models'
+      - 'wargaming'
+      - 'AI safety'
+      - 'systematic review'
+    
+    access_right: 'open'
+    license: 'cc-by'
+    upload_type: 'dataset'
+
+# Processing settings
+processing:
+  fuzzy_match_threshold: 85  # Threshold for title deduplication
+  min_abstract_length: 100  # Minimum abstract length to consider
+  pdf_timeout: 30  # Seconds to wait for PDF download
+  max_pdf_size: 50_000_000  # 50MB max PDF size
+
+# Logging settings
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  
+# Parallel processing
+parallel:
+  enabled: true
+  max_workers: 4  # Number of parallel workers for harvesting/extraction

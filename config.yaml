@@ -1,0 +1,258 @@
+# Literature Review Pipeline Configuration
+# Version: 1.0.0
+
+# Search Parameters
+search:
+  years:
+    start: 2018
+    end: 2025
+  
+  # Minimum LLM parameters (100M = GPT-2 baseline)
+  llm_min_params: 100_000_000
+  
+  # Inclusion flags (papers must match at least one)
+  inclusion_flags:
+    - open_ended
+    - quantitative
+  
+  # Search terms for wargames
+  wargame_terms:
+    - "wargame"
+    - "seminar wargame"
+    - "matrix wargame"
+    - "Diplomacy"
+    - "crisis simulation"
+    - "conflict simulation"
+    - "strategic game"
+    - "policy game"
+  
+  # LLM-related terms
+  llm_terms:
+    - "large language model"
+    - "LLM"
+    - "GPT"
+    - "Claude"
+    - "PaLM"
+    - "Llama"
+    - "BERT"
+    - "T5"
+    - "language model"
+  
+  # Role/action terms
+  action_terms:
+    - "play"
+    - "player"
+    - "scenario generation"
+    - "evaluation"
+    - "benchmark"
+    - "agent"
+    - "assistant"
+    - "facilitator"
+  
+  # Exclusion terms
+  exclusion_terms:
+    - "StarCraft"
+    - "AlphaGo"
+    - "Atari"
+    - "video game"
+    - "chess"
+    - "Go game"
+    - "poker"
+
+# Failure Mode Vocabulary
+failure_vocab:
+  content:
+    - bias
+    - hallucination
+    - factual_error
+    - confabulation
+    - inconsistency
+  
+  interactive:
+    - escalation
+    - deception
+    - prompt_sensitivity
+    - manipulation
+    - adversarial
+  
+  security:
+    - data_leakage
+    - jailbreak
+    - prompt_injection
+    - privacy_breach
+  
+  other:
+    - other
+    - unspecified
+    - unknown
+
+# API Configuration
+api_keys:
+  semantic_scholar: "${SEMANTIC_SCHOLAR_API_KEY}"
+  openai: "${OPENAI_API_KEY}"
+  unpaywall_email: "${UNPAYWALL_EMAIL}"
+
+# API Rate Limits
+rate_limits:
+  google_scholar:
+    requests_per_hour: 100
+    delay_seconds: 5
+  
+  semantic_scholar:
+    requests_per_second: 10
+    delay_milliseconds: 100
+  
+  arxiv:
+    requests_per_second: 3
+    delay_milliseconds: 333
+  
+  crossref:
+    requests_per_second: 50
+    delay_milliseconds: 20
+
+# Paths
+paths:
+  cache_dir: "./pdf_cache"
+  output_dir: "./output"
+  data_dir: "./data"
+  log_dir: "./logs"
+  plugin_dir: "./plugins"
+  
+  # Data files
+  raw_papers: "./data/raw/papers_raw.csv"
+  screening_progress: "./data/processed/screening_progress.csv"
+  extraction_results: "./data/extracted/extraction.csv"
+  
+  # Database
+  logging_db: "./logs/logging.db"
+
+# LLM Configuration
+llm:
+  model: "gpt-4o"
+  temperature: 0.1
+  max_tokens: 4000
+  
+  # System prompts
+  extraction_prompt: |
+    You are an expert at extracting structured information from academic papers about LLM-powered wargames.
+    Extract the following fields based on the provided definitions:
+    - venue_type: conference/journal/tech-report/workshop
+    - game_type: seminar/matrix/digital/hybrid
+    - open_ended: yes/no (based on definition of unconstrained natural-language moves)
+    - quantitative: yes/no (tracks numeric scores/payoffs)
+    - llm_family: The specific LLM used (e.g., GPT-4, Claude, Llama-70B)
+    - llm_role: player/generator/analyst
+    - eval_metrics: Description of evaluation metrics used
+    - failure_modes: List of documented failure modes from the controlled vocabulary
+    - code_release: GitHub URL or "none"
+    - grey_lit_flag: true/false
+    
+    Return your response as a JSON object with these exact field names.
+  
+  awscale_prompt: |
+    Rate this paper on the AWScale (Analytic ↔ Wild-Creative) from 1-5:
+    1 = Strictly analytic (deterministic tables, numeric payoff, no free narrative)
+    2 = Mostly analytic (limited free text, heavy scoring)
+    3 = Balanced (narrative <=> numeric balance)
+    4 = Mostly creative (free-form moves, light scoring)
+    5 = Wild-creative (storytelling, referee adjudication, emergent goals)
+    
+    Return only the number (1-5).
+
+# Processing Configuration
+processing:
+  # Deduplication
+  dedup:
+    methods:
+      - doi_exact
+      - title_fuzzy
+    title_similarity_threshold: 0.9
+  
+  # PDF Processing
+  pdf:
+    max_file_size_mb: 50
+    timeout_seconds: 30
+    extract_images: false
+  
+  # Batch sizes
+  batch_sizes:
+    harvesting: 50
+    pdf_download: 10
+    llm_extraction: 5
+
+# Visualization Configuration
+visualization:
+  # Output format
+  format: "png"
+  dpi: 300
+  
+  # Style
+  style: "seaborn-v0_8-darkgrid"
+  figsize: [10, 6]
+  
+  # Color scheme
+  colors:
+    game_types:
+      seminar: "#1f77b4"
+      matrix: "#ff7f0e"
+      digital: "#2ca02c"
+      hybrid: "#d62728"
+    
+    awscale:
+      1: "#d62728"  # Red - Strictly analytic
+      2: "#ff7f0e"  # Orange
+      3: "#ffbb78"  # Light orange - Balanced
+      4: "#2ca02c"  # Green
+      5: "#1f77b4"  # Blue - Wild-creative
+
+# Export Configuration
+export:
+  # Zenodo settings (optional)
+  zenodo:
+    enabled: false
+    access_token: "${ZENODO_ACCESS_TOKEN}"
+    community: "llm-wargames"
+  
+  # Archive settings
+  compression: "zip"
+  include_pdfs: false
+  include_logs: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # SQLite logging
+  db_schema:
+    table: "pipeline_logs"
+    columns:
+      - timestamp
+      - module
+      - function
+      - status
+      - message
+      - error_trace
+
+# Quality Control
+quality:
+  # Minimum confidence scores
+  min_confidence:
+    title_match: 0.8
+    pdf_extraction: 0.7
+    llm_extraction: 0.6
+  
+  # Validation rules
+  validation:
+    require_doi: false
+    require_abstract: true
+    min_year: 2018
+    max_year: 2025
+
+# Development Settings
+development:
+  debug: false
+  dry_run: false
+  sample_size: null  # Set to integer to limit processing
+  use_cache: true
+  parallel_workers: 4

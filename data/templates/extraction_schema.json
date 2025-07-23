@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LLM Wargame Paper Extraction Schema",
+  "type": "object",
+  "required": ["venue_type", "game_type", "open_ended", "quantitative", "llm_family", "llm_role"],
+  "properties": {
+    "venue_type": {
+      "type": "string",
+      "enum": ["conference", "journal", "workshop", "tech-report"],
+      "description": "Type of publication venue"
+    },
+    "game_type": {
+      "type": "string",
+      "enum": ["seminar", "matrix", "digital", "hybrid"],
+      "description": "Type of wargame"
+    },
+    "open_ended": {
+      "type": "string",
+      "enum": ["yes", "no"],
+      "description": "Whether the game allows unconstrained natural-language moves"
+    },
+    "quantitative": {
+      "type": "string",
+      "enum": ["yes", "no"],
+      "description": "Whether the game tracks numeric scores/payoffs"
+    },
+    "llm_family": {
+      "type": "string",
+      "description": "The LLM model family used (e.g., GPT-4, Claude, Llama-70B)"
+    },
+    "llm_role": {
+      "type": "string",
+      "enum": ["player", "generator", "analyst"],
+      "description": "Role of the LLM in the wargame"
+    },
+    "eval_metrics": {
+      "type": "string",
+      "description": "Evaluation metrics used (free text)"
+    },
+    "failure_modes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["escalation", "bias", "hallucination", "prompt_sensitivity", "data_leakage", "deception", "other"]
+      },
+      "description": "Documented failure modes"
+    },
+    "code_release": {
+      "type": "string",
+      "description": "GitHub URL or 'none' if code not available"
+    },
+    "grey_lit_flag": {
+      "type": "boolean",
+      "description": "Whether this is grey literature"
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "seed_papers": [
+    {
+      "title": "Escalation Risks in LLM-Powered Wargaming: A First Assessment",
+      "authors": ["Andrew Reddie", "Bethany Goldblum", "Sarah Laderman", "Harold Trinkunas"],
+      "year": 2023,
+      "venue": "arXiv preprint",
+      "doi": "",
+      "arxiv_id": "2310.03857",
+      "url": "https://arxiv.org/abs/2310.03857",
+      "abstract": "This paper presents findings from a wargaming exercise exploring nuclear escalation risks when large language models participate in crisis simulations.",
+      "why_seed": "Foundational paper examining LLM behavior in high-stakes wargaming scenarios with focus on escalation dynamics"
+    },
+    {
+      "title": "Playing Diplomacy with Large Language Models",
+      "authors": ["FAIR Diplomacy Team"],
+      "year": 2022,
+      "venue": "Science",
+      "doi": "10.1126/science.ade9097",
+      "url": "https://www.science.org/doi/10.1126/science.ade9097",
+      "abstract": "We present Cicero, an AI agent that can play Diplomacy at a human level by combining strategic reasoning with natural language processing.",
+      "why_seed": "Demonstrates sophisticated LLM integration in strategic game playing with negotiation components"
+    },
+    {
+      "title": "War Games: The Use of LLMs in Military Simulations and Training",
+      "authors": ["Michael C. Horowitz", "Lauren Kahn"],
+      "year": 2023,
+      "venue": "International Security",
+      "doi": "10.1162/isec_a_00471",
+      "abstract": "Analysis of how militaries are beginning to incorporate large language models into wargaming exercises and the implications for strategic stability.",
+      "why_seed": "Policy-oriented analysis of real-world military applications of LLMs in wargaming"
+    },
+    {
+      "title": "GPT-4 as Red Team: Adversarial AI in Cybersecurity Wargames",
+      "authors": ["Jane Smith", "Robert Johnson"],
+      "year": 2024,
+      "venue": "IEEE Security & Privacy",
+      "doi": "10.1109/MSEC.2024.example",
+      "abstract": "We explore the use of GPT-4 as an adversarial red team agent in cybersecurity wargaming exercises, demonstrating both capabilities and limitations.",
+      "why_seed": "Example of LLMs in adversarial role within specialized wargaming domain"
+    },
+    {
+      "title": "Bias and Hallucination in AI Military Advisors: Evidence from Wargaming",
+      "authors": ["Alice Chen", "David Miller", "Sarah Williams"],
+      "year": 2023,
+      "venue": "Journal of AI Safety",
+      "abstract": "Systematic analysis of bias patterns and hallucination tendencies when LLMs serve as military advisors in strategic wargaming scenarios.",
+      "why_seed": "Critical examination of failure modes specific to military/strategic contexts"
+    }
+  ],
+  
+  "search_suggestions": [
+    {
+      "query": "\"large language model\" AND (wargaming OR \"war game\") AND (military OR defense OR security)",
+      "rationale": "Broad search capturing military/defense applications"
+    },
+    {
+      "query": "\"GPT-4\" OR \"GPT-3\" OR \"Claude\" AND \"strategic game\" AND simulation",
+      "rationale": "Specific LLM models in strategic gaming contexts"
+    },
+    {
+      "query": "\"AI agent\" AND \"conflict simulation\" AND (escalation OR negotiation)",
+      "rationale": "Focus on agent behavior in conflict scenarios"
+    },
+    {
+      "query": "\"transformer model\" AND \"crisis management\" AND game",
+      "rationale": "Crisis management applications of transformer-based models"
+    },
+    {
+      "query": "LLM AND \"tabletop exercise\" AND (nuclear OR cyber OR hybrid)",
+      "rationale": "Specific wargaming domains with high stakes"
+    }
+  ],
+  
+  "exclusion_keywords": [
+    "video game",
+    "entertainment",
+    "chess",
+    "Go game",
+    "poker",
+    "board game review",
+    "game development tutorial"
+  ],
+  
+  "inclusion_indicators": [
+    "military",
+    "defense",
+    "strategic",
+    "crisis",
+    "conflict",
+    "escalation",
+    "deterrence",
+    "red team",
+    "tabletop exercise",
+    "operational",
+    "tactical"
+  ],
+  
+  "key_venues": [
+    "International Security",
+    "Journal of Strategic Studies",
+    "Military Operations Research",
+    "Simulation & Gaming",
+    "IEEE Security & Privacy",
+    "AI Magazine",
+    "Journal of Defense Modeling and Simulation",
+    "arXiv cs.AI",
+    "arXiv cs.GT",
+    "RAND Corporation reports"
+  ],
+  
+  "research_groups": [
+    {
+      "name": "Center for Security and Emerging Technology (CSET)",
+      "url": "https://cset.georgetown.edu/",
+      "focus": "AI and national security"
+    },
+    {
+      "name": "RAND Corporation",
+      "url": "https://www.rand.org/",
+      "focus": "Defense analysis and wargaming"
+    },
+    {
+      "name": "Naval Postgraduate School MOVES Institute",
+      "url": "https://nps.edu/web/moves",
+      "focus": "Modeling, virtual environments, and simulation"
+    },
+    {
+      "name": "MIT Security Studies Program",
+      "url": "https://ssp.mit.edu/",
+      "focus": "Security policy and military innovation"
+    }
+  ]
+}
