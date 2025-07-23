@@ -29,9 +29,11 @@ class CrossrefHarvester(BaseHarvester):
 
         # Set up headers
         self.headers = {
-            "User-Agent": f"LitReviewPipeline/1.0 (mailto:{self.email})"
-            if self.email
-            else "LitReviewPipeline/1.0"
+            "User-Agent": (
+                f"LitReviewPipeline/1.0 (mailto:{self.email})"
+                if self.email
+                else "LitReviewPipeline/1.0"
+            )
         }
 
     def search(self, query: str, max_results: int = 100) -> list[Paper]:
@@ -185,9 +187,11 @@ class CrossrefHarvester(BaseHarvester):
                 source_db="crossref",
                 url=result.get("URL", ""),
                 doi=result.get("DOI"),
-                venue=result.get("container-title", [""])[0]
-                if result.get("container-title")
-                else "",
+                venue=(
+                    result.get("container-title", [""])[0]
+                    if result.get("container-title")
+                    else ""
+                ),
                 citations=result.get("is-referenced-by-count", 0),
             )
 

@@ -1,0 +1,22 @@
+paper_id,has_pdf,has_tex,has_html,arxiv_id,title
+2311.32204,True,False,False,2311.32204,ALYMPICS: LLM Agents Meet Game Theory -- Exploring Strategic Decision-Making with AI Agents
+2506.93901,True,False,False,2506.93901,Beyond Nash Equilibrium: Bounded Rationality of LLMs and humans in Strategic Decision-making
+2401.105682,True,False,False,2401.105682,CivRealm: A Learning and Reasoning Odyssey in Civilization for Decision-Making Agents
+2506.96552,True,False,False,2506.96552,DipLLM: Fine-Tuning LLM for Strategic Decision-making in Diplomacy
+2503.60471,True,False,False,2503.60471,DSGBench: A Diverse Strategic Game Benchmark for Evaluating LLM-based Agents in Complex Decision-Making Environments
+2502.163391,True,False,False,2502.163391,Dynamic Coalition Structure Detection in Natural Language-based Interactions
+2401.34081,True,False,False,2401.34081,Escalation Risks from Language Models in Military and Diplomatic Decision-Making
+2403.34074,True,False,False,2403.34074,Human vs. Machine: Behavioral Differences Between Expert Humans and Language Models in Wargame Simulations
+paper_8,False,False,False,,Le formateur et son public dans le cadre de l’élaboration d’une simulation de type <i>wargame</i> sur plateau
+2408.139151,True,False,False,2408.139151,LLMs are Superior Feedback Providers: Bootstrapping Reasoning for Lie Detection with Self-Generated Feedback
+2410.132041,True,False,False,2410.132041,Measuring Free-Form Decision-Making Inconsistency of Language Models in Military Crisis Simulations
+2404.114461,True,False,False,2404.114461,Open-Ended Wargames with Large Language Models
+2501.83282,True,False,False,2501.83282,PokerBench: Training Large Language Models to become Professional Poker Players
+2303.31962,True,False,False,2303.31962,Population-based Evaluation in Repeated Rock-Paper-Scissors as a Benchmark for Multiagent Reinforcement Learning
+2507.91571,True,False,False,2507.91571,PU-Lie: Lightweight Deception Detection in Imbalanced Diplomatic Dialogues via Positive-Unlabeled Learning
+2407.68134,True,False,False,2407.68134,Richelieu: Self-Evolving LLM-Based Agents for AI Diplomacy
+2312.10902,True,False,True,2312.10902,Self Generated Wargame AI: Double Layer Agent Task Planning Based on Large Language Model
+2305.191651,True,False,False,2305.191651,Strategic Reasoning with Language Models
+2506.120121,True,False,False,2506.120121,"Tracing LLM Reasoning Processes with Strategic Games: A Framework for Planning, Revision, and Resource-Constrained Decision Making"
+2310.89011,True,False,False,2310.89011,Welfare Diplomacy: Benchmarking Language Model Cooperation
+2506.102641,True,False,False,2506.102641,WGSR-Bench: Wargame-based Game-theoretic Strategic Reasoning Benchmark for Large Language Models

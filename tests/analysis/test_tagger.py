@@ -12,9 +12,9 @@ class TestTagger:
         """Test Tagger initialization."""
         tagger = Tagger(sample_config)
         assert tagger.config is not None
-        assert hasattr(tagger, "failure_vocabularies")
-        assert hasattr(tagger, "llm_patterns")
-        assert hasattr(tagger, "game_type_patterns")
+        assert hasattr(tagger, "failure_vocab")
+        assert hasattr(tagger, "failure_patterns")
+        assert hasattr(tagger, "metadata_patterns")
 
     def test_tag_failures_basic(self, sample_config):
         """Test basic failure mode tagging."""
@@ -33,7 +33,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "failure_modes_regex" in tagged_df.columns
         assert "escalation" in tagged_df.loc[0, "failure_modes_regex"]
@@ -54,7 +54,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         failures = tagged_df.loc[0, "failure_modes_regex"]
         assert "hallucination" in failures
@@ -89,7 +89,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "llm_detected" in tagged_df.columns
         assert "gpt4" in tagged_df.loc[0, "llm_detected"].lower()
@@ -112,7 +112,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "game_type_detected" in tagged_df.columns
         assert tagged_df.loc[0, "game_type_detected"] == "seminar"
@@ -125,20 +125,24 @@ class TestTagger:
 
         df = pd.DataFrame(
             {
-                "screening_id": ["SCREEN_0001", "SCREEN_0002"],
+                "screening_id": ["SCREEN_0001", "SCREEN_0002", "SCREEN_0003"],
                 "abstract": [
                     "We measured win rate and conducted human evaluation of outputs.",
+                    "The accuracy was 95% with an F1 score of 0.92.",
                     "Success was measured through SME assessment and plausibility scores.",
                 ],
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "metrics_detected" in tagged_df.columns
         assert "win_rate" in tagged_df.loc[0, "metrics_detected"]
         assert "human_evaluation" in tagged_df.loc[0, "metrics_detected"]
-        assert "assessment" in tagged_df.loc[1, "metrics_detected"]
+        assert "accuracy" in tagged_df.loc[1, "metrics_detected"]
+        assert "f1_score" in tagged_df.loc[1, "metrics_detected"]
+        # The third row has no recognized metrics pattern
+        assert tagged_df.loc[2, "metrics_detected"] == ""
 
     def test_code_availability_detection(self, sample_config):
         """Test code availability detection."""
@@ -156,7 +160,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "code_detected" in tagged_df.columns
         assert "github.com/example/repo" in tagged_df.loc[0, "code_detected"]
@@ -174,7 +178,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         failures = tagged_df.loc[0, "failure_modes_regex"]
         assert "hallucination" in failures
@@ -185,7 +189,7 @@ class TestTagger:
         tagger = Tagger(sample_config)
 
         empty_df = pd.DataFrame()
-        tagged_df = tagger.tag_failures(empty_df)
+        tagged_df = tagger.tag_papers(empty_df)
 
         assert isinstance(tagged_df, pd.DataFrame)
         assert len(tagged_df) == 0
@@ -197,7 +201,7 @@ class TestTagger:
         # DataFrame without abstract or title
         df = pd.DataFrame({"screening_id": ["SCREEN_0001"], "year": [2024]})
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         # Should handle gracefully
         assert isinstance(tagged_df, pd.DataFrame)
@@ -218,7 +222,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         assert "escalation" in tagged_df.loc[0, "failure_modes_regex"]
         # Depending on implementation, this might or might not match
@@ -236,7 +240,7 @@ class TestTagger:
             }
         )
 
-        tagged_df = tagger.tag_failures(df)
+        tagged_df = tagger.tag_papers(df)
 
         # Should combine existing and detected tags
         assert "bias" in tagged_df.loc[0, "failure_modes_regex"]

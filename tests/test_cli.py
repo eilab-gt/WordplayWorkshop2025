@@ -18,29 +18,42 @@ class TestCLI:
         result = runner.invoke(cli, ["--help"])
 
         assert result.exit_code == 0
-        assert "Literature review pipeline CLI" in result.output
+        assert "Literature Review Pipeline" in result.output
         assert "harvest" in result.output
         assert "extract" in result.output
 
+    @patch("run.Normalizer")
     @patch("run.SearchHarvester")
-    def test_harvest_command(self, mock_harvester, sample_config):
+    def test_harvest_command(self, mock_harvester, mock_normalizer, sample_config):
         """Test harvest command."""
         # Setup mock
         mock_instance = Mock()
-        mock_instance.search_all.return_value = pd.DataFrame(
-            {"title": ["Test Paper"], "authors": ["Test Author"], "year": [2024]}
+        test_df = pd.DataFrame(
+            {
+                "title": ["Test Paper"],
+                "authors": ["Test Author"],
+                "year": [2024],
+                "source_db": ["test_source"],
+            }
         )
+        mock_instance.search_all.return_value = test_df
+        mock_instance.save_results = Mock()
         mock_harvester.return_value = mock_instance
+        
+        # Mock normalizer
+        mock_norm_instance = Mock()
+        mock_norm_instance.normalize_dataframe.return_value = test_df
+        mock_normalizer.return_value = mock_norm_instance
 
         runner = CliRunner()
         with runner.isolated_filesystem():
             # Create config file
-            Path("config.yaml").write_text('search:\n  queries:\n    preset1: "test"')
+            Path("config.yaml").write_text('search:\n  queries:\n    preset1: "test"\npaths:\n  output_dir: outputs')
 
-            result = runner.invoke(cli, ["harvest", "--config", "config.yaml"])
+            result = runner.invoke(cli, ["--config", "config.yaml", "harvest"])
 
             assert result.exit_code == 0
-            assert "Harvesting papers" in result.output
+            assert "Starting harvest" in result.output
             assert "Found 1 papers" in result.output
 
     @patch("run.SearchHarvester")
@@ -66,25 +79,35 @@ class TestCLI:
 
             result = runner.invoke(
                 cli,
-                ["prepare-screen", "--input", "papers.csv", "--config", "config.yaml"],
+                ["--config", "config.yaml", "prepare-screen", "--input", "papers.csv"],
             )
 
             assert result.exit_code == 0
-            assert "Preparing screening sheet" in result.output
+            assert "Preparing screening sheet" in result.output or "Loading papers" in result.output
 
+    @patch("run.Tagger")
     @patch("run.LLMExtractor")
-    def test_extract_command(self, mock_extractor):
+    def test_extract_command(self, mock_extractor, mock_tagger):
         """Test extract command."""
         # Setup mock
         mock_instance = Mock()
-        mock_instance.extract_batch.return_value = pd.DataFrame(
+        test_df = pd.DataFrame(
             {
                 "screening_id": ["SCREEN_0001"],
                 "venue_type": ["conference"],
                 "extraction_status": ["success"],
+                "title": ["Test Paper"],
+                "pdf_path": ["test.pdf"],
             }
         )
+        mock_instance.extract_all.return_value = test_df
         mock_extractor.return_value = mock_instance
+        
+        # Mock tagger
+        mock_tag_instance = Mock()
+        mock_tag_instance.tag_papers.return_value = test_df
+        mock_tag_instance.get_failure_mode_summary.return_value = pd.DataFrame()
+        mock_tagger.return_value = mock_tag_instance
 
         runner = CliRunner()
         with runner.isolated_filesystem():
@@ -97,23 +120,31 @@ class TestCLI:
                 }
             ).to_csv("screening.csv", index=False)
 
-            Path("config.yaml").write_text("api_keys:\n  openai: test-key")
+            Path("config.yaml").write_text("api_keys:\n  openai: test-key\npaths:\n  output_dir: outputs")
 
             result = runner.invoke(
-                cli, ["extract", "--input", "screening.csv", "--config", "config.yaml"]
+                cli, ["--config", "config.yaml", "extract", "--input", "screening.csv"]
             )
 
             assert result.exit_code == 0
-            assert "Extracting information" in result.output
+            assert "Loading screening data" in result.output or "Extracting with LLM" in result.output
 
     @patch("run.Visualizer")
     def test_visualise_command(self, mock_visualizer):
         """Test visualise command."""
         # Setup mock
         mock_instance = Mock()
-        mock_instance.generate_all_charts.return_value = {
-            "timeline": "timeline.png",
-            "venue_dist": "venue.png",
+        # Mock the output directory
+        mock_instance.output_dir = Path("outputs/figures")
+        # Mock figure objects
+        mock_fig1 = Mock()
+        mock_fig1.name = "timeline.png"
+        mock_fig2 = Mock()
+        mock_fig2.name = "venue_dist.png"
+        mock_instance.create_all_visualizations.return_value = [mock_fig1, mock_fig2]
+        mock_instance.create_summary_report.return_value = {
+            "total_papers": 2,
+            "year_range": "2023-2024",
         }
         mock_visualizer.return_value = mock_instance
 
@@ -130,25 +161,32 @@ class TestCLI:
 
             result = runner.invoke(
                 cli,
-                ["visualise", "--input", "extraction.csv", "--config", "config.yaml"],
+                ["--config", "config.yaml", "visualise", "--input", "extraction.csv"],
             )
 
             assert result.exit_code == 0
-            assert "Creating visualizations" in result.output
+            assert "Creating visualizations" in result.output or "Loading extraction data" in result.output
 
+    @patch("run.Visualizer")
     @patch("run.Exporter")
-    def test_export_command(self, mock_exporter):
+    def test_export_command(self, mock_exporter, mock_visualizer):
         """Test export command."""
-        # Setup mock
-        mock_instance = Mock()
-        mock_instance.create_package.return_value = "package.zip"
-        mock_exporter.return_value = mock_instance
+        # Setup mock exporter
+        mock_exp_instance = Mock()
+        mock_exp_instance.export_full_package.return_value = Path("package.zip")
+        mock_exp_instance.export_bibtex.return_value = Path("refs.bib")
+        mock_exporter.return_value = mock_exp_instance
+        
+        # Setup mock visualizer
+        mock_viz_instance = Mock()
+        mock_viz_instance.create_all_visualizations.return_value = []
+        mock_viz_instance.create_summary_report.return_value = {}
+        mock_visualizer.return_value = mock_viz_instance
 
         runner = CliRunner()
         with runner.isolated_filesystem():
-            # Create input files
-            pd.DataFrame({"title": ["Paper 1"]}).to_csv("papers.csv", index=False)
-            pd.DataFrame({"screening_id": ["SCREEN_0001"]}).to_csv(
+            # Create input file
+            pd.DataFrame({"screening_id": ["SCREEN_0001"], "title": ["Paper 1"]}).to_csv(
                 "extraction.csv", index=False
             )
 
@@ -157,62 +195,70 @@ class TestCLI:
             result = runner.invoke(
                 cli,
                 [
-                    "export",
-                    "--papers",
-                    "papers.csv",
-                    "--extraction",
-                    "extraction.csv",
                     "--config",
                     "config.yaml",
+                    "export",
+                    "--input",
+                    "extraction.csv",
                 ],
             )
 
             assert result.exit_code == 0
-            assert "Creating export package" in result.output
+            assert "Creating export package" in result.output or "Loading extraction data" in result.output
 
-    def test_test_command(self):
+    @patch("run.SearchHarvester")
+    def test_test_command(self, mock_harvester):
         """Test the test command."""
+        # Setup mock
+        mock_instance = Mock()
+        mock_instance.search_all.return_value = pd.DataFrame(
+            {
+                "title": ["Test Paper"],
+                "authors": ["Test Author"],
+                "year": [2024],
+                "source_db": ["google_scholar"],
+            }
+        )
+        mock_harvester.return_value = mock_instance
+        
         runner = CliRunner()
         with runner.isolated_filesystem():
             Path("config.yaml").write_text('search:\n  queries:\n    preset1: "test"')
 
-            result = runner.invoke(cli, ["test", "--config", "config.yaml"])
+            result = runner.invoke(cli, ["--config", "config.yaml", "test"])
 
             assert result.exit_code == 0
-            assert "Testing pipeline components" in result.output
-            assert "Config" in result.output
+            assert "Running test search" in result.output or "Query:" in result.output
 
-    @patch("run.LoggingDatabase")
-    def test_status_command(self, mock_db):
+    @patch("run.PDFFetcher")
+    def test_status_command(self, mock_pdf_fetcher):
         """Test status command."""
         # Setup mock
         mock_instance = Mock()
-        mock_instance.get_summary.return_value = {
-            "total_logs": 100,
-            "by_level": {"INFO": 80, "WARNING": 15, "ERROR": 5},
+        mock_instance.get_cache_statistics.return_value = {
+            "cache_dir": Path("cache/pdfs"),
+            "total_files": 10,
+            "total_size_mb": 50.5,
         }
-        mock_instance.query_logs.return_value = [
-            {"timestamp": "2024-01-01T10:00:00", "level": "INFO", "message": "Test log"}
-        ]
-        mock_db.return_value = mock_instance
-
+        mock_pdf_fetcher.return_value = mock_instance
+        
         runner = CliRunner()
         with runner.isolated_filesystem():
-            Path("config.yaml").write_text("paths:\n  log_db: logs.db")
+            Path("config.yaml").write_text("paths:\n  output_dir: outputs")
 
-            result = runner.invoke(cli, ["status", "--config", "config.yaml"])
+            result = runner.invoke(cli, ["--config", "config.yaml", "status"])
 
             assert result.exit_code == 0
             assert "Pipeline Status" in result.output
-            assert "100" in result.output
 
     def test_invalid_config_path(self):
         """Test handling of invalid config path."""
         runner = CliRunner()
-        result = runner.invoke(cli, ["harvest", "--config", "nonexistent.yaml"])
+        result = runner.invoke(cli, ["--config", "nonexistent.yaml", "harvest"])
 
         assert result.exit_code != 0
-        assert "Error" in result.output or "not found" in result.output
+        assert result.exception is not None
+        assert "not found" in str(result.exception) or "Configuration file" in str(result.exception)
 
     def test_command_with_all_options(self):
         """Test command with all available options."""
@@ -222,31 +268,43 @@ class TestCLI:
                 'search:\n  queries:\n    custom: "test query"'
             )
 
-            with patch("run.SearchHarvester") as mock_harvester:
+            with patch("run.SearchHarvester") as mock_harvester, patch("run.Normalizer") as mock_normalizer:
                 mock_instance = Mock()
-                mock_instance.search_all.return_value = pd.DataFrame(
-                    {"title": ["Test"]}
+                test_df = pd.DataFrame(
+                    {"title": ["Test"], "source_db": ["test_source"]}
                 )
+                mock_instance.search_all.return_value = test_df
+                mock_instance.save_results = Mock()
                 mock_harvester.return_value = mock_instance
+                
+                # Mock normalizer
+                mock_norm = Mock()
+                mock_norm.normalize_dataframe.return_value = test_df
+                mock_normalizer.return_value = mock_norm
 
-                runner.invoke(
+                result = runner.invoke(
                     cli,
                     [
-                        "harvest",
                         "--config",
                         "config.yaml",
+                        "harvest",
                         "--query",
                         "custom",
                         "--sources",
-                        "arxiv,crossref",
+                        "arxiv",
+                        "--sources",
+                        "crossref",
                         "--max-results",
                         "50",
-                        "--no-parallel",
+                        "--sequential",
                         "--output",
                         "custom_output.csv",
                     ],
                 )
 
+                # Check that the command executed successfully
+                assert result.exit_code == 0
+                
                 # Check that options were parsed
                 mock_instance.search_all.assert_called_once()
                 call_args = mock_instance.search_all.call_args

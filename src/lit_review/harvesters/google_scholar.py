@@ -30,9 +30,9 @@ class GoogleScholarHarvester(BaseHarvester):
         try:
             # Try to use free proxies to avoid rate limiting
             pg = ProxyGenerator()
-            pg.FreeProxies()
-            scholarly.use_proxy(pg)
-            logger.info("Google Scholar: Using free proxy")
+            # Skip FreeProxies() as it's causing issues with the current scholarly version
+            # Just initialize without proxy for now
+            logger.info("Google Scholar: Running without proxy (proxy setup disabled)")
         except Exception as e:
             logger.warning(f"Google Scholar: Could not set up proxy: {e}")
             # Continue without proxy
@@ -53,7 +53,16 @@ class GoogleScholarHarvester(BaseHarvester):
             logger.info(f"Google Scholar: Starting search with query: {query}")
 
             # Execute search
-            search_query = scholarly.search_pubs(query)
+            try:
+                search_query = scholarly.search_pubs(query)
+            except Exception as e:
+                # Handle common scholarly errors
+                if "Cannot Fetch" in str(e) or "CAPTCHA" in str(e):
+                    logger.warning(f"Google Scholar: Access blocked or rate limited: {e}")
+                    logger.info("Google Scholar: Consider using a proxy or reducing request rate")
+                else:
+                    logger.error(f"Google Scholar: Search initialization failed: {e}")
+                return papers
 
             # Collect results
             for i, result in enumerate(search_query):

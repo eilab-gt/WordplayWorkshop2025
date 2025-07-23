@@ -30,12 +30,16 @@ def generate_paper_stats(df: pd.DataFrame) -> dict:
     stats = {
         "total_papers": len(df),
         "date_range": {
-            "min_year": int(df["year"].min())
-            if "year" in df and not df["year"].isna().all()
-            else None,
-            "max_year": int(df["year"].max())
-            if "year" in df and not df["year"].isna().all()
-            else None,
+            "min_year": (
+                int(df["year"].min())
+                if "year" in df and not df["year"].isna().all()
+                else None
+            ),
+            "max_year": (
+                int(df["year"].max())
+                if "year" in df and not df["year"].isna().all()
+                else None
+            ),
         },
         "sources": {},
         "venues": {},

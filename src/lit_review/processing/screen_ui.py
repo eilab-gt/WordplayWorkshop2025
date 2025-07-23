@@ -73,25 +73,37 @@ class ScreenUI:
         Returns:
             DataFrame with screening columns
         """
-        # Title/Abstract screening columns
-        df["include_ta"] = ""  # yes/no/maybe
-        df["reason_ta"] = ""  # Exclusion reason
-        df["notes_ta"] = ""  # Additional notes
+        # Title/Abstract screening columns - only add if not present
+        if "include_ta" not in df.columns:
+            df["include_ta"] = ""  # yes/no/maybe
+        if "reason_ta" not in df.columns:
+            df["reason_ta"] = ""  # Exclusion reason
+        if "notes_ta" not in df.columns:
+            df["notes_ta"] = ""  # Additional notes
 
         # Full-text screening columns
-        df["include_ft"] = ""  # yes/no
-        df["reason_ft"] = ""  # Exclusion reason
-        df["notes_ft"] = ""  # Additional notes
+        if "include_ft" not in df.columns:
+            df["include_ft"] = ""  # yes/no
+        if "reason_ft" not in df.columns:
+            df["reason_ft"] = ""  # Exclusion reason
+        if "notes_ft" not in df.columns:
+            df["notes_ft"] = ""  # Additional notes
 
         # Screening metadata
-        df["screener_ta"] = ""  # Who screened title/abstract
-        df["screened_ta_date"] = ""  # When screened
-        df["screener_ft"] = ""  # Who screened full text
-        df["screened_ft_date"] = ""  # When screened
+        if "screener_ta" not in df.columns:
+            df["screener_ta"] = ""  # Who screened title/abstract
+        if "screened_ta_date" not in df.columns:
+            df["screened_ta_date"] = ""  # When screened
+        if "screener_ft" not in df.columns:
+            df["screener_ft"] = ""  # Who screened full text
+        if "screened_ft_date" not in df.columns:
+            df["screened_ft_date"] = ""  # When screened
 
         # Quality/relevance scores
-        df["relevance_score"] = ""  # 1-5 scale
-        df["quality_score"] = ""  # 1-5 scale
+        if "relevance_score" not in df.columns:
+            df["relevance_score"] = ""  # 1-5 scale
+        if "quality_score" not in df.columns:
+            df["quality_score"] = ""  # 1-5 scale
 
         return df
 
@@ -104,6 +116,10 @@ class ScreenUI:
         Returns:
             Sorted DataFrame
         """
+        # Handle empty DataFrame
+        if df.empty:
+            return df
+            
         # Create a composite score for sorting
         df["sort_score"] = 0
 
@@ -119,35 +135,68 @@ class ScreenUI:
         ]
 
         for keyword in priority_keywords:
-            # Check title
-            df.loc[
-                df["title"].str.lower().str.contains(keyword, na=False), "sort_score"
-            ] += 2
-            # Check abstract
-            df.loc[
-                df["abstract"].str.lower().str.contains(keyword, na=False), "sort_score"
-            ] += 1
+            # Check title if it exists
+            if "title" in df.columns:
+                df.loc[
+                    df["title"].str.lower().str.contains(keyword, na=False), "sort_score"
+                ] += 2
+            # Check abstract if it exists
+            if "abstract" in df.columns:
+                df.loc[
+                    df["abstract"].str.lower().str.contains(keyword, na=False), "sort_score"
+                ] += 1
 
-        # Boost recent papers
-        current_year = datetime.now().year
-        df["year_score"] = df["year"].apply(lambda y: max(0, 5 - (current_year - y)))
-        df["sort_score"] += df["year_score"]
+        # Boost recent papers if year column exists
+        if "year" in df.columns:
+            current_year = datetime.now().year
+            df["year_score"] = df["year"].apply(lambda y: max(0, 5 - (current_year - y)))
+            df["sort_score"] += df["year_score"]
 
         # Boost papers with more citations
         if "citations" in df.columns:
-            df["citation_score"] = pd.qcut(
-                df["citations"].fillna(0),
-                q=5,
-                labels=[1, 2, 3, 4, 5],
-                duplicates="drop",
-            )
+            try:
+                # Try to create 5 bins, but handle cases with few unique values
+                unique_citations = df["citations"].fillna(0).nunique()
+                if unique_citations >= 5:
+                    df["citation_score"] = pd.qcut(
+                        df["citations"].fillna(0),
+                        q=5,
+                        labels=[1, 2, 3, 4, 5],
+                        duplicates="drop",
+                    )
+                elif unique_citations > 1:
+                    # Use fewer bins if we have fewer unique values
+                    df["citation_score"] = pd.qcut(
+                        df["citations"].fillna(0),
+                        q=unique_citations,
+                        labels=range(1, unique_citations + 1),
+                        duplicates="drop",
+                    )
+                else:
+                    # All same value, give them all score of 3
+                    df["citation_score"] = 3
+            except Exception:
+                # Fallback: use rank instead
+                df["citation_score"] = df["citations"].fillna(0).rank(method="dense").astype(int)
+                # Normalize to 1-5 scale
+                max_rank = df["citation_score"].max()
+                if max_rank > 0:
+                    df["citation_score"] = ((df["citation_score"] - 1) / (max_rank - 1) * 4 + 1).round()
+                else:
+                    df["citation_score"] = 3
+            
             df["sort_score"] += df["citation_score"]
 
-        # Sort by score (descending), then year (descending)
-        df = df.sort_values(["sort_score", "year"], ascending=[False, False])
+        # Sort by score (descending), then year (descending) if year exists
+        sort_columns = ["sort_score"]
+        if "year" in df.columns:
+            sort_columns.append("year")
+        df = df.sort_values(sort_columns, ascending=[False] * len(sort_columns))
 
         # Remove temporary columns
-        df = df.drop(["sort_score", "year_score"], axis=1)
+        df = df.drop("sort_score", axis=1)
+        if "year_score" in df.columns:
+            df = df.drop("year_score", axis=1)
         if "citation_score" in df.columns:
             df = df.drop("citation_score", axis=1)
 

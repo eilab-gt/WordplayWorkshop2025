@@ -497,16 +497,20 @@ Relevant excerpt from paper:
         paper = pd.Series(
             {
                 "pdf_path": pdf_path,
-                "title": paper_metadata.get("title", "Unknown")
-                if paper_metadata
-                else "Unknown",
-                "authors": paper_metadata.get("authors", "Unknown")
-                if paper_metadata
-                else "Unknown",
+                "title": (
+                    paper_metadata.get("title", "Unknown")
+                    if paper_metadata
+                    else "Unknown"
+                ),
+                "authors": (
+                    paper_metadata.get("authors", "Unknown")
+                    if paper_metadata
+                    else "Unknown"
+                ),
                 "year": paper_metadata.get("year", 0) if paper_metadata else 0,
-                "abstract": paper_metadata.get("abstract", "")
-                if paper_metadata
-                else "",
+                "abstract": (
+                    paper_metadata.get("abstract", "") if paper_metadata else ""
+                ),
             }
         )
 

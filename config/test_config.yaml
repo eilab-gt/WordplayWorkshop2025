@@ -1,0 +1,96 @@
+# Minimal test configuration for pipeline testing
+# This config is designed for small-scale testing and debugging
+
+search:
+  # Search terms for query building
+  wargame_terms:
+    - "wargaming"
+    - "wargame"
+    - "war game"
+
+  llm_terms:
+    - "LLM"
+    - "large language model"
+    - "GPT"
+
+  action_terms:
+    - "simulation"
+    - "agent"
+    - "playing"
+
+  exclusion_terms: []
+  # Test with very specific, limited queries
+  queries:
+    test1: '"LLM" AND "wargaming"'  # Should return <10 results
+    test2: '"artificial intelligence" AND "game simulation"'  # Slightly broader
+  
+  # Start with just one source at a time
+  sources:
+    arxiv:
+      enabled: true  # Enable for combined test
+      max_results: 3  # Very small for testing
+    google_scholar:
+      enabled: false  # Disabled due to proxy issues
+      max_results: 3
+    semantic_scholar:
+      enabled: true  # We have API key now!
+      max_results: 3
+    crossref:
+      enabled: true  # Enable for combined test
+      max_results: 3
+
+# API keys
+api_keys:
+  openai: ${OPENAI_API_KEY:-test-key}
+  semantic_scholar: ${SEMANTIC_SCHOLAR_API_KEY:-ZWaRtkUf1t20eYwG7ocpY17bfJ3xZwld8Yo4lZFf}
+  unpaywall_email: ${UNPAYWALL_EMAIL:-test@example.com}
+
+# Minimal extraction config (not used in harvesting phase)
+extraction:
+  model: gpt-4
+  temperature: 0.3
+  max_tokens: 1000
+  prompt: "Extract key information"
+
+# Test paths - using temporary directory
+paths:
+  data_dir: ./test_output/data
+  pdf_cache: ./test_output/pdfs
+  output_dir: ./test_output/results
+  log_db: ./test_output/logs/test_pipeline.db
+
+# Rate limiting - conservative for testing
+rate_limits:
+  google_scholar:
+    delay_seconds: 10  # Very conservative
+  arxiv:
+    delay_seconds: 3
+  semantic_scholar:
+    delay_seconds: 1.5  # API limit is 1 req/sec, being extra safe
+  crossref:
+    delay_seconds: 2
+
+# Processing settings
+processing:
+  # Deduplication methods to test
+  dedup_methods:
+    - doi_exact
+    - title_fuzzy
+    - arxiv_exact
+  title_similarity_threshold: 0.85
+  
+  # Small batches for testing
+  batch_size: 5
+  parallel_workers: 2
+
+# Year range - recent papers only
+search_years: [2023, 2024]
+
+# Logging - verbose for debugging
+logging:
+  level: DEBUG
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  
+# Enable debug mode
+debug: true
+dry_run: false  # Set to true to test without actual API calls

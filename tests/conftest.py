@@ -23,9 +23,12 @@ def temp_dir():
     shutil.rmtree(temp_dir)
 
 
+from src.lit_review.utils.config import Config, ConfigLoader
+
+
 @pytest.fixture
-def sample_config(temp_dir):
-    """Create a sample configuration for testing."""
+def sample_config_path(temp_dir):
+    """Create a sample configuration file for testing."""
     config = {
         "search": {
             "queries": {
@@ -106,6 +109,53 @@ def sample_config(temp_dir):
     Path(config["paths"]["output_dir"]).mkdir(parents=True, exist_ok=True)
 
     return config_path
+
+
+@pytest.fixture  
+def sample_config(sample_config_path, temp_dir):
+    """Create a sample Config object for testing."""
+    config = Config()
+    # Set required attributes for LLMExtractor
+    config.openai_key = "test-key"
+    config.semantic_scholar_key = "test-key"
+    config.llm_model = "gpt-4"
+    config.llm_temperature = 0.3
+    config.llm_max_tokens = 4000
+    config.extraction_prompt = "Extract information about LLM wargaming from this paper"
+    config.awscale_prompt = "Rate the AWScale for this paper"
+    config.batch_size_llm = 5
+    config.parallel_workers = 4
+    
+    # Set paths
+    config.cache_dir = Path(temp_dir) / "pdf_cache"
+    config.output_dir = Path(temp_dir) / "outputs"
+    config.data_dir = Path(temp_dir) / "data"
+    config.log_dir = Path(temp_dir) / "logs"
+    
+    # Set failure vocabulary for Tagger
+    config.failure_vocab = {
+        "escalation": ["escalation", "nuclear", "escalate", "brinkmanship"],
+        "bias": ["bias", "biased", "unfair", "skew"],
+        "hallucination": ["hallucination", "hallucinate", "confabulate", "fabricate"],
+        "prompt_sensitivity": ["prompt sensitivity", "prompt engineering", "fragile"],
+        "data_leakage": ["data_leakage", "data leakage", "memorization", "training data"],
+        "deception": ["deception", "deceive", "mislead", "manipulation"],
+    }
+    
+    # Set required attributes for Normalizer
+    config.dedup_methods = ["doi_exact", "title_fuzzy", "arxiv_exact", "content_hash"]
+    config.title_similarity_threshold = 0.9
+    config.search_years = (2018, 2025)
+    
+    # Set required attributes for harvesters
+    config.rate_limits = {
+        "google_scholar": {"delay_seconds": 5},
+        "arxiv": {"delay_seconds": 3},
+        "semantic_scholar": {"delay_seconds": 1},
+        "crossref": {"delay_seconds": 1}
+    }
+    
+    return config
 
 
 @pytest.fixture
@@ -225,7 +275,8 @@ def mock_openai_client():
 @pytest.fixture
 def mock_scholarly():
     """Mock scholarly library for testing."""
-    with patch("scholarly.scholarly") as mock:
+    # Patch the module where it's imported, not where it's defined
+    with patch("src.lit_review.harvesters.google_scholar.scholarly") as mock:
         # Mock search results
         mock_results = [
             {
@@ -250,7 +301,10 @@ def mock_arxiv():
     with patch("arxiv.Search") as mock_search:
         mock_result = Mock()
         mock_result.title = "GPT-4 as a Crisis Simulation Agent"
-        mock_result.authors = [Mock(name="Johnson, Alice")]
+        # Create proper author mocks with string names
+        mock_author = Mock()
+        mock_author.name = "Johnson, Alice"
+        mock_result.authors = [mock_author]
         mock_result.published = Mock(year=2023)
         mock_result.summary = (
             "We investigate how GPT-4 can serve as an autonomous agent..."
@@ -258,6 +312,10 @@ def mock_arxiv():
         mock_result.entry_id = "https://arxiv.org/abs/2301.12345"
         mock_result.doi = None
         mock_result.pdf_url = "https://arxiv.org/pdf/2301.12345.pdf"
+        mock_result.categories = [Mock(term="cs.AI"), Mock(term="cs.CL")]
+        mock_result.journal_ref = None
 
-        mock_search.return_value.results.return_value = [mock_result]
+        # Make results() return an iterator
+        mock_search_instance = mock_search.return_value
+        mock_search_instance.results.return_value = iter([mock_result])
         yield mock_search

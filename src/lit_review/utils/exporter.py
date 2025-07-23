@@ -32,7 +32,7 @@ class Exporter:
         # Zenodo settings
         self.zenodo_enabled = config.zenodo_enabled
         self.zenodo_token = config.zenodo_token
-        self.zenodo_community = config.get("zenodo_community", "llm-wargames")
+        self.zenodo_community = getattr(config, "zenodo_community", "llm-wargames")
 
     def export_full_package(
         self,
@@ -154,12 +154,12 @@ class Exporter:
                     len(
                         df[
                             df["pdf_status"].notna()
-                            & df["pdf_status"].str.startswith("downloaded")
+                            & (df["pdf_status"].str.startswith("downloaded") | df["pdf_status"].str.startswith("cached"))
                         ]
-                    ),
-                    len(df[df["extraction_status"] == "success"]),
-                    len(df[df["failure_modes"].notna() & (df["failure_modes"] != "")]),
-                    df["llm_family"].nunique(),
+                    ) if "pdf_status" in df.columns else 0,
+                    len(df[df["extraction_status"] == "success"]) if "extraction_status" in df.columns else 0,
+                    len(df[df["failure_modes"].notna() & (df["failure_modes"] != "")]) if "failure_modes" in df.columns else 0,
+                    df["llm_family"].nunique() if "llm_family" in df.columns else 0,
                 ],
             }
             summary_df = pd.DataFrame(summary_data)
@@ -220,9 +220,11 @@ class Exporter:
             },
             "data_summary": {
                 "columns": list(df.columns),
-                "sources": df["source_db"].value_counts().to_dict()
-                if "source_db" in df.columns
-                else {},
+                "sources": (
+                    df["source_db"].value_counts().to_dict()
+                    if "source_db" in df.columns
+                    else {}
+                ),
                 "year_range": {
                     "min": int(df["year"].min()) if "year" in df.columns else None,
                     "max": int(df["year"].max()) if "year" in df.columns else None,
@@ -233,10 +235,11 @@ class Exporter:
                     df[df["abstract"].notna() & (df["abstract"] != "")]
                 ),
                 "papers_with_dois": len(df[df["doi"].notna() & (df["doi"] != "")]),
-                "extraction_success_rate": len(df[df["extraction_status"] == "success"])
-                / len(df)
-                if "extraction_status" in df.columns
-                else 0,
+                "extraction_success_rate": (
+                    len(df[df["extraction_status"] == "success"]) / len(df)
+                    if "extraction_status" in df.columns
+                    else 0
+                ),
             },
         }
 
@@ -449,9 +452,11 @@ If you use this data, please cite:
                         "systematic review",
                         "natural language processing",
                     ],
-                    "communities": [{"identifier": self.zenodo_community}]
-                    if self.zenodo_community
-                    else [],
+                    "communities": (
+                        [{"identifier": self.zenodo_community}]
+                        if self.zenodo_community
+                        else []
+                    ),
                     "language": "eng",
                     "license": "cc-by-4.0",
                 }

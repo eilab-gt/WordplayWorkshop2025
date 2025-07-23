@@ -2,6 +2,9 @@
 
 import logging
 import time
+import re
+import requests
+from typing import Optional
 
 import arxiv
 
@@ -162,7 +165,7 @@ class ArxivHarvester(BaseHarvester):
                 doi=result.doi,
                 arxiv_id=arxiv_id,
                 pdf_url=result.pdf_url,
-                keywords=[cat.term for cat in result.categories],
+                keywords=[cat.term if hasattr(cat, 'term') else str(cat) for cat in result.categories],
             )
 
             # Add journal reference if available
@@ -217,4 +220,88 @@ class ArxivHarvester(BaseHarvester):
 
         except Exception as e:
             logger.error(f"arXiv: Error fetching paper {arxiv_id}: {e}")
+            return None
+
+    def fetch_tex_source(self, arxiv_id: str) -> Optional[str]:
+        """Fetch the TeX source for an arXiv paper.
+
+        Args:
+            arxiv_id: arXiv ID (e.g., "2301.00234")
+
+        Returns:
+            TeX source content or None if not available
+        """
+        try:
+            # Clean the arxiv ID (remove version if present)
+            clean_id = arxiv_id.split('v')[0]
+            
+            # arXiv source URL
+            source_url = f"https://arxiv.org/e-print/{clean_id}"
+            
+            logger.info(f"Fetching TeX source for arXiv:{clean_id}")
+            
+            # Add headers to identify as a research tool
+            headers = {
+                'User-Agent': 'LiteratureReviewPipeline/1.0 (Research Tool)'
+            }
+            
+            response = requests.get(source_url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            # arXiv returns tar.gz files for source
+            # For now, return the raw content - we'll process it later
+            content = response.content
+            
+            # Check if it's actually TeX (starts with common TeX commands)
+            text_preview = content[:1000].decode('utf-8', errors='ignore')
+            if any(cmd in text_preview for cmd in ['\\documentclass', '\\begin{document}', '\\section']):
+                logger.info(f"Successfully fetched TeX source for {arxiv_id}")
+                return content.decode('utf-8', errors='ignore')
+            else:
+                logger.warning(f"Source for {arxiv_id} doesn't appear to be TeX")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error fetching TeX source for {arxiv_id}: {e}")
+            return None
+
+    def fetch_html_source(self, arxiv_id: str) -> Optional[str]:
+        """Fetch the HTML version of an arXiv paper if available.
+
+        Args:
+            arxiv_id: arXiv ID (e.g., "2301.00234")
+
+        Returns:
+            HTML content or None if not available
+        """
+        try:
+            # Clean the arxiv ID
+            clean_id = arxiv_id.split('v')[0]
+            
+            # Some arXiv papers have HTML versions
+            # Try the ar5iv service which converts arXiv papers to HTML
+            html_url = f"https://ar5iv.org/abs/{clean_id}"
+            
+            logger.info(f"Fetching HTML version for arXiv:{clean_id}")
+            
+            headers = {
+                'User-Agent': 'LiteratureReviewPipeline/1.0 (Research Tool)'
+            }
+            
+            response = requests.get(html_url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                # Check if we got actual HTML content
+                if 'text/html' in response.headers.get('content-type', ''):
+                    logger.info(f"Successfully fetched HTML for {arxiv_id}")
+                    return response.text
+                else:
+                    logger.warning(f"Response for {arxiv_id} is not HTML")
+                    return None
+            else:
+                logger.warning(f"HTML not available for {arxiv_id} (status: {response.status_code})")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error fetching HTML for {arxiv_id}: {e}")
             return None

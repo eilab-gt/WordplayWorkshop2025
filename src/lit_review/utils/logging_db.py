@@ -37,7 +37,8 @@ class SQLiteHandler(logging.Handler):
         cursor = conn.cursor()
 
         # Create table if not exists
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -49,23 +50,30 @@ class SQLiteHandler(logging.Handler):
                 error_trace TEXT,
                 metadata TEXT
             )
-        """)
+        """
+        )
 
         # Create indices
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             CREATE INDEX IF NOT EXISTS idx_timestamp
             ON {self.table_name} (timestamp)
-        """)
+        """
+        )
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             CREATE INDEX IF NOT EXISTS idx_module
             ON {self.table_name} (module)
-        """)
+        """
+        )
 
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             CREATE INDEX IF NOT EXISTS idx_level
             ON {self.table_name} (level)
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()
@@ -254,46 +262,56 @@ class LoggingDatabase:
         stats["total_logs"] = cursor.fetchone()[0]
 
         # Logs by level
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT level, COUNT(*) as count
             FROM {self.table_name}
             GROUP BY level
-        """)
+        """
+        )
         stats["by_level"] = dict(cursor.fetchall())
 
         # Logs by status
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT status, COUNT(*) as count
             FROM {self.table_name}
             GROUP BY status
-        """)
+        """
+        )
         stats["by_status"] = dict(cursor.fetchall())
 
         # Logs by module (top 10)
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT module, COUNT(*) as count
             FROM {self.table_name}
             GROUP BY module
             ORDER BY count DESC
             LIMIT 10
-        """)
+        """
+        )
         stats["top_modules"] = dict(cursor.fetchall())
 
         # Time range
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT MIN(timestamp) as first_log, MAX(timestamp) as last_log
             FROM {self.table_name}
-        """)
+        """
+        )
         row = cursor.fetchone()
         if row and row[0]:
             stats["time_range"] = {"first": row[0], "last": row[1]}
 
         # Error count
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT COUNT(*)
             FROM {self.table_name}
             WHERE level = 'ERROR' OR status = 'error'
-        """)
+        """
+        )
         stats["error_count"] = cursor.fetchone()[0]
 
         conn.close()
@@ -348,11 +366,11 @@ class LoggingDatabase:
         )
 
         deleted_count = cursor.rowcount
-
-        # Vacuum to reclaim space
-        cursor.execute("VACUUM")
-
         conn.commit()
+        
+        # Vacuum to reclaim space (must be done outside a transaction)
+        conn.execute("VACUUM")
+        
         conn.close()
 
         return deleted_count

@@ -29,9 +29,7 @@ def create_demo_config():
                 "crossref": {"enabled": False},
             },
         },
-        "api_keys": {
-            "openai": "demo-key-not-real"  # Demo mode
-        },
+        "api_keys": {"openai": "demo-key-not-real"},  # Demo mode
         "paths": {
             "data_dir": "./demo_data",
             "pdf_cache": "./demo_pdfs",

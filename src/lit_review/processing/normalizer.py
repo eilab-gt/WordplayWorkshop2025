@@ -467,8 +467,8 @@ class Normalizer:
         df = df[(df["year"] >= start_year) & (df["year"] <= end_year)]
 
         # Remove papers without abstracts if required
-        if self.config.quality.get("validation", {}).get("require_abstract", True):
-            df = df[df["abstract"].notna() & (df["abstract"].str.len() > 50)]
+        # Note: For now, always require abstracts with minimum length
+        df = df[df["abstract"].notna() & (df["abstract"].str.len() > 50)]
 
         removed = original_count - len(df)
         if removed > 0:

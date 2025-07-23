@@ -35,9 +35,11 @@ class PDFFetcher:
         self.session = requests.Session()
         self.session.headers.update(
             {
-                "User-Agent": f"LitReviewPipeline/1.0 (mailto:{self.email})"
-                if self.email
-                else "LitReviewPipeline/1.0"
+                "User-Agent": (
+                    f"LitReviewPipeline/1.0 (mailto:{self.email})"
+                    if self.email
+                    else "LitReviewPipeline/1.0"
+                )
             }
         )
 
@@ -421,7 +423,7 @@ class PDFFetcher:
             "cache_dir": str(self.cache_dir),
             "total_files": len(pdf_files),
             "total_size_mb": total_size / 1024 / 1024,
-            "average_size_mb": (total_size / len(pdf_files) / 1024 / 1024)
-            if pdf_files
-            else 0,
+            "average_size_mb": (
+                (total_size / len(pdf_files) / 1024 / 1024) if pdf_files else 0
+            ),
         }

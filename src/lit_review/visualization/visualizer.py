@@ -734,9 +734,11 @@ class Visualizer:
         summary = {
             "total_papers": len(df),
             "date_generated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "year_range": f"{df['year'].min()}-{df['year'].max()}"
-            if "year" in df.columns
-            else "N/A",
+            "year_range": (
+                f"{df['year'].min()}-{df['year'].max()}"
+                if "year" in df.columns
+                else "N/A"
+            ),
             "sources": {},
         }
 
