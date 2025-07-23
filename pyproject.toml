@@ -29,7 +29,7 @@ dev = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-xdist>=3.8.0",
-    "ruff>=0.12.4",
+    "ruff>=0.8.6",
     "sqlalchemy>=2.0.41",
     "tabulate>=0.9.0",
 ]
@@ -79,7 +79,9 @@ include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py313"
+
+[tool.ruff.lint]
 select = [
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings
@@ -87,16 +89,51 @@ select = [
     "I",    # isort
     "B",    # flake8-bugbear
     "C4",   # flake8-comprehensions
+    "D",    # pydocstyle
     "UP",   # pyupgrade
+    "S",    # flake8-bandit
     "ARG",  # flake8-unused-arguments
     "SIM",  # flake8-simplify
+    "PTH",  # flake8-use-pathlib
+    "RUF",  # Ruff-specific rules
 ]
-ignore = []
+ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D107",  # Missing docstrings
+    "S101",  # Use of assert detected
+    "S603",  # subprocess call
+    "S607",  # Starting a process with a partial executable path
+    "ARG001", "ARG002",  # Unused function arguments
+    "E501",  # Line too long - we'll handle this case by case
+    "PTH111", "PTH123",  # os.path usage - legacy code
+    "B017",  # Don't care about exception type in tests
+    "E712",  # Allow comparisons to False in tests
+    "E722",  # Allow bare except in demo scripts
+    "F841",  # Allow unused variables in tests
+    "SIM117",  # Allow nested with statements
+]
 fixable = ["ALL"]
 unfixable = []
 
-[tool.ruff.isort]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "D", "B904", "PTH100", "PTH118", "PTH120"]
+"scripts/*" = ["D"]
+"notebooks/*" = ["RUF001"]
+"src/lit_review/utils/logging_db.py" = ["S608", "E402"]
+"src/lit_review/harvesters/*" = ["S113"]
+"src/lit_review/processing/screen_ui.py" = ["S110"]
+"src/lit_review/utils/exporter.py" = ["S113"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+docstring-code-line-length = 72
 
 [tool.mypy]
 python_version = "3.9"

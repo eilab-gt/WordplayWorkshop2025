@@ -1,134 +1,135 @@
 """arXiv harvester implementation."""
 
-import time
 import logging
-from typing import List, Optional
+import time
+
 import arxiv
 
 from .base import BaseHarvester, Paper
-
 
 logger = logging.getLogger(__name__)
 
 
 class ArxivHarvester(BaseHarvester):
     """Harvester for arXiv papers."""
-    
+
     def __init__(self, config):
         """Initialize arXiv harvester.
-        
+
         Args:
             config: Configuration object
         """
         super().__init__(config)
-        self.rate_limits = config.rate_limits.get('arxiv', {})
-        self.delay_milliseconds = self.rate_limits.get('delay_milliseconds', 333)
-        
-    def search(self, query: str, max_results: int = 100) -> List[Paper]:
+        self.rate_limits = config.rate_limits.get("arxiv", {})
+        self.delay_milliseconds = self.rate_limits.get("delay_milliseconds", 333)
+
+    def search(self, query: str, max_results: int = 100) -> list[Paper]:
         """Search arXiv for papers.
-        
+
         Args:
             query: Search query string
             max_results: Maximum number of results
-            
+
         Returns:
             List of Paper objects
         """
         papers = []
-        
+
         try:
             logger.info(f"arXiv: Starting search with query: {query}")
-            
+
             # Build arXiv query
             arxiv_query = self._build_arxiv_query(query)
-            
+
             # Create search
             search = arxiv.Search(
                 query=arxiv_query,
                 max_results=max_results,
                 sort_by=arxiv.SortCriterion.SubmittedDate,
-                sort_order=arxiv.SortOrder.Descending
+                sort_order=arxiv.SortOrder.Descending,
             )
-            
+
             # Execute search and collect results
             for i, result in enumerate(search.results()):
                 try:
                     paper = self._extract_paper(result)
                     if paper:
                         papers.append(paper)
-                        logger.debug(f"arXiv: Added paper {i+1}: {paper.title[:50]}...")
-                    
+                        logger.debug(
+                            f"arXiv: Added paper {i + 1}: {paper.title[:50]}..."
+                        )
+
                     # Rate limiting
                     time.sleep(self.delay_milliseconds / 1000.0)
-                    
+
                 except Exception as e:
-                    logger.error(f"arXiv: Error extracting paper {i+1}: {e}")
+                    logger.error(f"arXiv: Error extracting paper {i + 1}: {e}")
                     continue
-            
+
             logger.info(f"arXiv: Found {len(papers)} papers")
-            
+
         except Exception as e:
             logger.error(f"arXiv: Error during search: {e}")
-        
+
         # Filter by year
         papers = self.filter_by_year(papers)
-        
+
         return papers
-    
+
     def _build_arxiv_query(self, base_query: str) -> str:
         """Convert general query to arXiv-specific query.
-        
+
         Args:
             base_query: General search query
-            
+
         Returns:
             arXiv-formatted query
         """
         # arXiv uses different query syntax
         # Convert quoted terms and boolean operators
-        
+
         # For arXiv, we'll search in title and abstract
         # and focus on CS categories
-        
+
         # Extract key terms from our config
         terms = []
-        
+
         # Add wargame terms
         for term in self.config.wargame_terms:
             terms.append(f'(ti:"{term}" OR abs:"{term}")')
-        
+
         # Add LLM terms
         llm_terms = []
         for term in self.config.llm_terms:
             llm_terms.append(f'(ti:"{term}" OR abs:"{term}")')
-        
+
         # Combine with AND
         query_parts = []
-        
+
         # At least one wargame term
         if terms:
             query_parts.append(f"({' OR '.join(terms)})")
-        
+
         # At least one LLM term
         if llm_terms:
             query_parts.append(f"({' OR '.join(llm_terms)})")
-        
+
         # Combine
-        arxiv_query = ' AND '.join(query_parts)
-        
+        arxiv_query = " AND ".join(query_parts)
+
         # Add category filter for CS
         arxiv_query = f"({arxiv_query}) AND (cat:cs.*)"
-        
+
         logger.debug(f"arXiv query: {arxiv_query}")
-        
+
         return arxiv_query
-    
-    def _extract_paper(self, result: arxiv.Result) -> Optional[Paper]:
+
+    def _extract_paper(self, result: arxiv.Result) -> Paper | None:
         """Extract Paper object from arXiv result.
-        
+
         Args:
             result: arXiv Result object
-            
+
         Returns:
             Paper object or None if extraction fails
         """
@@ -137,83 +138,83 @@ class ArxivHarvester(BaseHarvester):
             title = result.title
             if not title:
                 return None
-            
+
             # Extract authors
             authors = [author.name for author in result.authors]
-            
+
             # Extract year from published date
             year = result.published.year if result.published else 0
-            
+
             # Get abstract
             abstract = result.summary
-            
+
             # Extract arXiv ID
-            arxiv_id = result.entry_id.split('/')[-1].replace('v', '')
-            
+            arxiv_id = result.entry_id.split("/")[-1].replace("v", "")
+
             # Create Paper object
             paper = Paper(
                 title=self.clean_text(title),
                 authors=authors,
                 year=year,
                 abstract=self.clean_text(abstract),
-                source_db='arxiv',
+                source_db="arxiv",
                 url=result.entry_id,
                 doi=result.doi,
                 arxiv_id=arxiv_id,
                 pdf_url=result.pdf_url,
-                keywords=[cat.term for cat in result.categories]
+                keywords=[cat.term for cat in result.categories],
             )
-            
+
             # Add journal reference if available
             if result.journal_ref:
                 paper.venue = result.journal_ref
-            
+
             return paper
-            
+
         except Exception as e:
             logger.error(f"arXiv: Failed to extract paper: {e}")
             return None
-    
-    def search_by_category(self, 
-                          category: str = "cs.AI",
-                          max_results: int = 100) -> List[Paper]:
+
+    def search_by_category(
+        self, category: str = "cs.AI", max_results: int = 100
+    ) -> list[Paper]:
         """Search within a specific arXiv category.
-        
+
         Args:
             category: arXiv category (e.g., cs.AI, cs.CL)
             max_results: Maximum number of results
-            
+
         Returns:
             List of Paper objects
         """
         # Build query with category
         base_query = self.build_query()
         arxiv_query = self._build_arxiv_query(base_query)
-        
+
         # Add category filter
         category_query = f"{arxiv_query} AND cat:{category}"
-        
+
         # Use the base search method
         return self.search(category_query, max_results)
-    
-    def get_paper_by_id(self, arxiv_id: str) -> Optional[Paper]:
+
+    def get_paper_by_id(self, arxiv_id: str) -> Paper | None:
         """Get a specific paper by arXiv ID.
-        
+
         Args:
             arxiv_id: arXiv ID (e.g., "2301.00234")
-            
+
         Returns:
             Paper object or None if not found
         """
         try:
             search = arxiv.Search(id_list=[arxiv_id])
             results = list(search.results())
-            
+
             if results:
                 return self._extract_paper(results[0])
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"arXiv: Error fetching paper {arxiv_id}: {e}")
             return None

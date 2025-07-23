@@ -4,4 +4,4 @@ from .normalizer import Normalizer
 from .pdf_fetcher import PDFFetcher
 from .screen_ui import ScreenUI
 
-__all__ = ['Normalizer', 'PDFFetcher', 'ScreenUI']
+__all__ = ["Normalizer", "PDFFetcher", "ScreenUI"]

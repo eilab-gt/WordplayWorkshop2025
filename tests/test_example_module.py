@@ -1,6 +1,7 @@
 """Tests for example module."""
 
 import pytest
+
 from src.example import add, multiply
 
 
