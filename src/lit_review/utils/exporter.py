@@ -151,14 +151,34 @@ class Exporter:
                 ],
                 "Value": [
                     len(df),
-                    len(
-                        df[
-                            df["pdf_status"].notna()
-                            & (df["pdf_status"].str.startswith("downloaded") | df["pdf_status"].str.startswith("cached"))
-                        ]
-                    ) if "pdf_status" in df.columns else 0,
-                    len(df[df["extraction_status"] == "success"]) if "extraction_status" in df.columns else 0,
-                    len(df[df["failure_modes"].notna() & (df["failure_modes"] != "")]) if "failure_modes" in df.columns else 0,
+                    (
+                        len(
+                            df[
+                                df["pdf_status"].notna()
+                                & (
+                                    df["pdf_status"].str.startswith("downloaded")
+                                    | df["pdf_status"].str.startswith("cached")
+                                )
+                            ]
+                        )
+                        if "pdf_status" in df.columns
+                        else 0
+                    ),
+                    (
+                        len(df[df["extraction_status"] == "success"])
+                        if "extraction_status" in df.columns
+                        else 0
+                    ),
+                    (
+                        len(
+                            df[
+                                df["failure_modes"].notna()
+                                & (df["failure_modes"] != "")
+                            ]
+                        )
+                        if "failure_modes" in df.columns
+                        else 0
+                    ),
                     df["llm_family"].nunique() if "llm_family" in df.columns else 0,
                 ],
             }

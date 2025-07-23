@@ -149,55 +149,66 @@ class BaseHarvester(ABC):
         match = re.search(doi_pattern, text)
 
         return match.group(0) if match else None
-    
-    def filter_by_keywords(self, papers: list[Paper], 
-                          include_keywords: list[str] | None = None,
-                          exclude_keywords: list[str] | None = None,
-                          min_matches: int = 1) -> list[Paper]:
+
+    def filter_by_keywords(
+        self,
+        papers: list[Paper],
+        include_keywords: list[str] | None = None,
+        exclude_keywords: list[str] | None = None,
+        min_matches: int = 1,
+    ) -> list[Paper]:
         """Filter papers by abstract keywords.
-        
+
         Args:
             papers: List of papers to filter
             include_keywords: Keywords that must appear in abstract
             exclude_keywords: Keywords that must NOT appear in abstract
             min_matches: Minimum number of include keywords that must match
-            
+
         Returns:
             Filtered list of papers
         """
         if not include_keywords and not exclude_keywords:
             return papers
-            
+
         filtered = []
-        
+
         for paper in papers:
             if not paper.abstract:
                 continue
-                
+
             abstract_lower = paper.abstract.lower()
-            
+
             # Check exclusions first
             if exclude_keywords:
-                excluded = any(keyword.lower() in abstract_lower 
-                             for keyword in exclude_keywords)
+                excluded = any(
+                    keyword.lower() in abstract_lower for keyword in exclude_keywords
+                )
                 if excluded:
-                    logger.debug(f"Excluded paper '{paper.title[:50]}...' due to keyword match")
+                    logger.debug(
+                        f"Excluded paper '{paper.title[:50]}...' due to keyword match"
+                    )
                     continue
-            
+
             # Check inclusions
             if include_keywords:
-                matches = sum(1 for keyword in include_keywords 
-                            if keyword.lower() in abstract_lower)
+                matches = sum(
+                    1
+                    for keyword in include_keywords
+                    if keyword.lower() in abstract_lower
+                )
                 if matches >= min_matches:
                     filtered.append(paper)
-                    logger.debug(f"Included paper '{paper.title[:50]}...' with {matches} keyword matches")
+                    logger.debug(
+                        f"Included paper '{paper.title[:50]}...' with {matches} keyword matches"
+                    )
             else:
                 # No inclusion filter, just add if not excluded
                 filtered.append(paper)
-        
+
         logger.info(
             f"{self.source_name}: Filtered {len(papers)} papers to {len(filtered)} "
             f"by keyword filtering (min_matches={min_matches})"
         )
-        
+
         return filtered

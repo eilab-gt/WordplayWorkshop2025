@@ -54,7 +54,7 @@ class TestExporter:
             path.write_text("fake image data")
 
         summary = {"total_papers": 2, "with_extraction": 2}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=list(viz_paths.values()),
@@ -77,23 +77,25 @@ class TestExporter:
         """Test package directory structure."""
         exporter = Exporter(sample_config)
 
-        extraction_df = pd.DataFrame({
-            "screening_id": ["SCREEN_0001"],
-            "title": ["Test Paper"],
-            "authors": ["Test Author"],
-            "year": [2024],
-            "abstract": ["Test abstract"],
-            "doi": ["10.1234/test"],
-            "url": ["https://example.com"],
-            "source_db": ["arxiv"],
-            "extraction_status": ["success"],
-            "failure_modes": [""],
-            "pdf_status": ["downloaded"],
-            "llm_family": ["GPT-4"],
-        })
+        extraction_df = pd.DataFrame(
+            {
+                "screening_id": ["SCREEN_0001"],
+                "title": ["Test Paper"],
+                "authors": ["Test Author"],
+                "year": [2024],
+                "abstract": ["Test abstract"],
+                "doi": ["10.1234/test"],
+                "url": ["https://example.com"],
+                "source_db": ["arxiv"],
+                "extraction_status": ["success"],
+                "failure_modes": [""],
+                "pdf_status": ["downloaded"],
+                "llm_family": ["GPT-4"],
+            }
+        )
 
         summary = {"total_papers": 1, "extracted": 1}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=[],
@@ -129,7 +131,7 @@ class TestExporter:
         )
 
         summary = {"total_papers": 3, "papers_with_extraction": 2}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=[],
@@ -155,7 +157,7 @@ class TestExporter:
         # Enable Zenodo in config
         sample_config.zenodo_enabled = True
         sample_config.zenodo_token = "test-token"
-        
+
         exporter = Exporter(sample_config)
 
         # Mock Zenodo API responses
@@ -174,31 +176,33 @@ class TestExporter:
         # Upload file response
         upload_response = Mock()
         upload_response.status_code = 200
-        
+
         # Metadata update response
         metadata_response = Mock()
         metadata_response.status_code = 200
-        
+
         mock_put.side_effect = [upload_response, metadata_response]
 
         # Create test data
-        extraction_df = pd.DataFrame({
-            "screening_id": ["SCREEN_0001"],
-            "title": ["Test Paper"],
-            "authors": ["Test Author"],
-            "year": [2024],
-            "abstract": ["Test abstract"],
-            "doi": ["10.1234/test"],
-            "url": ["https://example.com"],
-            "source_db": ["arxiv"],
-            "extraction_status": ["success"],
-            "failure_modes": [""],
-            "pdf_status": ["downloaded"],
-            "llm_family": ["GPT-4"],
-        })
+        extraction_df = pd.DataFrame(
+            {
+                "screening_id": ["SCREEN_0001"],
+                "title": ["Test Paper"],
+                "authors": ["Test Author"],
+                "year": [2024],
+                "abstract": ["Test abstract"],
+                "doi": ["10.1234/test"],
+                "url": ["https://example.com"],
+                "source_db": ["arxiv"],
+                "extraction_status": ["success"],
+                "failure_modes": [""],
+                "pdf_status": ["downloaded"],
+                "llm_family": ["GPT-4"],
+            }
+        )
 
         summary = {"total_papers": 1, "extracted": 1}
-        
+
         # This should create package and upload to Zenodo
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
@@ -209,7 +213,7 @@ class TestExporter:
 
         assert result_path.exists()
         assert mock_post.call_count == 1  # Create deposition
-        assert mock_put.call_count == 2   # Upload file and update metadata
+        assert mock_put.call_count == 2  # Upload file and update metadata
 
     def test_create_readme(self, sample_config, temp_dir):
         """Test README generation."""
@@ -233,7 +237,7 @@ class TestExporter:
         )
 
         summary = {"total_papers": 2, "extracted": 2}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=[],
@@ -271,7 +275,7 @@ class TestExporter:
         )
 
         summary = {"total_papers": 1, "extracted": 1}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=[],
@@ -294,20 +298,22 @@ class TestExporter:
 
         # Create DataFrame with one row to avoid NaN issues
         # This tests minimal data scenario
-        minimal_extraction = pd.DataFrame({
-            "screening_id": ["SCREEN_0001"],
-            "title": [""],
-            "authors": [""],
-            "year": [2024],
-            "abstract": [""],
-            "doi": [""],
-            "url": [""],
-            "source_db": ["unknown"],
-            "extraction_status": ["failed"],
-            "failure_modes": ["no_data"],
-            "pdf_status": ["not_found"],
-            "llm_family": [""],
-        })
+        minimal_extraction = pd.DataFrame(
+            {
+                "screening_id": ["SCREEN_0001"],
+                "title": [""],
+                "authors": [""],
+                "year": [2024],
+                "abstract": [""],
+                "doi": [""],
+                "url": [""],
+                "source_db": ["unknown"],
+                "extraction_status": ["failed"],
+                "failure_modes": ["no_data"],
+                "pdf_status": ["not_found"],
+                "llm_family": [""],
+            }
+        )
 
         summary = {"total_papers": 1, "extracted": 0}
 
@@ -327,20 +333,22 @@ class TestExporter:
         """Test adding custom metadata to package."""
         exporter = Exporter(sample_config)
 
-        extraction_df = pd.DataFrame({
-            "screening_id": ["SCREEN_0001"],
-            "title": ["Paper 1"],
-            "authors": ["Author A"],
-            "year": [2024],
-            "abstract": ["Test abstract"],
-            "doi": ["10.1234/test"],
-            "url": ["https://example.com"],
-            "source_db": ["arxiv"],
-            "extraction_status": ["success"],
-            "failure_modes": [""],
-            "pdf_status": ["downloaded"],
-            "llm_family": ["GPT-4"],
-        })
+        extraction_df = pd.DataFrame(
+            {
+                "screening_id": ["SCREEN_0001"],
+                "title": ["Paper 1"],
+                "authors": ["Author A"],
+                "year": [2024],
+                "abstract": ["Test abstract"],
+                "doi": ["10.1234/test"],
+                "url": ["https://example.com"],
+                "source_db": ["arxiv"],
+                "extraction_status": ["success"],
+                "failure_modes": [""],
+                "pdf_status": ["downloaded"],
+                "llm_family": ["GPT-4"],
+            }
+        )
 
         # Note: export_full_package doesn't support custom_metadata parameter
         # so we'll just test that the standard metadata is created
@@ -381,7 +389,9 @@ class TestExporter:
                 "abstract": ["Long abstract text " * 50 for _ in range(100)],
                 "doi": [f"10.1234/test{i}" for i in range(100)],
                 "url": [f"https://example.com/{i}" for i in range(100)],
-                "source_db": ["arxiv" if i % 2 == 0 else "google_scholar" for i in range(100)],
+                "source_db": [
+                    "arxiv" if i % 2 == 0 else "google_scholar" for i in range(100)
+                ],
                 "venue_type": ["conference"] * 100,
                 "extraction_status": ["success"] * 100,
                 "failure_modes": [""] * 100,
@@ -391,7 +401,7 @@ class TestExporter:
         )
 
         summary = {"total_papers": 100, "extracted": 100}
-        
+
         result_path = exporter.export_full_package(
             extraction_df=extraction_df,
             figures=[],
@@ -414,23 +424,25 @@ class TestExporter:
         bad_config.export_include_logs = False
         bad_config.zenodo_enabled = False
         bad_config.zenodo_token = None
-        
+
         exporter = Exporter(bad_config)
 
-        extraction_df = pd.DataFrame({
-            "screening_id": ["SCREEN_0001"],
-            "title": ["Paper 1"],
-            "authors": ["Author A"],
-            "year": [2024],
-            "abstract": ["Test abstract"],
-            "doi": ["10.1234/test"],
-            "url": ["https://example.com"],
-            "source_db": ["arxiv"],
-            "extraction_status": ["success"],
-            "failure_modes": [""],
-            "pdf_status": ["downloaded"],
-            "llm_family": ["GPT-4"],
-        })
+        extraction_df = pd.DataFrame(
+            {
+                "screening_id": ["SCREEN_0001"],
+                "title": ["Paper 1"],
+                "authors": ["Author A"],
+                "year": [2024],
+                "abstract": ["Test abstract"],
+                "doi": ["10.1234/test"],
+                "url": ["https://example.com"],
+                "source_db": ["arxiv"],
+                "extraction_status": ["success"],
+                "failure_modes": [""],
+                "pdf_status": ["downloaded"],
+                "llm_family": ["GPT-4"],
+            }
+        )
 
         summary = {"total_papers": 1, "extracted": 1}
 
@@ -447,36 +459,42 @@ class TestExporter:
         exporter = Exporter(sample_config)
 
         # Create test data with various venue types
-        df = pd.DataFrame({
-            "title": ["Conference Paper", "Journal Article", "Tech Report"],
-            "authors": ["Author A; Author B", "Author C", "Author D; Author E"],
-            "year": [2024, 2023, 2022],
-            "venue": ["Proc. of ICML", "Nature", "MIT Tech Report"],
-            "venue_type": ["conference", "journal", "tech report"],
-            "doi": ["10.1234/conf", "10.1234/journal", ""],
-            "url": ["https://conf.com", "https://journal.com", "https://tech.com"],
-            "abstract": ["Conference abstract", "Journal abstract", "Tech report abstract"],
-        })
+        df = pd.DataFrame(
+            {
+                "title": ["Conference Paper", "Journal Article", "Tech Report"],
+                "authors": ["Author A; Author B", "Author C", "Author D; Author E"],
+                "year": [2024, 2023, 2022],
+                "venue": ["Proc. of ICML", "Nature", "MIT Tech Report"],
+                "venue_type": ["conference", "journal", "tech report"],
+                "doi": ["10.1234/conf", "10.1234/journal", ""],
+                "url": ["https://conf.com", "https://journal.com", "https://tech.com"],
+                "abstract": [
+                    "Conference abstract",
+                    "Journal abstract",
+                    "Tech report abstract",
+                ],
+            }
+        )
 
         output_path = Path(temp_dir) / "test.bib"
         result_path = exporter.export_bibtex(df, output_path)
 
         assert result_path.exists()
-        
+
         # Read and verify BibTeX content
-        with open(result_path, "r") as f:
+        with open(result_path) as f:
             content = f.read()
-            
+
         # Check entry types
         assert "@inproceedings{" in content
         assert "@article{" in content
         assert "@techreport{" in content
-        
+
         # Check content includes all papers
         assert "Conference Paper" in content
         assert "Journal Article" in content
         assert "Tech Report" in content
-        
+
         # Check authors are formatted correctly (may have extra spaces)
         assert "Author A and" in content and "Author B" in content
         assert "Author D and" in content and "Author E" in content

@@ -1,6 +1,5 @@
 """Tests for the PDFFetcher module."""
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -23,11 +22,13 @@ class TestPDFFetcher:
         fetcher = PDFFetcher(sample_config)
 
         # Test filename generation from paper data
-        paper = pd.Series({
-            "title": "Test: Paper? With* Special/Characters|2024",
-            "authors": "John Doe; Jane Smith",
-            "year": 2024
-        })
+        paper = pd.Series(
+            {
+                "title": "Test: Paper? With* Special/Characters|2024",
+                "authors": "John Doe; Jane Smith",
+                "year": 2024,
+            }
+        )
         filename = fetcher._generate_filename(paper)
         assert filename.endswith(".pdf")
         # Check that special characters are removed
@@ -36,22 +37,17 @@ class TestPDFFetcher:
         assert "*" not in filename
         assert "/" not in filename
         assert "|" not in filename
-        
+
         # Test with missing authors
-        paper_no_author = pd.Series({
-            "title": "Test Paper",
-            "year": 2024
-        })
+        paper_no_author = pd.Series({"title": "Test Paper", "year": 2024})
         filename = fetcher._generate_filename(paper_no_author)
         assert "Unknown" in filename
-        
+
         # Test filename length limit
         long_title = "A" * 300
-        paper_long = pd.Series({
-            "title": long_title,
-            "authors": "Author Name",
-            "year": 2024
-        })
+        paper_long = pd.Series(
+            {"title": long_title, "authors": "Author Name", "year": 2024}
+        )
         filename = fetcher._generate_filename(paper_long)
         # Base name is limited to 100 chars + .pdf
         assert len(filename) <= 104
@@ -59,21 +55,21 @@ class TestPDFFetcher:
     def test_download_pdf_direct(self, sample_config, temp_dir):
         """Test direct PDF download."""
         fetcher = PDFFetcher(sample_config)
-        
-        with patch.object(fetcher.session, 'get') as mock_get:
+
+        with patch.object(fetcher.session, "get") as mock_get:
             # Mock successful PDF download
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.headers = {"Content-Type": "application/pdf"}
-            mock_response.iter_content = lambda chunk_size: [b"%PDF-1.4 fake pdf content"]
+            mock_response.iter_content = lambda chunk_size: [
+                b"%PDF-1.4 fake pdf content"
+            ]
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
 
             # Test download
             filepath = fetcher.cache_dir / "test_paper.pdf"
-            success = fetcher._download_pdf(
-                "https://example.com/paper.pdf", filepath
-            )
+            success = fetcher._download_pdf("https://example.com/paper.pdf", filepath)
 
             assert success is True
             assert filepath.exists()
@@ -82,17 +78,17 @@ class TestPDFFetcher:
     def test_fetch_single_pdf_arxiv(self, sample_config):
         """Test arXiv PDF fetching."""
         fetcher = PDFFetcher(sample_config)
-        
-        with patch.object(fetcher, '_download_pdf') as mock_download:
+
+        with patch.object(fetcher, "_download_pdf") as mock_download:
             mock_download.return_value = True
-            
+
             # Create test paper with arXiv ID
             paper = pd.Series(
                 {
                     "title": "Test arXiv Paper",
                     "arxiv_id": "2301.12345",
                     "authors": "Test Author",
-                    "year": 2023
+                    "year": 2023,
                 }
             )
 
@@ -108,16 +104,14 @@ class TestPDFFetcher:
     def test_download_pdf_failure(self, sample_config):
         """Test handling of download failures."""
         fetcher = PDFFetcher(sample_config)
-        
-        with patch.object(fetcher.session, 'get') as mock_get:
+
+        with patch.object(fetcher.session, "get") as mock_get:
             # Mock failed download
             mock_get.side_effect = requests.RequestException("Connection error")
 
             # Test download failure handling
             filepath = fetcher.cache_dir / "test_paper.pdf"
-            success = fetcher._download_pdf(
-                "https://example.com/paper.pdf", filepath
-            )
+            success = fetcher._download_pdf("https://example.com/paper.pdf", filepath)
 
             assert success is False
 
@@ -128,9 +122,17 @@ class TestPDFFetcher:
         with patch.object(fetcher, "_fetch_single_pdf") as mock_fetch:
             # Setup mock to return different results
             mock_fetch.side_effect = [
-                {"path": "pdf_cache/arxiv_paper.pdf", "status": "downloaded_arxiv", "hash": "abc123"},
+                {
+                    "path": "pdf_cache/arxiv_paper.pdf",
+                    "status": "downloaded_arxiv",
+                    "hash": "abc123",
+                },
                 {"path": "", "status": "not_found", "hash": ""},
-                {"path": "pdf_cache/direct_paper.pdf", "status": "downloaded_direct", "hash": "def456"}
+                {
+                    "path": "pdf_cache/direct_paper.pdf",
+                    "status": "downloaded_direct",
+                    "hash": "def456",
+                },
             ]
 
             # Run batch fetch
@@ -147,15 +149,13 @@ class TestPDFFetcher:
     def test_fetch_unpaywall(self, sample_config):
         """Test Unpaywall DOI fetching."""
         fetcher = PDFFetcher(sample_config)
-        
-        with patch.object(fetcher.session, 'get') as mock_get:
+
+        with patch.object(fetcher.session, "get") as mock_get:
             # Mock Unpaywall API response
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                "best_oa_location": {
-                    "url_for_pdf": "https://example.com/oa_paper.pdf"
-                }
+                "best_oa_location": {"url_for_pdf": "https://example.com/oa_paper.pdf"}
             }
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
@@ -182,16 +182,24 @@ class TestPDFFetcher:
                 "doi": ["", "10.1234/test", ""],
                 "url": ["", "", "https://example.com/paper3.pdf"],
                 "authors": ["Author One", "Author Two", "Author Three"],
-                "year": [2023, 2024, 2024]
+                "year": [2023, 2024, 2024],
             }
         )
 
         with patch.object(fetcher, "_fetch_single_pdf") as mock_fetch:
             # Setup different outcomes
             mock_fetch.side_effect = [
-                {"path": "pdf_cache/paper1.pdf", "status": "downloaded_arxiv", "hash": "hash1"},
+                {
+                    "path": "pdf_cache/paper1.pdf",
+                    "status": "downloaded_arxiv",
+                    "hash": "hash1",
+                },
                 {"path": "", "status": "not_found", "hash": ""},
-                {"path": "pdf_cache/paper3.pdf", "status": "downloaded_direct", "hash": "hash3"}
+                {
+                    "path": "pdf_cache/paper3.pdf",
+                    "status": "downloaded_direct",
+                    "hash": "hash3",
+                },
             ]
 
             updated_df = fetcher.fetch_pdfs(df, parallel=False)
@@ -206,11 +214,9 @@ class TestPDFFetcher:
         fetcher = PDFFetcher(sample_config)
 
         # Create a fake existing PDF with proper filename
-        paper = pd.Series({
-            "title": "Existing Paper",
-            "authors": "Test Author",
-            "year": 2024
-        })
+        paper = pd.Series(
+            {"title": "Existing Paper", "authors": "Test Author", "year": 2024}
+        )
         filename = fetcher._generate_filename(paper)
         existing_pdf = fetcher.cache_dir / filename
         existing_pdf.write_bytes(b"%PDF-1.4 existing content")
@@ -222,7 +228,7 @@ class TestPDFFetcher:
                 "title": ["Existing Paper"],
                 "authors": ["Test Author"],
                 "year": [2024],
-                "arxiv_id": ["2301.12345"]
+                "arxiv_id": ["2301.12345"],
             }
         )
 
@@ -246,7 +252,7 @@ class TestPDFFetcher:
                 "arxiv_id": ["2301.12345" if i % 2 == 0 else "" for i in range(5)],
                 "doi": ["" if i % 2 == 0 else f"10.1234/test.{i}" for i in range(5)],
                 "authors": [f"Author {i}" for i in range(5)],
-                "year": [2024 for i in range(5)]
+                "year": [2024 for i in range(5)],
             }
         )
 
@@ -254,9 +260,9 @@ class TestPDFFetcher:
             mock_fetch.return_value = {
                 "path": "test.pdf",
                 "status": "downloaded_arxiv",
-                "hash": "testhash"
+                "hash": "testhash",
             }
-            
+
             # Test with parallel execution
             updated_df = fetcher.fetch_pdfs(df, parallel=True)
 
@@ -269,28 +275,32 @@ class TestPDFFetcher:
         fetcher = PDFFetcher(sample_config)
 
         # Test paper with non-PDF URL
-        paper_non_pdf = pd.Series({
-            "title": "Test Paper",
-            "url": "https://example.com/page.html",
-            "authors": "Test Author",
-            "year": 2024
-        })
+        paper_non_pdf = pd.Series(
+            {
+                "title": "Test Paper",
+                "url": "https://example.com/page.html",
+                "authors": "Test Author",
+                "year": 2024,
+            }
+        )
 
         # Test paper with PDF URL
-        paper_pdf = pd.Series({
-            "title": "Test Paper",
-            "url": "https://example.com/paper.pdf",
-            "authors": "Test Author",
-            "year": 2024
-        })
-        
-        with patch.object(fetcher, '_download_pdf') as mock_download:
+        paper_pdf = pd.Series(
+            {
+                "title": "Test Paper",
+                "url": "https://example.com/paper.pdf",
+                "authors": "Test Author",
+                "year": 2024,
+            }
+        )
+
+        with patch.object(fetcher, "_download_pdf") as mock_download:
             mock_download.return_value = True
-            
+
             # Non-PDF URL should not trigger download from URL field alone
             result1 = fetcher._fetch_single_pdf(paper_non_pdf)
             assert result1["status"] == "not_found"
-            
+
             # PDF URL should trigger download
             result2 = fetcher._fetch_single_pdf(paper_pdf)
             assert result2["status"] == "downloaded_direct"

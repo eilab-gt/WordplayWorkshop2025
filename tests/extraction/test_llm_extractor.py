@@ -32,12 +32,12 @@ class TestLLMExtractor:
             # Just test that the method can be called and returns expected structure
             # Mock the entire method since PDF parsing is complex
             with patch.object(
-                extractor, 
+                extractor,
                 "_extract_pdf_content",
-                return_value=("This is a test PDF about LLM wargaming.", {"pages": 2})
+                return_value=("This is a test PDF about LLM wargaming.", {"pages": 2}),
             ) as mock_extract:
                 text, metadata = extractor._extract_pdf_content(pdf_path)
-                
+
                 assert text == "This is a test PDF about LLM wargaming."
                 assert metadata["pages"] == 2
                 mock_extract.assert_called_once_with(pdf_path)
@@ -55,9 +55,11 @@ class TestLLMExtractor:
             )
         ]
         mock_client.chat.completions.create.return_value = mock_response
-        
+
         # Patch at the module level where it's imported
-        with patch("src.lit_review.extraction.llm_extractor.OpenAI", return_value=mock_client):
+        with patch(
+            "src.lit_review.extraction.llm_extractor.OpenAI", return_value=mock_client
+        ):
             extractor = LLMExtractor(sample_config)
 
             # Test context
@@ -82,7 +84,7 @@ class TestLLMExtractor:
             # Create test paper with actual PDF file
             pdf_path = Path(temp_dir) / "test.pdf"
             pdf_path.write_text("dummy content")  # Create the file
-            
+
             paper = pd.Series(
                 {
                     "screening_id": "SCREEN_0001",
@@ -97,7 +99,10 @@ class TestLLMExtractor:
                 patch.object(
                     extractor,
                     "_extract_pdf_content",
-                    return_value=("Full paper text about GPT-4 in wargaming. " * 20, {"pages": 10}),  # Make it >100 chars
+                    return_value=(
+                        "Full paper text about GPT-4 in wargaming. " * 20,
+                        {"pages": 10},
+                    ),  # Make it >100 chars
                 ),
                 patch.object(extractor, "_llm_extract") as mock_llm,
                 patch.object(extractor, "_assign_awscale", return_value=3),
@@ -111,7 +116,7 @@ class TestLLMExtractor:
                     "llm_family": "GPT-4",
                     "llm_role": "player",
                 }
-                
+
                 result = extractor._extract_single_paper(paper)
 
                 assert isinstance(result, dict)
@@ -133,7 +138,11 @@ class TestLLMExtractor:
 
             # Mock PDF content extraction
             with (
-                patch.object(extractor, "_extract_pdf_content", return_value=("Paper text", {"pages": 10})),
+                patch.object(
+                    extractor,
+                    "_extract_pdf_content",
+                    return_value=("Paper text", {"pages": 10}),
+                ),
                 patch.object(extractor, "_llm_extract") as mock_llm,
                 patch.object(extractor, "_assign_awscale", return_value=3),
             ):
@@ -165,7 +174,7 @@ class TestLLMExtractor:
             # Create valid PDF file
             pdf_path = Path(temp_dir) / "error_test.pdf"
             pdf_path.write_text("dummy content")
-            
+
             paper = pd.Series(
                 {
                     "screening_id": "SCREEN_0001",
@@ -175,7 +184,11 @@ class TestLLMExtractor:
                 }
             )
 
-            with patch.object(extractor, "_extract_pdf_content", return_value=("Text content " * 20, {"pages": 5})):
+            with patch.object(
+                extractor,
+                "_extract_pdf_content",
+                return_value=("Text content " * 20, {"pages": 5}),
+            ):
                 result = extractor._extract_single_paper(paper)
 
                 assert result["extraction_status"] == "llm_extraction_failed"
@@ -256,7 +269,7 @@ class TestLLMExtractor:
             # Create papers with different amounts of text
             pdf_path_full = Path(temp_dir) / "full.pdf"
             pdf_path_full.write_text("dummy content")
-            
+
             paper_full = pd.Series(
                 {
                     "screening_id": "SCREEN_0001",
@@ -276,7 +289,11 @@ class TestLLMExtractor:
             )
 
             with (
-                patch.object(extractor, "_extract_pdf_content", return_value=("Full text " * 100, {"pages": 20})),
+                patch.object(
+                    extractor,
+                    "_extract_pdf_content",
+                    return_value=("Full text " * 100, {"pages": 20}),
+                ),
                 patch.object(extractor, "_llm_extract") as mock_llm,
                 patch.object(extractor, "_assign_awscale", return_value=3),
             ):
@@ -289,14 +306,14 @@ class TestLLMExtractor:
                     "llm_family": "GPT-4",
                     "llm_role": "player",
                 }
-                
+
                 result_full = extractor._extract_single_paper(paper_full)
                 result_minimal = extractor._extract_single_paper(paper_minimal)
 
                 # Full paper should have successful extraction
                 assert result_full.get("extraction_status") == "success"
                 assert result_minimal.get("extraction_status") == "pdf_not_found"
-                
+
                 # Check if full paper has confidence score
                 if "extraction_confidence" in result_full:
                     assert result_full.get("extraction_confidence", 0) > 0
@@ -320,7 +337,7 @@ class TestLLMExtractor:
                 )
 
             df = pd.DataFrame(papers)
-            
+
             # Create the PDF files with more content
             for i in range(5):
                 pdf_path = Path(temp_dir) / f"paper_{i}.pdf"
@@ -328,7 +345,10 @@ class TestLLMExtractor:
 
             # Mock the extraction methods to bypass PDF reading issues
             with (
-                patch("pdfminer.high_level.extract_text", return_value="Long text content " * 50),
+                patch(
+                    "pdfminer.high_level.extract_text",
+                    return_value="Long text content " * 50,
+                ),
                 patch.object(extractor, "_llm_extract") as mock_llm,
                 patch.object(extractor, "_assign_awscale", return_value=3),
             ):
@@ -341,7 +361,7 @@ class TestLLMExtractor:
                     "llm_family": "GPT-4",
                     "llm_role": "player",
                 }
-                
+
                 # Test with different worker counts
                 results_df = extractor.extract_all(df, parallel=True)
 

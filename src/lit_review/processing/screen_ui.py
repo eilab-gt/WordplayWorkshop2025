@@ -119,7 +119,7 @@ class ScreenUI:
         # Handle empty DataFrame
         if df.empty:
             return df
-            
+
         # Create a composite score for sorting
         df["sort_score"] = 0
 
@@ -138,18 +138,22 @@ class ScreenUI:
             # Check title if it exists
             if "title" in df.columns:
                 df.loc[
-                    df["title"].str.lower().str.contains(keyword, na=False), "sort_score"
+                    df["title"].str.lower().str.contains(keyword, na=False),
+                    "sort_score",
                 ] += 2
             # Check abstract if it exists
             if "abstract" in df.columns:
                 df.loc[
-                    df["abstract"].str.lower().str.contains(keyword, na=False), "sort_score"
+                    df["abstract"].str.lower().str.contains(keyword, na=False),
+                    "sort_score",
                 ] += 1
 
         # Boost recent papers if year column exists
         if "year" in df.columns:
             current_year = datetime.now().year
-            df["year_score"] = df["year"].apply(lambda y: max(0, 5 - (current_year - y)))
+            df["year_score"] = df["year"].apply(
+                lambda y: max(0, 5 - (current_year - y))
+            )
             df["sort_score"] += df["year_score"]
 
         # Boost papers with more citations
@@ -177,14 +181,18 @@ class ScreenUI:
                     df["citation_score"] = 3
             except Exception:
                 # Fallback: use rank instead
-                df["citation_score"] = df["citations"].fillna(0).rank(method="dense").astype(int)
+                df["citation_score"] = (
+                    df["citations"].fillna(0).rank(method="dense").astype(int)
+                )
                 # Normalize to 1-5 scale
                 max_rank = df["citation_score"].max()
                 if max_rank > 0:
-                    df["citation_score"] = ((df["citation_score"] - 1) / (max_rank - 1) * 4 + 1).round()
+                    df["citation_score"] = (
+                        (df["citation_score"] - 1) / (max_rank - 1) * 4 + 1
+                    ).round()
                 else:
                     df["citation_score"] = 3
-            
+
             df["sort_score"] += df["citation_score"]
 
         # Sort by score (descending), then year (descending) if year exists

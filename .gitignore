@@ -122,4 +122,8 @@ models/*.bin
 models/*.pt
 models/*.pth
 models/*.onnx
-checkpoints/
+checkpoints/*.pdf
+
+# Large content files
+*.html
+v1_pipeline_run/html/

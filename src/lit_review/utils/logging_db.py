@@ -367,10 +367,10 @@ class LoggingDatabase:
 
         deleted_count = cursor.rowcount
         conn.commit()
-        
+
         # Vacuum to reclaim space (must be done outside a transaction)
         conn.execute("VACUUM")
-        
+
         conn.close()
 
         return deleted_count

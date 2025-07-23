@@ -70,7 +70,7 @@ class RateLimiter:
     """Unified rate limiting for all harvesters."""
     def __init__(self, delay_ms: int):
         self.delay_ms = delay_ms
-    
+
     def wait(self):
         time.sleep(self.delay_ms / 1000.0)
 ```
@@ -136,9 +136,9 @@ class ResponseCache:
 import structlog
 
 logger = structlog.get_logger()
-logger.info("api_call", 
+logger.info("api_call",
     service="arxiv",
-    endpoint="search", 
+    endpoint="search",
     query=query,
     results=len(papers)
 )
@@ -222,7 +222,7 @@ repos:
 
 ---
 
-**Timeline**: 
+**Timeline**:
 - Week 1: Fix tests, basic documentation
 - Week 2-3: Code cleanup, remaining tests
 - Week 4+: Performance optimization, monitoring

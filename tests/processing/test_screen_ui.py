@@ -53,7 +53,7 @@ class TestScreenUI:
         headers = [cell.value for cell in ws[1]]
         assert "title" in headers
         assert "abstract" in headers
-        
+
         # Check column widths were adjusted
         title_col_letter = chr(65 + headers.index("title"))  # Convert to column letter
         abstract_col_letter = chr(65 + headers.index("abstract"))
@@ -131,14 +131,14 @@ class TestScreenUI:
         # Check that the data was written correctly
         # Find the include_ta column
         include_ta_col = [cell.value for cell in ws[1]].index("include_ta") + 1
-        
+
         # Collect all include_ta values (excluding header)
         include_ta_values = []
         for row in range(2, 5):  # Rows 2-4
             value = ws.cell(row=row, column=include_ta_col).value
             if value:  # Skip empty values
                 include_ta_values.append(value)
-        
+
         # Check that we have the expected values (order may vary due to sorting)
         assert "yes" in include_ta_values
         assert "no" in include_ta_values

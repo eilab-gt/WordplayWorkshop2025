@@ -27,7 +27,7 @@ ArXiv harvester successfully retrieved 5 highly relevant papers:
 
 1. **"Exploring Potential Prompt Injection Attacks in Federated Military LLMs"** (2025)
    - Focus on military LLMs, wargaming for security testing
-   
+
 2. **"On Large Language Models in National Security Applications"** (2024)
    - Mentions USAF's use of LLMs for wargaming and summarization
 
@@ -48,7 +48,7 @@ ArXiv harvester successfully retrieved 5 highly relevant papers:
    - Abstracts
    - ArXiv IDs and PDF URLs
    - Keywords/categories
-   
+
 3. **Deduplication**: No duplicates found (as expected from single source)
 
 4. **Performance**:
@@ -91,7 +91,7 @@ ArXiv harvester successfully retrieved 5 highly relevant papers:
 
 1. **Configuration Structure** ✅
    - Search terms must be under `search` section in YAML
-   
+
 2. **ArXiv Category Parsing** ✅
    - Categories can be strings or objects with `.term`
    - Fixed with conditional check

@@ -23,7 +23,7 @@ search:
   queries:
     test1: '"LLM" AND "wargaming"'  # Should return <10 results
     test2: '"artificial intelligence" AND "game simulation"'  # Slightly broader
-  
+
   # Start with just one source at a time
   sources:
     arxiv:
@@ -78,7 +78,7 @@ processing:
     - title_fuzzy
     - arxiv_exact
   title_similarity_threshold: 0.85
-  
+
   # Small batches for testing
   batch_size: 5
   parallel_workers: 2
@@ -90,7 +90,7 @@ search_years: [2023, 2024]
 logging:
   level: DEBUG
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  
+
 # Enable debug mode
 debug: true
 dry_run: false  # Set to true to test without actual API calls

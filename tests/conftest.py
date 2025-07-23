@@ -23,7 +23,7 @@ def temp_dir():
     shutil.rmtree(temp_dir)
 
 
-from src.lit_review.utils.config import Config, ConfigLoader
+from src.lit_review.utils.config import Config
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ def sample_config_path(temp_dir):
     return config_path
 
 
-@pytest.fixture  
+@pytest.fixture
 def sample_config(sample_config_path, temp_dir):
     """Create a sample Config object for testing."""
     config = Config()
@@ -125,36 +125,41 @@ def sample_config(sample_config_path, temp_dir):
     config.awscale_prompt = "Rate the AWScale for this paper"
     config.batch_size_llm = 5
     config.parallel_workers = 4
-    
+
     # Set paths
     config.cache_dir = Path(temp_dir) / "pdf_cache"
     config.output_dir = Path(temp_dir) / "outputs"
     config.data_dir = Path(temp_dir) / "data"
     config.log_dir = Path(temp_dir) / "logs"
-    
+
     # Set failure vocabulary for Tagger
     config.failure_vocab = {
         "escalation": ["escalation", "nuclear", "escalate", "brinkmanship"],
         "bias": ["bias", "biased", "unfair", "skew"],
         "hallucination": ["hallucination", "hallucinate", "confabulate", "fabricate"],
         "prompt_sensitivity": ["prompt sensitivity", "prompt engineering", "fragile"],
-        "data_leakage": ["data_leakage", "data leakage", "memorization", "training data"],
+        "data_leakage": [
+            "data_leakage",
+            "data leakage",
+            "memorization",
+            "training data",
+        ],
         "deception": ["deception", "deceive", "mislead", "manipulation"],
     }
-    
+
     # Set required attributes for Normalizer
     config.dedup_methods = ["doi_exact", "title_fuzzy", "arxiv_exact", "content_hash"]
     config.title_similarity_threshold = 0.9
     config.search_years = (2018, 2025)
-    
+
     # Set required attributes for harvesters
     config.rate_limits = {
         "google_scholar": {"delay_seconds": 5},
         "arxiv": {"delay_seconds": 3},
         "semantic_scholar": {"delay_seconds": 1},
-        "crossref": {"delay_seconds": 1}
+        "crossref": {"delay_seconds": 1},
     }
-    
+
     return config
 
 

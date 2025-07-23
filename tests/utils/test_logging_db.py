@@ -78,7 +78,9 @@ class TestSQLiteHandler:
         # Check extra data was stored
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("SELECT metadata FROM pipeline_logs WHERE message LIKE '%Processing paper%'")
+        cursor.execute(
+            "SELECT metadata FROM pipeline_logs WHERE message LIKE '%Processing paper%'"
+        )
         metadata_json = cursor.fetchone()[0]
         extra_data = json.loads(metadata_json) if metadata_json else {}
 
@@ -178,7 +180,16 @@ class TestLoggingDatabase:
             timestamp = base_time.replace(hour=i)
             cursor.execute(
                 "INSERT INTO pipeline_logs (timestamp, module, function, level, status, message, error_trace, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (timestamp.isoformat(), "test", "test_func", "INFO", "info", f"Message {i}", None, "{}"),
+                (
+                    timestamp.isoformat(),
+                    "test",
+                    "test_func",
+                    "INFO",
+                    "info",
+                    f"Message {i}",
+                    None,
+                    "{}",
+                ),
             )
 
         conn.commit()
@@ -285,9 +296,9 @@ class TestSetupDBLogging:
         class MockConfig:
             def __init__(self, path):
                 self.logging_db_path = path
-        
+
         config = MockConfig(db_path)
-        
+
         # Setup logging
         db_handler = setup_db_logging(config)
 
@@ -306,12 +317,12 @@ class TestSetupDBLogging:
         class MockConfig:
             def __init__(self, path):
                 self.logging_db_path = path
-        
+
         config = MockConfig(db_path)
-        
+
         # Setup logging
         db_handler = setup_db_logging(config)
-        
+
         # Log a message
         logger = logging.getLogger("test_module")
         logger.setLevel(logging.INFO)
@@ -320,7 +331,7 @@ class TestSetupDBLogging:
         # Check the log was written
         db = LoggingDatabase(db_path)
         logs = db.query_logs()
-        
+
         assert len(logs) >= 1
         assert any("Test message" in log["message"] for log in logs)
 
@@ -332,15 +343,15 @@ class TestSetupDBLogging:
         class MockConfig:
             def __init__(self, path):
                 self.logging_db_path = path
-        
+
         config = MockConfig(db_path)
-        
+
         # Setup logging
         db_handler = setup_db_logging(config)
-        
+
         # The formatter should be set
         assert db_handler.formatter is not None
-        
+
         # Log a message to test formatting
         logger = logging.getLogger("formatter_test")
         logger.setLevel(logging.INFO)
@@ -349,8 +360,11 @@ class TestSetupDBLogging:
         # Check that the message was formatted
         db = LoggingDatabase(db_path)
         logs = db.query_logs()
-        
+
         # The message should contain timestamp prefix from formatter
         assert len(logs) >= 1
         # Message should have been formatted with asctime, name, levelname
-        assert any("formatter_test" in log["message"] and "INFO" in log["message"] for log in logs)
+        assert any(
+            "formatter_test" in log["message"] and "INFO" in log["message"]
+            for log in logs
+        )

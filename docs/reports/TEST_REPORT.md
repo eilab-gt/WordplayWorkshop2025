@@ -12,7 +12,7 @@ Successfully fixed all failing tests in the Literature Review Pipeline project, 
 ### 1. Configuration System Mismatch
 - **Issue**: Tests expected `Config` object with dict-like access (`.get()` method)
 - **Solution**: Updated all implementations to use attribute access and fixed test fixtures
-- **Files Fixed**: 
+- **Files Fixed**:
   - `tests/conftest.py` - Updated `sample_config` fixture
   - `src/lit_review/utils/exporter.py` - Changed `.get()` to `getattr()`
 

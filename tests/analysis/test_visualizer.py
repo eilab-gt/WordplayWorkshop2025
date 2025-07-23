@@ -1,6 +1,5 @@
 """Tests for the Visualizer module."""
 
-from pathlib import Path
 from unittest.mock import patch
 
 import matplotlib.pyplot as plt
@@ -242,7 +241,7 @@ class TestVisualizer:
         with patch("matplotlib.pyplot.savefig"):
             # Since we're using axes methods, we need to check if the plot has proper labels
             result = visualizer.plot_time_series(df, save=True)
-            
+
             # If the plot was created, it should have applied styling
             if result is not None:
                 # The Visualizer uses the ax object directly for styling
@@ -257,17 +256,19 @@ class TestVisualizer:
         # so we'll test that all charts are created when create_all_visualizations is called
         visualizer = Visualizer(sample_config)
 
-        df = pd.DataFrame({
-            "year": [2022, 2023, 2024],
-            "venue_type": ["conference", "journal", "workshop"],
-            "failure_modes": ["bias", "escalation|bias", ""],
-            "llm_family": ["GPT-4", "Claude", "Llama"],
-            "game_type": ["matrix", "seminar", "digital"],
-            "awscale": [1, 3, 5],
-            "source_db": ["arxiv", "crossref", "arxiv"],
-            "open_ended": ["yes", "no", "yes"],
-            "quantitative": ["no", "yes", "yes"],
-        })
+        df = pd.DataFrame(
+            {
+                "year": [2022, 2023, 2024],
+                "venue_type": ["conference", "journal", "workshop"],
+                "failure_modes": ["bias", "escalation|bias", ""],
+                "llm_family": ["GPT-4", "Claude", "Llama"],
+                "game_type": ["matrix", "seminar", "digital"],
+                "awscale": [1, 3, 5],
+                "source_db": ["arxiv", "crossref", "arxiv"],
+                "open_ended": ["yes", "no", "yes"],
+                "quantitative": ["no", "yes", "yes"],
+            }
+        )
 
         with patch("matplotlib.pyplot.savefig"):
             saved_figures = visualizer.create_all_visualizations(df, save=True)

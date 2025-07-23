@@ -58,8 +58,12 @@ class GoogleScholarHarvester(BaseHarvester):
             except Exception as e:
                 # Handle common scholarly errors
                 if "Cannot Fetch" in str(e) or "CAPTCHA" in str(e):
-                    logger.warning(f"Google Scholar: Access blocked or rate limited: {e}")
-                    logger.info("Google Scholar: Consider using a proxy or reducing request rate")
+                    logger.warning(
+                        f"Google Scholar: Access blocked or rate limited: {e}"
+                    )
+                    logger.info(
+                        "Google Scholar: Consider using a proxy or reducing request rate"
+                    )
                 else:
                     logger.error(f"Google Scholar: Search initialization failed: {e}")
                 return papers

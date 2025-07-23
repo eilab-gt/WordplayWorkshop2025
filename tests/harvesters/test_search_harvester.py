@@ -25,7 +25,9 @@ class TestSearchHarvester:
         harvester = SearchHarvester(sample_config)
 
         # Test with valid query
-        results_df = harvester.search_all(sources=["google_scholar"], max_results_per_source=10)
+        results_df = harvester.search_all(
+            sources=["google_scholar"], max_results_per_source=10
+        )
         assert isinstance(results_df, pd.DataFrame)
         assert len(results_df) > 0
         assert "title" in results_df.columns
@@ -73,7 +75,9 @@ class TestSearchHarvester:
         mock_get.return_value = mock_response
 
         harvester = SearchHarvester(sample_config)
-        results_df = harvester.search_all(sources=["semantic_scholar"], max_results_per_source=10)
+        results_df = harvester.search_all(
+            sources=["semantic_scholar"], max_results_per_source=10
+        )
 
         assert isinstance(results_df, pd.DataFrame)
         assert len(results_df) > 0
@@ -104,14 +108,18 @@ class TestSearchHarvester:
         mock_get.return_value = mock_response
 
         harvester = SearchHarvester(sample_config)
-        results_df = harvester.search_all(sources=["crossref"], max_results_per_source=10)
+        results_df = harvester.search_all(
+            sources=["crossref"], max_results_per_source=10
+        )
 
         assert isinstance(results_df, pd.DataFrame)
         assert len(results_df) > 0
         assert all(results_df["source_db"] == "crossref")
 
     @patch("time.sleep", return_value=None)  # Mock time.sleep to avoid delays
-    def test_search_all_sequential(self, mock_sleep, sample_config, mock_scholarly, mock_arxiv):
+    def test_search_all_sequential(
+        self, mock_sleep, sample_config, mock_scholarly, mock_arxiv
+    ):
         """Test searching all sources sequentially."""
         # Mock the semantic scholar and crossref responses
         with patch("requests.get") as mock_get:
@@ -119,7 +127,9 @@ class TestSearchHarvester:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                "data": [{"paperId": "123", "title": "SS Paper", "authors": [], "year": 2024}]
+                "data": [
+                    {"paperId": "123", "title": "SS Paper", "authors": [], "year": 2024}
+                ]
             }
             mock_get.return_value = mock_response
 
@@ -133,7 +143,9 @@ class TestSearchHarvester:
             assert len(unique_sources) >= 2  # At least 2 sources returned results
 
     @patch("time.sleep", return_value=None)  # Mock time.sleep to avoid delays
-    def test_search_all_parallel(self, mock_sleep, sample_config, mock_scholarly, mock_arxiv):
+    def test_search_all_parallel(
+        self, mock_sleep, sample_config, mock_scholarly, mock_arxiv
+    ):
         """Test searching all sources in parallel."""
         # Mock the semantic scholar and crossref responses
         with patch("requests.get") as mock_get:
@@ -141,7 +153,9 @@ class TestSearchHarvester:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                "data": [{"paperId": "123", "title": "SS Paper", "authors": [], "year": 2024}]
+                "data": [
+                    {"paperId": "123", "title": "SS Paper", "authors": [], "year": 2024}
+                ]
             }
             mock_get.return_value = mock_response
 
@@ -152,7 +166,9 @@ class TestSearchHarvester:
             assert len(results_df) > 0
 
     @patch("time.sleep", return_value=None)  # Mock time.sleep to avoid delays
-    def test_search_with_specific_sources(self, mock_sleep, sample_config, mock_scholarly, mock_arxiv):
+    def test_search_with_specific_sources(
+        self, mock_sleep, sample_config, mock_scholarly, mock_arxiv
+    ):
         """Test searching specific sources only."""
         harvester = SearchHarvester(sample_config)
         results_df = harvester.search_all(sources=["google_scholar", "arxiv"])
@@ -186,7 +202,9 @@ class TestSearchHarvester:
         harvester = SearchHarvester(sample_config)
 
         # Should use default preset query from config
-        with patch.object(harvester.harvesters["google_scholar"], "search") as mock_search:
+        with patch.object(
+            harvester.harvesters["google_scholar"], "search"
+        ) as mock_search:
             mock_search.return_value = []
             harvester.search_all(sources=["google_scholar"])
             mock_search.assert_called_once()

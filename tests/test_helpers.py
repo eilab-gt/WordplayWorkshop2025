@@ -1,17 +1,19 @@
 """Helper utilities for tests."""
 
 from pathlib import Path
-from src.lit_review.utils.config import Config, ConfigLoader
+
 import yaml
+
+from src.lit_review.utils.config import Config, ConfigLoader
 
 
 def create_test_config(temp_dir: str, **overrides) -> Config:
     """Create a test configuration with optional overrides.
-    
+
     Args:
         temp_dir: Temporary directory for test files
         **overrides: Configuration values to override
-        
+
     Returns:
         Config object for testing
     """
@@ -47,22 +49,22 @@ def create_test_config(temp_dir: str, **overrides) -> Config:
                 "harvesting": 10,
                 "pdf_download": 5,
             }
-        }
+        },
     }
-    
+
     # Apply overrides
     _deep_update(default_config, overrides)
-    
+
     # Save config file
     config_path = Path(temp_dir) / "test_config.yaml"
     with open(config_path, "w") as f:
         yaml.dump(default_config, f)
-    
+
     # Create directories
     Path(default_config["paths"]["data_dir"]).mkdir(parents=True, exist_ok=True)
     Path(default_config["paths"]["pdf_cache"]).mkdir(parents=True, exist_ok=True)
     Path(default_config["paths"]["output_dir"]).mkdir(parents=True, exist_ok=True)
-    
+
     # Load and return Config object
     loader = ConfigLoader(str(config_path))
     return loader.load()

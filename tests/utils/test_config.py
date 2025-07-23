@@ -30,11 +30,11 @@ class TestConfig:
         # Test attributes exist
         assert config.openai_key == "test-key"
         assert config.semantic_scholar_key == "test-key"
-        
+
         # Test paths
         assert config.data_dir.exists()
         assert config.cache_dir.exists()
-        
+
         # Test search parameters
         assert isinstance(config.search_years, tuple)
         assert len(config.search_years) == 2
@@ -56,20 +56,20 @@ class TestConfig:
         loader1 = ConfigLoader(str(sample_config_path))
         config1 = loader1.load()
         initial_value = config1.llm_min_params
-        
+
         # Modify the config file
         with open(sample_config_path) as f:
             data = yaml.safe_load(f)
-        
+
         data["search"]["llm_min_params"] = 200_000_000
-        
+
         with open(sample_config_path, "w") as f:
             yaml.dump(data, f)
-        
+
         # Load again (simulating reload)
         loader2 = ConfigLoader(str(sample_config_path))
         config2 = loader2.load()
-        
+
         # Check the value changed
         assert config2.llm_min_params == 200_000_000
         assert config2.llm_min_params != initial_value
@@ -99,7 +99,7 @@ class TestConfigLoader:
         # Create invalid YAML file
         invalid_yaml = Path(temp_dir) / "invalid.yaml"
         invalid_yaml.write_text("invalid: yaml: content: [")
-        
+
         loader = ConfigLoader(str(invalid_yaml))
 
         with pytest.raises(yaml.YAMLError):
@@ -124,7 +124,7 @@ class TestConfigLoader:
 
         config_file = Path(temp_dir) / "env_test.yaml"
         config_file.write_text(config_text)
-        
+
         loader = ConfigLoader(str(config_file))
         config = loader.load()
 
@@ -150,7 +150,7 @@ class TestConfigLoader:
 
         config_file = Path(temp_dir) / "missing_env.yaml"
         config_file.write_text(config_text)
-        
+
         loader = ConfigLoader(str(config_file))
         config = loader.load()
 
@@ -160,7 +160,7 @@ class TestConfigLoader:
     def test_validate_config(self, sample_config_path):
         """Test configuration validation."""
         loader = ConfigLoader(str(sample_config_path))
-        
+
         # Should not raise exception for valid config
         config = loader.load()
         assert config is not None
@@ -173,12 +173,12 @@ class TestConfigLoader:
           queries: {}
         # Missing api_keys and paths sections
         """
-        
+
         config_file = Path(temp_dir) / "invalid.yaml"
         config_file.write_text(config_text)
-        
+
         loader = ConfigLoader(str(config_file))
-        
+
         # The loader should handle missing fields with defaults
         config = loader.load()
         assert config is not None
@@ -194,12 +194,12 @@ class TestConfigLoader:
           pdf_cache: {temp_dir}/cache
           output_dir: {temp_dir}/output
         """
-        
+
         config_file = Path(temp_dir) / "invalid_api_keys.yaml"
         config_file.write_text(config_text)
-        
+
         loader = ConfigLoader(str(config_file))
-        
+
         # Should raise an error when loading invalid structure
         with pytest.raises((ValueError, TypeError, AttributeError)):
             loader.load()
@@ -228,7 +228,7 @@ class TestLoadConfigFunction:
                 preset1: test
             paths:
               data_dir: {temp_dir}/data
-              pdf_cache: {temp_dir}/cache  
+              pdf_cache: {temp_dir}/cache
               output_dir: {temp_dir}/output
             """
 

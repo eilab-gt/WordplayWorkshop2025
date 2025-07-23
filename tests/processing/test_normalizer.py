@@ -34,8 +34,16 @@ class TestNormalizer:
                 "year": [2024, 2024, 2023],
                 "doi": ["10.1234/test", "10.1234/test", "10.5678/test"],
                 "source_db": ["google_scholar", "arxiv", "crossref"],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is another abstract that is long enough to pass the validation check."],
-                "url": ["https://example.com/1", "https://example.com/2", "https://example.com/3"],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                ],
+                "url": [
+                    "https://example.com/1",
+                    "https://example.com/2",
+                    "https://example.com/3",
+                ],
                 "arxiv_id": ["", "", ""],
                 "citations": [0, 0, 0],
             }
@@ -62,8 +70,16 @@ class TestNormalizer:
                 "year": [2024, 2024, 2023],
                 "doi": ["", "", ""],  # No DOIs
                 "source_db": ["google_scholar", "arxiv", "crossref"],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is another abstract that is long enough to pass the validation check."],
-                "url": ["https://example.com/1", "https://example.com/2", "https://example.com/3"],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                ],
+                "url": [
+                    "https://example.com/1",
+                    "https://example.com/2",
+                    "https://example.com/3",
+                ],
                 "arxiv_id": ["", "", ""],
                 "citations": [0, 0, 0],
             }
@@ -85,7 +101,10 @@ class TestNormalizer:
                 "year": [2024, 2023],
                 "doi": ["10.1234/test1", "10.1234/test2"],
                 "source_db": ["google_scholar", "arxiv"],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is another abstract that is long enough to pass the validation check."],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                ],
                 "url": ["https://example.com/1", "https://example.com/2"],
                 "arxiv_id": ["", ""],
                 "citations": [0, 0],
@@ -117,8 +136,16 @@ class TestNormalizer:
                 "year": [2024, None, 2023],
                 "doi": [None, "10.1234/test", ""],
                 "source_db": ["google_scholar", "arxiv", "crossref"],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is another abstract that is long enough to pass the validation check.", "And this is a third abstract with sufficient length to pass validation."],
-                "url": ["https://example.com/1", "https://example.com/2", "https://example.com/3"],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                    "And this is a third abstract with sufficient length to pass validation.",
+                ],
+                "url": [
+                    "https://example.com/1",
+                    "https://example.com/2",
+                    "https://example.com/3",
+                ],
                 "arxiv_id": ["", "", ""],
                 "citations": [0, 0, 0],
             }
@@ -135,10 +162,19 @@ class TestNormalizer:
     def test_empty_dataframe(self, sample_config):
         """Test normalization of empty DataFrame."""
         # Create empty DataFrame with required columns
-        df = pd.DataFrame(columns=[
-            "title", "authors", "year", "doi", "source_db", 
-            "abstract", "url", "arxiv_id", "citations"
-        ])
+        df = pd.DataFrame(
+            columns=[
+                "title",
+                "authors",
+                "year",
+                "doi",
+                "source_db",
+                "abstract",
+                "url",
+                "arxiv_id",
+                "citations",
+            ]
+        )
         normalizer = Normalizer(sample_config)
         normalized_df = normalizer.normalize_dataframe(df)
 
@@ -155,7 +191,9 @@ class TestNormalizer:
                 "doi": ["10.1234/test"],
                 "source_db": ["google_scholar"],
                 "venue": ["Test Conference"],
-                "abstract": ["This is a test abstract that is long enough to meet the minimum length requirement for the validation check."],
+                "abstract": [
+                    "This is a test abstract that is long enough to meet the minimum length requirement for the validation check."
+                ],
                 "url": ["https://test.com"],
                 "citations": [10],
                 "pdf_url": ["https://test.com/pdf"],
@@ -167,7 +205,16 @@ class TestNormalizer:
         normalized_df = normalizer.normalize_dataframe(df)
 
         # Check that key columns are preserved (some internal columns are dropped)
-        essential_cols = ["title", "authors", "year", "doi", "source_db", "venue", "abstract", "url"]
+        essential_cols = [
+            "title",
+            "authors",
+            "year",
+            "doi",
+            "source_db",
+            "venue",
+            "abstract",
+            "url",
+        ]
         for col in essential_cols:
             assert col in normalized_df.columns
 
@@ -190,8 +237,18 @@ class TestNormalizer:
                     "crossref",
                     "semantic_scholar",
                 ],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is another abstract that is long enough to pass the validation check.", "This is another abstract that is long enough to pass the validation check."],
-                "url": ["https://example.com/1", "https://example.com/2", "https://example.com/3", "https://example.com/4"],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                    "This is another abstract that is long enough to pass the validation check.",
+                ],
+                "url": [
+                    "https://example.com/1",
+                    "https://example.com/2",
+                    "https://example.com/3",
+                    "https://example.com/4",
+                ],
                 "arxiv_id": ["", "", "", ""],
                 "citations": [0, 0, 0, 0],
             }
@@ -215,7 +272,10 @@ class TestNormalizer:
                 "doi": ["10.1234/test", "10.1234/test"],
                 "source_db": ["arxiv", "google_scholar"],  # arXiv should be preferred
                 "pdf_url": ["https://arxiv.org/pdf", ""],
-                "abstract": ["This is a longer abstract that meets the minimum length requirement for testing purposes.", "This is a longer abstract that meets the minimum length requirement for testing purposes."],
+                "abstract": [
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                    "This is a longer abstract that meets the minimum length requirement for testing purposes.",
+                ],
                 "url": ["https://arxiv.org/1", "https://scholar.google.com/2"],
                 "arxiv_id": ["2301.12345", ""],
                 "citations": [10, 5],

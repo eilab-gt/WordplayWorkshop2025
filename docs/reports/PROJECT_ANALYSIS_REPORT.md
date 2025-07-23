@@ -40,7 +40,7 @@ The Literature Review Pipeline project has **68.39% test coverage** (below the 7
 ## 🐛 Code Quality Issues
 
 ### 1. Exception Handling Patterns
-- **50 instances** of broad `except Exception as e:` 
+- **50 instances** of broad `except Exception as e:`
 - **Recommendation**: Use specific exception types
 ```python
 # Bad

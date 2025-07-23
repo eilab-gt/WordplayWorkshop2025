@@ -6,7 +6,7 @@ We successfully tested the harvesting and initial processing components of the l
 
 ## ✅ What's Working
 
-### 1. **ArXiv Harvester** 
+### 1. **ArXiv Harvester**
 - Successfully retrieves papers using complex boolean queries
 - Found 5 highly relevant papers about LLMs and wargaming
 - Proper rate limiting (333ms between requests)

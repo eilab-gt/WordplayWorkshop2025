@@ -63,9 +63,21 @@ def cli(ctx, config, log_level):
 @click.option("--output", help="Output file path")
 @click.option("--filter-keywords", help="Include keywords (comma-separated)")
 @click.option("--exclude-keywords", help="Exclude keywords (comma-separated)")
-@click.option("--min-keyword-matches", default=1, help="Minimum keyword matches required")
+@click.option(
+    "--min-keyword-matches", default=1, help="Minimum keyword matches required"
+)
 @click.pass_context
-def harvest(ctx, query, sources, max_results, parallel, output, filter_keywords, exclude_keywords, min_keyword_matches):
+def harvest(
+    ctx,
+    query,
+    sources,
+    max_results,
+    parallel,
+    output,
+    filter_keywords,
+    exclude_keywords,
+    min_keyword_matches,
+):
     """Harvest papers from configured sources."""
     config = ctx.obj["config"]
     console = ctx.obj["console"]
@@ -104,26 +116,37 @@ def harvest(ctx, query, sources, max_results, parallel, output, filter_keywords,
     df = normalizer.normalize_dataframe(df)
 
     console.print(f"[green]✓[/green] After deduplication: {len(df)} papers")
-    
+
     # Apply keyword filtering if specified
     if filter_keywords or exclude_keywords:
         console.print("\n[bold]Applying keyword filters...[/bold]")
         original_count = len(df)
-        
+
         # Parse keywords
-        include_list = [k.strip() for k in filter_keywords.split(",")] if filter_keywords else None
-        exclude_list = [k.strip() for k in exclude_keywords.split(",")] if exclude_keywords else None
-        
+        include_list = (
+            [k.strip() for k in filter_keywords.split(",")] if filter_keywords else None
+        )
+        exclude_list = (
+            [k.strip() for k in exclude_keywords.split(",")]
+            if exclude_keywords
+            else None
+        )
+
         # Apply filtering using SearchHarvester
         temp_harvester = SearchHarvester(config)
-        
+
         # Convert DataFrame to Paper objects for filtering
         from src.lit_review.harvesters.base import Paper
+
         papers = []
         for _, row in df.iterrows():
             paper = Paper(
                 title=row.get("title", ""),
-                authors=row.get("authors", "").split("; ") if isinstance(row.get("authors"), str) else [],
+                authors=(
+                    row.get("authors", "").split("; ")
+                    if isinstance(row.get("authors"), str)
+                    else []
+                ),
                 year=row.get("year", 0),
                 abstract=row.get("abstract", ""),
                 source_db=row.get("source_db", ""),
@@ -133,41 +156,51 @@ def harvest(ctx, query, sources, max_results, parallel, output, filter_keywords,
                 venue=row.get("venue"),
                 citations=row.get("citations"),
                 pdf_url=row.get("pdf_url"),
-                keywords=row.get("keywords", "").split("; ") if isinstance(row.get("keywords"), str) else []
+                keywords=(
+                    row.get("keywords", "").split("; ")
+                    if isinstance(row.get("keywords"), str)
+                    else []
+                ),
             )
             papers.append(paper)
-        
+
         # Filter papers by keywords
         filtered_papers = []
         for paper in papers:
             if not paper.abstract:
                 continue
-                
+
             abstract_lower = paper.abstract.lower()
-            
+
             # Check exclusions first
             if exclude_list:
-                excluded = any(keyword.lower() in abstract_lower 
-                             for keyword in exclude_list)
+                excluded = any(
+                    keyword.lower() in abstract_lower for keyword in exclude_list
+                )
                 if excluded:
                     continue
-            
+
             # Check inclusions
             if include_list:
-                matches = sum(1 for keyword in include_list 
-                            if keyword.lower() in abstract_lower)
+                matches = sum(
+                    1 for keyword in include_list if keyword.lower() in abstract_lower
+                )
                 if matches >= min_keyword_matches:
                     filtered_papers.append(paper)
             else:
                 # No inclusion filter, add if not excluded
                 filtered_papers.append(paper)
-        
+
         # Convert back to DataFrame
         if filtered_papers:
             df = pd.DataFrame([p.to_dict() for p in filtered_papers])
-            console.print(f"[green]✓[/green] Filtered from {original_count} to {len(df)} papers")
+            console.print(
+                f"[green]✓[/green] Filtered from {original_count} to {len(df)} papers"
+            )
         else:
-            console.print(f"[yellow]Warning:[/yellow] No papers matched the keyword filters")
+            console.print(
+                "[yellow]Warning:[/yellow] No papers matched the keyword filters"
+            )
             df = pd.DataFrame()
 
     # Save results
@@ -231,11 +264,27 @@ def prepare_screen(ctx, input_file, output, asreview):
 @click.option("--parallel/--sequential", default=True, help="Parallel extraction")
 @click.option("--skip-llm", is_flag=True, help="Skip LLM extraction")
 @click.option("--skip-tagging", is_flag=True, help="Skip regex tagging")
-@click.option("--use-enhanced", is_flag=True, help="Use enhanced LLM extractor with LiteLLM")
-@click.option("--llm-service-url", default="http://localhost:8000", help="LLM service URL")
-@click.option("--prefer-tex", is_flag=True, help="Prefer TeX/HTML over PDFs when available")
+@click.option(
+    "--use-enhanced", is_flag=True, help="Use enhanced LLM extractor with LiteLLM"
+)
+@click.option(
+    "--llm-service-url", default="http://localhost:8000", help="LLM service URL"
+)
+@click.option(
+    "--prefer-tex", is_flag=True, help="Prefer TeX/HTML over PDFs when available"
+)
 @click.pass_context
-def extract(ctx, input_file, output, parallel, skip_llm, skip_tagging, use_enhanced, llm_service_url, prefer_tex):
+def extract(
+    ctx,
+    input_file,
+    output,
+    parallel,
+    skip_llm,
+    skip_tagging,
+    use_enhanced,
+    llm_service_url,
+    prefer_tex,
+):
     """Extract structured information from screened papers."""
     config = ctx.obj["config"]
     console = ctx.obj["console"]
@@ -250,7 +299,7 @@ def extract(ctx, input_file, output, parallel, skip_llm, skip_tagging, use_enhan
 
     console.print(f"\n[bold]Loading screening data from {input_path}...[/bold]")
     # Handle both CSV and Excel files
-    if input_path.suffix.lower() in ['.xlsx', '.xls']:
+    if input_path.suffix.lower() in [".xlsx", ".xls"]:
         df = pd.read_excel(input_path)
     else:
         df = pd.read_csv(input_path)
@@ -272,21 +321,23 @@ def extract(ctx, input_file, output, parallel, skip_llm, skip_tagging, use_enhan
         if use_enhanced:
             console.print("\n[bold]Extracting with Enhanced LLM (LiteLLM)...[/bold]")
             extractor = EnhancedLLMExtractor(config, llm_service_url)
-            
+
             # Check service health
             if not extractor.check_service_health():
                 console.print("[red]Error:[/red] LLM service is not running")
-                console.print(f"Start the service with: python -m src.lit_review.llm_service")
+                console.print(
+                    "Start the service with: python -m src.lit_review.llm_service"
+                )
                 console.print(f"Expected URL: {llm_service_url}")
                 return
-                
+
             # Show available models
             models = extractor.get_available_models()
             console.print("\n[bold]Available models:[/bold]")
             for model, info in models.items():
                 status = "[green]✓[/green]" if info["available"] else "[red]✗[/red]"
                 console.print(f"  {status} {model}: {info['description']}")
-            
+
             included_df = extractor.extract_all(included_df, parallel=parallel)
         else:
             console.print("\n[bold]Extracting with LLM...[/bold]")

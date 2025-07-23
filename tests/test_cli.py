@@ -39,7 +39,7 @@ class TestCLI:
         mock_instance.search_all.return_value = test_df
         mock_instance.save_results = Mock()
         mock_harvester.return_value = mock_instance
-        
+
         # Mock normalizer
         mock_norm_instance = Mock()
         mock_norm_instance.normalize_dataframe.return_value = test_df
@@ -48,7 +48,9 @@ class TestCLI:
         runner = CliRunner()
         with runner.isolated_filesystem():
             # Create config file
-            Path("config.yaml").write_text('search:\n  queries:\n    preset1: "test"\npaths:\n  output_dir: outputs')
+            Path("config.yaml").write_text(
+                'search:\n  queries:\n    preset1: "test"\npaths:\n  output_dir: outputs'
+            )
 
             result = runner.invoke(cli, ["--config", "config.yaml", "harvest"])
 
@@ -83,7 +85,10 @@ class TestCLI:
             )
 
             assert result.exit_code == 0
-            assert "Preparing screening sheet" in result.output or "Loading papers" in result.output
+            assert (
+                "Preparing screening sheet" in result.output
+                or "Loading papers" in result.output
+            )
 
     @patch("run.Tagger")
     @patch("run.LLMExtractor")
@@ -102,7 +107,7 @@ class TestCLI:
         )
         mock_instance.extract_all.return_value = test_df
         mock_extractor.return_value = mock_instance
-        
+
         # Mock tagger
         mock_tag_instance = Mock()
         mock_tag_instance.tag_papers.return_value = test_df
@@ -120,14 +125,19 @@ class TestCLI:
                 }
             ).to_csv("screening.csv", index=False)
 
-            Path("config.yaml").write_text("api_keys:\n  openai: test-key\npaths:\n  output_dir: outputs")
+            Path("config.yaml").write_text(
+                "api_keys:\n  openai: test-key\npaths:\n  output_dir: outputs"
+            )
 
             result = runner.invoke(
                 cli, ["--config", "config.yaml", "extract", "--input", "screening.csv"]
             )
 
             assert result.exit_code == 0
-            assert "Loading screening data" in result.output or "Extracting with LLM" in result.output
+            assert (
+                "Loading screening data" in result.output
+                or "Extracting with LLM" in result.output
+            )
 
     @patch("run.Visualizer")
     def test_visualise_command(self, mock_visualizer):
@@ -165,7 +175,10 @@ class TestCLI:
             )
 
             assert result.exit_code == 0
-            assert "Creating visualizations" in result.output or "Loading extraction data" in result.output
+            assert (
+                "Creating visualizations" in result.output
+                or "Loading extraction data" in result.output
+            )
 
     @patch("run.Visualizer")
     @patch("run.Exporter")
@@ -176,7 +189,7 @@ class TestCLI:
         mock_exp_instance.export_full_package.return_value = Path("package.zip")
         mock_exp_instance.export_bibtex.return_value = Path("refs.bib")
         mock_exporter.return_value = mock_exp_instance
-        
+
         # Setup mock visualizer
         mock_viz_instance = Mock()
         mock_viz_instance.create_all_visualizations.return_value = []
@@ -186,9 +199,9 @@ class TestCLI:
         runner = CliRunner()
         with runner.isolated_filesystem():
             # Create input file
-            pd.DataFrame({"screening_id": ["SCREEN_0001"], "title": ["Paper 1"]}).to_csv(
-                "extraction.csv", index=False
-            )
+            pd.DataFrame(
+                {"screening_id": ["SCREEN_0001"], "title": ["Paper 1"]}
+            ).to_csv("extraction.csv", index=False)
 
             Path("config.yaml").write_text("export:\n  zenodo:\n    enabled: false")
 
@@ -204,7 +217,10 @@ class TestCLI:
             )
 
             assert result.exit_code == 0
-            assert "Creating export package" in result.output or "Loading extraction data" in result.output
+            assert (
+                "Creating export package" in result.output
+                or "Loading extraction data" in result.output
+            )
 
     @patch("run.SearchHarvester")
     def test_test_command(self, mock_harvester):
@@ -220,7 +236,7 @@ class TestCLI:
             }
         )
         mock_harvester.return_value = mock_instance
-        
+
         runner = CliRunner()
         with runner.isolated_filesystem():
             Path("config.yaml").write_text('search:\n  queries:\n    preset1: "test"')
@@ -241,7 +257,7 @@ class TestCLI:
             "total_size_mb": 50.5,
         }
         mock_pdf_fetcher.return_value = mock_instance
-        
+
         runner = CliRunner()
         with runner.isolated_filesystem():
             Path("config.yaml").write_text("paths:\n  output_dir: outputs")
@@ -258,7 +274,9 @@ class TestCLI:
 
         assert result.exit_code != 0
         assert result.exception is not None
-        assert "not found" in str(result.exception) or "Configuration file" in str(result.exception)
+        assert "not found" in str(result.exception) or "Configuration file" in str(
+            result.exception
+        )
 
     def test_command_with_all_options(self):
         """Test command with all available options."""
@@ -268,7 +286,10 @@ class TestCLI:
                 'search:\n  queries:\n    custom: "test query"'
             )
 
-            with patch("run.SearchHarvester") as mock_harvester, patch("run.Normalizer") as mock_normalizer:
+            with (
+                patch("run.SearchHarvester") as mock_harvester,
+                patch("run.Normalizer") as mock_normalizer,
+            ):
                 mock_instance = Mock()
                 test_df = pd.DataFrame(
                     {"title": ["Test"], "source_db": ["test_source"]}
@@ -276,7 +297,7 @@ class TestCLI:
                 mock_instance.search_all.return_value = test_df
                 mock_instance.save_results = Mock()
                 mock_harvester.return_value = mock_instance
-                
+
                 # Mock normalizer
                 mock_norm = Mock()
                 mock_norm.normalize_dataframe.return_value = test_df
@@ -304,7 +325,7 @@ class TestCLI:
 
                 # Check that the command executed successfully
                 assert result.exit_code == 0
-                
+
                 # Check that options were parsed
                 mock_instance.search_all.assert_called_once()
                 call_args = mock_instance.search_all.call_args
