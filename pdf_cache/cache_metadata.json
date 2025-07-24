@@ -1,0 +1,29 @@
+{
+  "cache_info": {
+    "created": "2025-07-24",
+    "description": "PDF cache for literature review papers",
+    "source": "Migrated from v1_pipeline_run/pdfs/"
+  },
+  "papers": {
+    "2303.31962": {"arxiv_id": "2303.31962", "migrated": true},
+    "2305.191651": {"arxiv_id": "2305.19165", "migrated": true},
+    "2310.89011": {"arxiv_id": "2310.08901", "migrated": true},
+    "2311.32204": {"arxiv_id": "2311.32204", "migrated": true},
+    "2312.10902": {"arxiv_id": "2312.10902", "migrated": true},
+    "2401.105682": {"arxiv_id": "2401.10568", "migrated": true},
+    "2401.34081": {"arxiv_id": "2401.03408", "migrated": true},
+    "2403.34074": {"arxiv_id": "2403.03407", "migrated": true},
+    "2404.114461": {"arxiv_id": "2404.11446", "migrated": true},
+    "2407.68134": {"arxiv_id": "2407.06813", "migrated": true},
+    "2408.139151": {"arxiv_id": "2408.13915", "migrated": true},
+    "2410.132041": {"arxiv_id": "2410.13204", "migrated": true},
+    "2501.83282": {"arxiv_id": "2501.08328", "migrated": true},
+    "2502.163391": {"arxiv_id": "2502.16339", "migrated": true},
+    "2503.60471": {"arxiv_id": "2503.06047", "migrated": true},
+    "2506.102641": {"arxiv_id": "2506.10264", "migrated": true},
+    "2506.120121": {"arxiv_id": "2506.12012", "migrated": true},
+    "2506.93901": {"arxiv_id": "2506.09390", "migrated": true},
+    "2506.96552": {"arxiv_id": "2506.09655", "migrated": true},
+    "2507.91571": {"arxiv_id": "2507.09157", "migrated": true}
+  }
+}
