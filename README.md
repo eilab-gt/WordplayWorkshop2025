@@ -36,7 +36,7 @@ WordplayWorkshop2025/
 ├── tests/               # Comprehensive test suite
 ├── notebooks/           # Jupyter notebooks
 ├── scripts/             # Utility scripts
-├── config.yaml          # Main configuration
+├── config/              # Configuration files
 └── run.py              # CLI interface
 ```
 
@@ -70,8 +70,8 @@ uv pip install -e .
 
 4. Copy and configure settings:
 ```bash
-cp config.yaml.example config.yaml
-# Edit config.yaml with your API keys and preferences
+cp config/config.yaml.example config/config.yaml
+# Edit config/config.yaml with your API keys and preferences
 ```
 
 ## Quick Start
@@ -134,7 +134,7 @@ Generates:
 - Failure modes frequency
 - LLM families usage
 - Game types distribution
-- AWScale distribution
+- Analytical-Creative Scale distribution
 
 ### 5. Export Dataset
 
@@ -154,7 +154,7 @@ Creates a ZIP package with:
 
 ## Configuration
 
-Edit `config.yaml` to customize:
+Edit `config/config.yaml` to customize:
 
 ### Search Settings
 ```yaml
@@ -187,7 +187,7 @@ failure_vocabularies:
 
 ### Using Different LLM Models
 
-Configure in `config.yaml`:
+Configure in `config/config.yaml`:
 ```yaml
 extraction:
   model: gpt-4  # or gpt-3.5-turbo
@@ -273,7 +273,7 @@ make pre-commit
 ### Common Issues
 
 1. **Import errors**: Ensure you're in the virtual environment
-2. **API rate limits**: Configure rate limits in `config.yaml`
+2. **API rate limits**: Configure rate limits in `config/config.yaml`
 3. **PDF download failures**: Check internet connection and try Sci-Hub mirrors
 4. **LLM extraction errors**: Verify OpenAI API key and quota
 

@@ -10,6 +10,8 @@ from typing import Any
 import pandas as pd
 import requests
 
+from ..utils.content_cache import ContentCache
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,6 +32,9 @@ class PDFFetcher:
 
         # Create cache directory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # Initialize content cache
+        self.content_cache = ContentCache(config)
 
         # Session for connection pooling
         self.session = requests.Session()
@@ -131,7 +136,7 @@ class PDFFetcher:
         return df
 
     def _fetch_single_pdf(self, paper: pd.Series) -> dict[str, str]:
-        """Fetch PDF for a single paper.
+        """Fetch PDF for a single paper using content cache.
 
         Args:
             paper: Paper data as pandas Series
@@ -139,15 +144,8 @@ class PDFFetcher:
         Returns:
             Dictionary with path, status, and hash
         """
-        # Generate filename
-        filename = self._generate_filename(paper)
-        filepath = self.cache_dir / filename
-
-        # Check if already cached
-        if filepath.exists():
-            self.stats["already_cached"] += 1
-            file_hash = self._calculate_file_hash(filepath)
-            return {"path": str(filepath), "status": "cached", "hash": file_hash}
+        # Generate paper ID for caching
+        paper_id = self._generate_paper_id(paper)
 
         # Try different sources in order
         pdf_url = None
@@ -175,10 +173,33 @@ class PDFFetcher:
             pdf_url = paper["url"]
             source = "direct"
 
-        # Download if we have a URL
-        if pdf_url:
-            success = self._download_pdf(pdf_url, filepath)
-            if success:
+        if not pdf_url:
+            self.stats["failed_downloads"] += 1
+            return {"path": "", "status": "not_found", "hash": ""}
+
+        # Use content cache to get or fetch the PDF
+        def fetch_func():
+            """Fetcher function for the cache."""
+            content = self._download_pdf_content(pdf_url)
+            if content:
+                # Verify it's a PDF
+                if content[:5] == b"%PDF-":
+                    return content
+                else:
+                    logger.warning(f"Downloaded content is not a PDF for {pdf_url}")
+                    return None
+            return None
+
+        # Get from cache or fetch
+        cache_path, was_cached = self.content_cache.get_or_fetch(
+            paper_id, "pdf", fetch_func, source_url=pdf_url
+        )
+
+        if cache_path:
+            if was_cached:
+                self.stats["already_cached"] += 1
+                status = "cached"
+            else:
                 self.stats["successful_downloads"] += 1
                 if source == "unpaywall":
                     self.stats["unpaywall_success"] += 1
@@ -186,17 +207,43 @@ class PDFFetcher:
                     self.stats["arxiv_success"] += 1
                 else:
                     self.stats["direct_success"] += 1
+                status = f"downloaded_{source}"
 
-                file_hash = self._calculate_file_hash(filepath)
-                return {
-                    "path": str(filepath),
-                    "status": f"downloaded_{source}",
-                    "hash": file_hash,
-                }
+            # Calculate hash
+            file_hash = self._calculate_file_hash(cache_path)
+            return {
+                "path": str(cache_path),
+                "status": status,
+                "hash": file_hash,
+            }
 
         # Failed to download
         self.stats["failed_downloads"] += 1
         return {"path": "", "status": "not_found", "hash": ""}
+
+    def _generate_paper_id(self, paper: pd.Series) -> str:
+        """Generate a unique paper ID for caching.
+
+        Args:
+            paper: Paper data
+
+        Returns:
+            Unique ID string
+        """
+        # Prefer DOI, then arXiv ID, then generate from title+authors
+        if paper.get("doi"):
+            return paper["doi"]
+        elif paper.get("arxiv_id"):
+            return f"arxiv:{paper['arxiv_id']}"
+        else:
+            # Generate from title and first author
+            title = paper.get("title", "Unknown")
+            authors = paper.get("authors", "")
+            first_author = authors.split(";")[0].strip() if authors else "Unknown"
+            year = paper.get("year", "XXXX")
+            # Create a simple hash
+            content = f"{title}:{first_author}:{year}"
+            return hashlib.md5(content.encode()).hexdigest()[:16]
 
     def _generate_filename(self, paper: pd.Series) -> str:
         """Generate a filename for the PDF.
@@ -278,6 +325,65 @@ class PDFFetcher:
         except Exception as e:
             logger.debug(f"Unpaywall error for DOI {doi}: {e}")
             return None
+
+    def _download_pdf_content(self, url: str) -> bytes | None:
+        """Download PDF content from URL.
+
+        Args:
+            url: PDF URL
+
+        Returns:
+            PDF content as bytes or None if failed
+        """
+        try:
+            # Stream download to handle large files
+            response = self.session.get(
+                url, stream=True, timeout=self.timeout, allow_redirects=True
+            )
+
+            response.raise_for_status()
+
+            # Check content type
+            content_type = response.headers.get("Content-Type", "").lower()
+            if "pdf" not in content_type and "octet-stream" not in content_type:
+                logger.warning(f"Non-PDF content type: {content_type} for {url}")
+                return None
+
+            # Check file size
+            content_length = response.headers.get("Content-Length")
+            if content_length:
+                size_mb = int(content_length) / (1024 * 1024)
+                if size_mb > self.max_size_mb:
+                    logger.warning(f"PDF too large: {size_mb:.1f}MB for {url}")
+                    return None
+
+            # Download content
+            chunks = []
+            downloaded = 0
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    chunks.append(chunk)
+                    downloaded += len(chunk)
+
+                    # Check size during download
+                    if downloaded > self.max_size_mb * 1024 * 1024:
+                        logger.warning(f"Download exceeded size limit for {url}")
+                        return None
+
+            content = b"".join(chunks)
+            logger.debug(
+                f"Successfully downloaded {len(content)/1024:.1f}KB from {url}"
+            )
+            return content
+
+        except requests.exceptions.Timeout:
+            logger.warning(f"Timeout downloading {url}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Request error downloading {url}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error downloading {url}: {e}")
+
+        return None
 
     def _download_pdf(self, url: str, filepath: Path) -> bool:
         """Download PDF from URL.

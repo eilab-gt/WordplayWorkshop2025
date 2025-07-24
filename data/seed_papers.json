@@ -1,54 +1,62 @@
 {
   "seed_papers": [
     {
-      "title": "Escalation Risks in LLM-Powered Wargaming: A First Assessment",
-      "authors": ["Andrew Reddie", "Bethany Goldblum", "Sarah Laderman", "Harold Trinkunas"],
+      "title": "Open-Ended Wargames with Large Language Models",
+      "authors": ["Daniel P. Hogan", "Andrea Brennen"],
+      "year": 2024,
+      "venue": "arXiv preprint",
+      "doi": "",
+      "arxiv_id": "2404.11446",
+      "url": "http://arxiv.org/abs/2404.11446",
+      "abstract": "Wargames are a powerful tool for understanding and rehearsing real-world decision making. Automated play of wargames using artificial intelligence (AI) enables possibilities beyond those of human-conducted games, such as playing the game many times over to see a range of possible outcomes. There are two categories of wargames: quantitative games, with discrete types of moves, and qualitative games, which revolve around open-ended responses. Historically, automation efforts have focused on quantitative games, but large language models (LLMs) make it possible to automate qualitative wargames. We introduce \"Snow Globe,\" an LLM-powered multi-agent system for playing qualitative wargames. With Snow Globe, every stage of a text-based qualitative wargame from scenario preparation to post-game analysis can be optionally carried out by AI, humans, or a combination thereof. We describe its software architecture conceptually and release an open-source implementation alongside this publication. As case studies, we simulate a tabletop exercise about an AI incident response and a political wargame about a geopolitical crisis. We discuss potential applications of the approach and how it fits into the broader wargaming ecosystem.",
+      "why_seed": "Foundational paper introducing Snow Globe framework for automating qualitative wargames with LLMs, bridging human and AI-conducted wargaming"
+    },
+    {
+      "title": "War and Peace (WarAgent): Large Language Model-based Multi-agent Simulation of World Wars",
+      "authors": ["Wenyue Hua", "Lizhou Fan", "Lingyao Li", "Kai Mei", "Jianchao Ji", "Yingqiang Ge", "Libby Hemphill", "Yongfeng Zhang"],
       "year": 2023,
       "venue": "arXiv preprint",
       "doi": "",
-      "arxiv_id": "2310.03857",
-      "url": "https://arxiv.org/abs/2310.03857",
-      "abstract": "This paper presents findings from a wargaming exercise exploring nuclear escalation risks when large language models participate in crisis simulations.",
-      "why_seed": "Foundational paper examining LLM behavior in high-stakes wargaming scenarios with focus on escalation dynamics"
+      "arxiv_id": "2311.17227",
+      "url": "http://arxiv.org/abs/2311.17227",
+      "abstract": "Can we avoid wars at the crossroads of history? This question has been pursued by individuals, scholars, policymakers, and organizations throughout human history. In this research, we attempt to answer the question by developing WarAgent, an LLM-powered multi-agent AI system, to simulate the participating countries (agents) in international conflicts under diverse scenarios. By situating in the historical context of World War I and trying to prevent the war, we demonstrate the feasibility of computational simulations for peace research and international relations studies. Our findings suggest that WarAgent can generate meaningful insights, despite being constrained by historical facts and the inherent limitations of LLMs. Specifically, we find that the different backgrounds and personalities of leader agents can significantly influence the simulation outcome. Additionally, our framework is highly adaptable, allowing it to simulate a wide range of conflict scenarios.",
+      "why_seed": "Multi-agent simulation framework for international conflicts and war prevention using LLMs in historical contexts"
     },
     {
-      "title": "Playing Diplomacy with Large Language Models",
-      "authors": ["FAIR Diplomacy Team"],
+      "title": "Human vs. Machine: Behavioral Differences Between Expert Humans and Language Models in Wargame Simulations",
+      "authors": ["Max Lamparth", "Anthony Corso", "Jacob Ganz", "Oriana Skylar Mastro", "Jacquelyn Schneider", "Harold Trinkunas"],
+      "year": 2024,
+      "venue": "arXiv preprint",
+      "doi": "",
+      "arxiv_id": "2403.03407",
+      "url": "http://arxiv.org/abs/2403.03407",
+      "abstract": "To some, the advent of artificial intelligence (AI) promises better decision-making and increased military effectiveness while reducing the influence of human error and emotions. However, there is still debate about how AI systems, especially large language models (LLMs) that can be applied to many tasks, behave compared to humans in high-stakes military decision-making scenarios with the potential for increased risks towards escalation. To test this potential and scrutinize the use of LLMs for such purposes, we use a new wargame experiment with 214 national security experts designed to examine crisis escalation in a fictional U.S.-China scenario and compare the behavior of human player teams to LLM-simulated team responses in separate simulations. Here, we find that the LLM-simulated responses can be more aggressive and significantly affected by changes in the scenario. We show a considerable high-level agreement in the LLM and human responses and significant quantitative and qualitative differences in individual actions and strategic tendencies.",
+      "why_seed": "Empirical comparative study of human vs. LLM behavior in military wargaming with 214 national security experts"
+    },
+    {
+      "title": "Escalation Risks from Language Models in Military and Diplomatic Decision-Making",
+      "authors": ["Juan-Pablo Rivera", "Gabriel Mukobi", "Anka Reuel", "Max Lamparth", "Chandler Smith", "Jacquelyn Schneider"],
+      "year": 2024,
+      "venue": "The 2024 ACM Conference on Fairness, Accountability, and Transparency (FAccT 24)",
+      "doi": "10.1145/3630106.3658942",
+      "arxiv_id": "2401.03408",
+      "url": "http://arxiv.org/abs/2401.03408",
+      "abstract": "Governments are increasingly considering integrating autonomous AI agents in high-stakes military and foreign-policy decision-making, especially with the emergence of advanced generative AI models like GPT-4. Our work aims to scrutinize the behavior of multiple AI agents in simulated wargames, specifically focusing on their predilection to take escalatory actions that may exacerbate multilateral conflicts. Drawing on political science and international relations literature about escalation dynamics, we design a novel wargame simulation and scoring framework to assess the escalation risks of actions taken by these agents in different scenarios. Contrary to prior studies, our research provides both qualitative and quantitative insights and focuses on large language models (LLMs). We find that all five studied off-the-shelf LLMs show forms of escalation and difficult-to-predict escalation patterns.",
+      "why_seed": "Critical analysis of escalation risks when LLMs are used in high-stakes military and diplomatic decision-making scenarios"
+    },
+    {
+      "title": "Human-level play in the game of Diplomacy by combining language models with strategic reasoning",
+      "authors": ["Meta Fundamental AI Research Diplomacy Team (FAIR)", "Anton Bakhtin", "Noam Brown", "Emily Dinan", "Gabriele Farina", "Colin Flaherty", "Daniel Fried", "Andrew Goff", "Jonathan Gray", "Hengyuan Hu", "Athul Paul Jacob", "Mojtaba Komeili", "Karthik Konath", "Minae Kwon", "Adam Lerer", "Mike Lewis", "Alexander H. Miller", "Sasha Mitts", "Adithya Renduchintala", "Stephen Roller", "Dirk Rowe", "Weiyan Shi", "Joe Spisak", "Alexander Wei", "David Wu", "Hugh Zhang", "Markus Zijlstra"],
       "year": 2022,
       "venue": "Science",
       "doi": "10.1126/science.ade9097",
+      "arxiv_id": "",
       "url": "https://www.science.org/doi/10.1126/science.ade9097",
-      "abstract": "We present Cicero, an AI agent that can play Diplomacy at a human level by combining strategic reasoning with natural language processing.",
-      "why_seed": "Demonstrates sophisticated LLM integration in strategic game playing with negotiation components"
-    },
-    {
-      "title": "War Games: The Use of LLMs in Military Simulations and Training",
-      "authors": ["Michael C. Horowitz", "Lauren Kahn"],
-      "year": 2023,
-      "venue": "International Security",
-      "doi": "10.1162/isec_a_00471",
-      "abstract": "Analysis of how militaries are beginning to incorporate large language models into wargaming exercises and the implications for strategic stability.",
-      "why_seed": "Policy-oriented analysis of real-world military applications of LLMs in wargaming"
-    },
-    {
-      "title": "GPT-4 as Red Team: Adversarial AI in Cybersecurity Wargames",
-      "authors": ["Jane Smith", "Robert Johnson"],
-      "year": 2024,
-      "venue": "IEEE Security & Privacy",
-      "doi": "10.1109/MSEC.2024.example",
-      "abstract": "We explore the use of GPT-4 as an adversarial red team agent in cybersecurity wargaming exercises, demonstrating both capabilities and limitations.",
-      "why_seed": "Example of LLMs in adversarial role within specialized wargaming domain"
-    },
-    {
-      "title": "Bias and Hallucination in AI Military Advisors: Evidence from Wargaming",
-      "authors": ["Alice Chen", "David Miller", "Sarah Williams"],
-      "year": 2023,
-      "venue": "Journal of AI Safety",
-      "abstract": "Systematic analysis of bias patterns and hallucination tendencies when LLMs serve as military advisors in strategic wargaming scenarios.",
-      "why_seed": "Critical examination of failure modes specific to military/strategic contexts"
+      "abstract": "We present Cicero, an AI agent that can play Diplomacy at a human level by combining strategic reasoning with natural language processing. Diplomacy is a strategic board game where seven players compete for control of Europe, using both military units and natural language negotiation to form and break alliances. Unlike most AI systems that operate in perfect-information environments, Cicero must navigate a hidden-information game involving coordination, negotiation, and competition between multiple players. Our approach combines a language model for dialogue with a strategic reasoning module for planning. We demonstrate that Cicero achieved human-level performance in an online Diplomacy league, ranking in the top 10% of participants who played more than one game.",
+      "why_seed": "Landmark achievement demonstrating human-level strategic gameplay combining language models with reasoning in the game of Diplomacy"
     }
   ],
-  
+
   "search_suggestions": [
     {
       "query": "\"large language model\" AND (wargaming OR \"war game\") AND (military OR defense OR security)",
@@ -71,7 +79,7 @@
       "rationale": "Specific wargaming domains with high stakes"
     }
   ],
-  
+
   "exclusion_keywords": [
     "video game",
     "entertainment",
@@ -81,7 +89,7 @@
     "board game review",
     "game development tutorial"
   ],
-  
+
   "inclusion_indicators": [
     "military",
     "defense",
@@ -95,7 +103,7 @@
     "operational",
     "tactical"
   ],
-  
+
   "key_venues": [
     "International Security",
     "Journal of Strategic Studies",
@@ -104,11 +112,14 @@
     "IEEE Security & Privacy",
     "AI Magazine",
     "Journal of Defense Modeling and Simulation",
+    "Science",
+    "FAccT (Conference on Fairness, Accountability, and Transparency)",
     "arXiv cs.AI",
     "arXiv cs.GT",
+    "arXiv cs.CL",
     "RAND Corporation reports"
   ],
-  
+
   "research_groups": [
     {
       "name": "Center for Security and Emerging Technology (CSET)",
@@ -129,6 +140,11 @@
       "name": "MIT Security Studies Program",
       "url": "https://ssp.mit.edu/",
       "focus": "Security policy and military innovation"
+    },
+    {
+      "name": "Meta Fundamental AI Research (FAIR)",
+      "url": "https://ai.meta.com/research/",
+      "focus": "AI research including strategic reasoning and language models"
     }
   ]
 }

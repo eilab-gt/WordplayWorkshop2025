@@ -11,6 +11,8 @@ import requests
 from bs4 import BeautifulSoup
 from pdfminer.high_level import extract_text
 
+from ..utils.content_cache import ContentCache
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +28,9 @@ class EnhancedLLMExtractor:
         """
         self.config = config
         self.llm_service_url = llm_service_url
+
+        # Initialize content cache
+        self.content_cache = ContentCache(config)
 
         # Default model preferences
         self.model_preferences = [
@@ -259,7 +264,7 @@ class EnhancedLLMExtractor:
         return content, content_type
 
     def _extract_tex_content(self, arxiv_id: str) -> tuple[str, bool]:
-        """Extract content from arXiv TeX source."""
+        """Extract content from arXiv TeX source using cache."""
         try:
             from ..harvesters.arxiv_harvester import ArxivHarvester
 
@@ -269,12 +274,31 @@ class EnhancedLLMExtractor:
                     self.rate_limits = {"arxiv": {"delay_milliseconds": 0}}
 
             harvester = ArxivHarvester(MinimalConfig())
-            tex_content = harvester.fetch_tex_source(arxiv_id)
 
-            if tex_content:
-                # Clean TeX content
-                cleaned = self._clean_tex_content(tex_content)
-                return cleaned, True
+            # Generate paper ID for caching
+            paper_id = f"arxiv:{arxiv_id}"
+
+            # Define fetch function for cache
+            def fetch_func():
+                tex_content = harvester.fetch_tex_source(arxiv_id)
+                if tex_content:
+                    # Clean TeX content before caching
+                    cleaned = self._clean_tex_content(tex_content)
+                    return cleaned
+                return None
+
+            # Get from cache or fetch
+            cache_path, was_cached = self.content_cache.get_or_fetch(
+                paper_id,
+                "tex",
+                fetch_func,
+                source_url=f"https://arxiv.org/e-print/{arxiv_id}",
+            )
+
+            if cache_path and cache_path.exists():
+                # Read content from cache
+                tex_content = cache_path.read_text(encoding="utf-8")
+                return tex_content, True
 
         except Exception as e:
             logger.error(f"Error extracting TeX for {arxiv_id}: {e}")
@@ -282,7 +306,7 @@ class EnhancedLLMExtractor:
         return "", False
 
     def _extract_html_content(self, arxiv_id: str) -> tuple[str, bool]:
-        """Extract content from arXiv HTML version."""
+        """Extract content from arXiv HTML version using cache."""
         try:
             from ..harvesters.arxiv_harvester import ArxivHarvester
 
@@ -291,17 +315,33 @@ class EnhancedLLMExtractor:
                     self.rate_limits = {"arxiv": {"delay_milliseconds": 0}}
 
             harvester = ArxivHarvester(MinimalConfig())
-            html_content = harvester.fetch_html_source(arxiv_id)
 
-            if html_content:
-                # Parse HTML
-                soup = BeautifulSoup(html_content, "html.parser")
+            # Generate paper ID for caching
+            paper_id = f"arxiv:{arxiv_id}"
 
-                # Extract text from main content
-                main_content = soup.find("main") or soup.find("article") or soup
-                text = main_content.get_text(separator="\n", strip=True)
+            # Define fetch function for cache
+            def fetch_func():
+                html_content = harvester.fetch_html_source(arxiv_id)
+                if html_content:
+                    # Parse HTML and extract text
+                    soup = BeautifulSoup(html_content, "html.parser")
+                    main_content = soup.find("main") or soup.find("article") or soup
+                    text = main_content.get_text(separator="\n", strip=True)
+                    return text
+                return None
 
-                return text, True
+            # Get from cache or fetch
+            cache_path, was_cached = self.content_cache.get_or_fetch(
+                paper_id,
+                "html",
+                fetch_func,
+                source_url=f"https://ar5iv.org/abs/{arxiv_id}",
+            )
+
+            if cache_path and cache_path.exists():
+                # Read content from cache
+                text_content = cache_path.read_text(encoding="utf-8")
+                return text_content, True
 
         except Exception as e:
             logger.error(f"Error extracting HTML for {arxiv_id}: {e}")

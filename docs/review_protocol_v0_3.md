@@ -56,7 +56,7 @@
 | `llm_role` | player | player / generator / analyst |
 | `eval_metrics` | SME ratings; win-rate | free text |
 | `failure_modes` | escalation; hallucination | pipe-separated list |
-| `awscale` | 3 | 1-5 analytic-wild |
+| `awscale` | 3 | 1-5 analytical-creative |
 | `code_release` | github.com/xyz | "none" if absent |
 | `grey_lit_flag` | true | |
 | `language` | English | after translation if needed |
@@ -65,24 +65,24 @@
 
 ---
 
-## D. AWScale (Analytic ↔ Wild-Creative)
+## D. AWScale (Analytical<>Creative Scale)
 
 | Score | Descriptor | Cue words / signals |
 |-------|------------|---------------------|
-| 1 | Strictly analytic | Deterministic tables, numeric pay-off, no free narrative |
-| 2 | Mostly analytic | Limited free text, heavy scoring |
+| 1 | Strictly analytical | Deterministic tables, numeric pay-off, no free narrative |
+| 2 | Mostly analytical | Limited free text, heavy scoring |
 | 3 | Balanced | Narrative <=> numeric balance |
 | 4 | Mostly creative | Free-form moves, light scoring |
-| 5 | Wild-creative | Storytelling, referee adjudication, emergent goals |
+| 5 | Highly creative | Storytelling, referee adjudication, emergent goals |
 
 ---
 
 ## E. Seed Papers (coverage check)
 
-* Hogan & Brennen 2024 – *Open-ended Wargames with LLMs*
-* FAIR Diplomacy (Science 2022)
-* Lamparth et al. 2024 (two versions)
-* Shrivastava et al. 2024 (inconsistency)
-* Rivera et al. 2024 (escalation)
+* Hogan & Brennen 2024 – *Open-ended Wargames with Large Language Models* (arXiv:2404.11446)
+* Hua et al. 2023 – *War and Peace (WarAgent): Large Language Model-based Multi-agent Simulation of World Wars* (arXiv:2311.17227)
+* Lamparth et al. 2024 – *Human vs. Machine: Behavioral Differences Between Expert Humans and Language Models in Wargame Simulations* (arXiv:2403.03407)
+* Rivera et al. 2024 – *Escalation Risks from Language Models in Military and Diplomatic Decision-Making* (arXiv:2401.03408)
+* Meta FAIR Team 2022 – *Human-level play in the game of Diplomacy by combining language models with strategic reasoning* (Science)
 
-All search strings must surface these five.
+All search strings must surface these five foundational papers.

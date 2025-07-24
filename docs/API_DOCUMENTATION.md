@@ -25,7 +25,7 @@ The SearchHarvester module combines searches across multiple academic databases.
 from lit_review.harvesters import SearchHarvester
 
 # Initialize with config file
-harvester = SearchHarvester('config.yaml')
+harvester = SearchHarvester('config/config.yaml')
 
 # Search all enabled sources
 papers_df = harvester.search_all(
@@ -82,7 +82,7 @@ The Normalizer handles deduplication and data cleaning.
 ```python
 from lit_review.processing import Normalizer
 
-normalizer = Normalizer('config.yaml')
+normalizer = Normalizer('config/config.yaml')
 
 # Normalize and deduplicate papers
 normalized_df = normalizer.normalize(papers_df)
@@ -112,7 +112,7 @@ Downloads PDFs from various sources with fallback strategies.
 ```python
 from lit_review.processing import PDFFetcher
 
-fetcher = PDFFetcher('config.yaml')
+fetcher = PDFFetcher('config/config.yaml')
 
 # Batch download PDFs
 updated_df = fetcher.fetch_batch(
@@ -143,7 +143,7 @@ Generates Excel screening sheets for manual review.
 ```python
 from lit_review.processing import ScreenUI
 
-screen_ui = ScreenUI('config.yaml')
+screen_ui = ScreenUI('config/config.yaml')
 
 # Generate screening sheet
 excel_path = screen_ui.generate_sheet(
@@ -181,7 +181,7 @@ Extracts structured information using OpenAI's GPT models.
 ```python
 from lit_review.extraction import LLMExtractor
 
-extractor = LLMExtractor('config.yaml')
+extractor = LLMExtractor('config/config.yaml')
 
 # Extract from batch
 extraction_df = extractor.extract_batch(
@@ -200,7 +200,7 @@ result = extractor.extract_single(paper_series)
     "venue_type": "conference|journal|workshop|tech-report",
     "game_type": "seminar|matrix|digital|hybrid",
     "open_ended": "yes|no",
-    "quantitative": "yes|no", 
+    "quantitative": "yes|no",
     "llm_family": "GPT-4|Claude|Llama-70B|...",
     "llm_role": "player|generator|analyst",
     "eval_metrics": "free text",
@@ -226,7 +226,7 @@ Performs regex-based failure mode and metadata detection.
 ```python
 from lit_review.analysis import Tagger
 
-tagger = Tagger('config.yaml')
+tagger = Tagger('config/config.yaml')
 
 # Tag failure modes and detect patterns
 tagged_df = tagger.tag_failures(df)
@@ -257,7 +257,7 @@ Creates publication analysis charts.
 ```python
 from lit_review.analysis import Visualizer
 
-viz = Visualizer('config.yaml')
+viz = Visualizer('config/config.yaml')
 
 # Generate all charts
 chart_paths = viz.generate_all_charts(extraction_df)
@@ -293,7 +293,7 @@ Creates dataset packages for sharing and archival.
 ```python
 from lit_review.utils import Exporter
 
-exporter = Exporter('config.yaml')
+exporter = Exporter('config/config.yaml')
 
 # Create export package
 package_path = exporter.create_package(
@@ -334,7 +334,7 @@ Configuration management with environment variable support.
 from lit_review.utils import Config, load_config
 
 # Load configuration
-config = load_config('config.yaml')
+config = load_config('config/config.yaml')
 
 # Access configuration values
 api_key = config.openai_key
@@ -344,7 +344,7 @@ failure_vocab = config.failure_vocab
 
 ### Environment Variables
 
-Use `${VAR_NAME}` syntax in config.yaml:
+Use `${VAR_NAME}` syntax in config/config.yaml:
 
 ```yaml
 api_keys:
@@ -404,7 +404,7 @@ from lit_review.analysis import Tagger, Visualizer
 from lit_review.utils import Exporter, load_config
 
 # Load configuration
-config = load_config('config.yaml')
+config = load_config('config/config.yaml')
 
 # 1. Harvest papers
 harvester = SearchHarvester(config)

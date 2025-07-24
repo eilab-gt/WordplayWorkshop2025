@@ -298,7 +298,12 @@ class TestEnhancedLLMExtractor:
         }
 
         with patch.object(
-            extractor, "_get_paper_content", return_value=("Long content text", "tex")
+            extractor,
+            "_get_paper_content",
+            return_value=(
+                "This is a very long content text that should be sufficient for the LLM extraction process to work properly and meet the minimum content length requirement",
+                "tex",
+            ),
         ):
             with patch.object(
                 extractor, "_llm_service_extract", return_value=mock_extraction
@@ -341,7 +346,7 @@ class TestTeXHTMLExtraction:
         config = MagicMock()
         return EnhancedLLMExtractor(config)
 
-    @patch("src.lit_review.extraction.enhanced_llm_extractor.ArxivHarvester")
+    @patch("src.lit_review.harvesters.arxiv_harvester.ArxivHarvester")
     def test_extract_tex_content_success(self, mock_harvester_class, extractor):
         """Test successful TeX extraction."""
         mock_harvester = Mock()
@@ -350,12 +355,15 @@ class TestTeXHTMLExtraction:
         )
         mock_harvester_class.return_value = mock_harvester
 
-        content, success = extractor._extract_tex_content("2401.00001")
+        with patch.object(
+            extractor, "_clean_tex_content", return_value="Cleaned content"
+        ):
+            content, success = extractor._extract_tex_content("2401.00001")
 
-        assert success is True
-        assert len(content) > 0
+            assert success is True
+            assert len(content) > 0
 
-    @patch("src.lit_review.extraction.enhanced_llm_extractor.ArxivHarvester")
+    @patch("src.lit_review.harvesters.arxiv_harvester.ArxivHarvester")
     def test_extract_html_content_success(self, mock_harvester_class, extractor):
         """Test successful HTML extraction."""
         mock_harvester = Mock()
@@ -375,6 +383,9 @@ class TestTeXHTMLExtraction:
         pdf_path = tmp_path / "test.pdf"
         pdf_path.write_bytes(b"fake pdf content")
 
-        with patch("pdfminer.high_level.extract_text", return_value="Extracted text"):
+        with patch(
+            "src.lit_review.extraction.enhanced_llm_extractor.extract_text",
+            return_value="Extracted text",
+        ):
             text = extractor._extract_pdf_text(pdf_path)
             assert text == "Extracted text"

@@ -96,7 +96,7 @@ class Config:
 class ConfigLoader:
     """Loads and manages configuration from YAML and environment variables."""
 
-    def __init__(self, config_path: str = "config.yaml", env_path: str = ".env"):
+    def __init__(self, config_path: str = "config/config.yaml", env_path: str = ".env"):
         """Initialize the config loader.
 
         Args:
@@ -278,7 +278,9 @@ class ConfigLoader:
 
 
 # Convenience function
-def load_config(config_path: str = "config.yaml", env_path: str = ".env") -> Config:
+def load_config(
+    config_path: str = "config/config.yaml", env_path: str = ".env"
+) -> Config:
     """Load configuration from files.
 
     Args:

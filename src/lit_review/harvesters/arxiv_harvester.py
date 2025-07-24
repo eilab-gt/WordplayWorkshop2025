@@ -2,6 +2,7 @@
 
 import logging
 import time
+from datetime import datetime, timedelta
 
 import arxiv
 import requests
@@ -25,7 +26,7 @@ class ArxivHarvester(BaseHarvester):
         self.delay_milliseconds = self.rate_limits.get("delay_milliseconds", 333)
 
     def search(self, query: str, max_results: int = 100) -> list[Paper]:
-        """Search arXiv for papers.
+        """Search arXiv for papers with pagination support.
 
         Args:
             query: Search query string
@@ -37,37 +38,15 @@ class ArxivHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"arXiv: Starting search with query: {query}")
+            logger.info(
+                f"arXiv: Starting search with query: {query}, max_results: {max_results}"
+            )
 
             # Build arXiv query
             arxiv_query = self._build_arxiv_query(query)
 
-            # Create search
-            search = arxiv.Search(
-                query=arxiv_query,
-                max_results=max_results,
-                sort_by=arxiv.SortCriterion.SubmittedDate,
-                sort_order=arxiv.SortOrder.Descending,
-            )
-
-            # Execute search and collect results
-            for i, result in enumerate(search.results()):
-                try:
-                    paper = self._extract_paper(result)
-                    if paper:
-                        papers.append(paper)
-                        logger.debug(
-                            f"arXiv: Added paper {i + 1}: {paper.title[:50]}..."
-                        )
-
-                    # Rate limiting
-                    time.sleep(self.delay_milliseconds / 1000.0)
-
-                except Exception as e:
-                    logger.error(f"arXiv: Error extracting paper {i + 1}: {e}")
-                    continue
-
-            logger.info(f"arXiv: Found {len(papers)} papers")
+            # Use date-range splitting to overcome API limitations
+            papers = self._search_with_date_splitting(arxiv_query, max_results)
 
         except Exception as e:
             logger.error(f"arXiv: Error during search: {e}")
@@ -75,6 +54,324 @@ class ArxivHarvester(BaseHarvester):
         # Filter by year
         papers = self.filter_by_year(papers)
 
+        return papers
+
+    def _search_with_date_splitting(
+        self, arxiv_query: str, max_results: int
+    ) -> list[Paper]:
+        """Split query by date ranges to overcome arXiv API pagination limits.
+
+        Args:
+            arxiv_query: Formatted arXiv query
+            max_results: Maximum total results to collect
+
+        Returns:
+            List of Paper objects
+        """
+        papers = []
+
+        # Generate monthly date ranges from 2018-01 to 2025-12
+        date_ranges = self._generate_monthly_ranges("2018-01", "2025-12")
+
+        logger.info(
+            f"arXiv: Using date-range splitting strategy with {len(date_ranges)} monthly chunks"
+        )
+
+        for i, (start_date, end_date) in enumerate(date_ranges):
+            if len(papers) >= max_results:
+                break
+
+            logger.info(
+                f"arXiv: Processing date range {i+1}/{len(date_ranges)}: {start_date} to {end_date}"
+            )
+
+            # Add date filter to existing query
+            date_query = (
+                f"({arxiv_query}) AND submittedDate:[{start_date} TO {end_date}]"
+            )
+
+            try:
+                search = arxiv.Search(
+                    query=date_query,
+                    max_results=min(100, max_results - len(papers)),
+                    sort_by=arxiv.SortCriterion.SubmittedDate,
+                    sort_order=arxiv.SortOrder.Descending,
+                )
+
+                batch_papers = []
+                batch_count = 0
+
+                # Collect results for this date range
+                for result in search.results():
+                    paper = self._extract_paper(result)
+                    if paper:
+                        batch_papers.append(paper)
+                        batch_count += 1
+
+                    # Rate limiting
+                    time.sleep(self.delay_milliseconds / 1000.0)
+
+                    if batch_count >= min(100, max_results - len(papers)):
+                        break
+
+                papers.extend(batch_papers)
+
+                logger.info(
+                    f"arXiv: Date range yielded {len(batch_papers)} papers, total: {len(papers)}"
+                )
+
+                # Conservative delay between date ranges
+                time.sleep(2.0)
+
+            except Exception as e:
+                logger.error(f"arXiv: Error in date range {start_date}-{end_date}: {e}")
+                continue
+
+        logger.info(
+            f"arXiv: Date-range splitting complete. Found {len(papers)} total papers"
+        )
+
+        # Deduplicate papers based on arXiv ID
+        seen_ids = set()
+        unique_papers = []
+        for paper in papers:
+            if paper.arxiv_id and paper.arxiv_id not in seen_ids:
+                seen_ids.add(paper.arxiv_id)
+                unique_papers.append(paper)
+            elif not paper.arxiv_id:
+                # If no arxiv_id, use title + year as deduplication key
+                key = f"{paper.title}_{paper.year}"
+                if key not in seen_ids:
+                    seen_ids.add(key)
+                    unique_papers.append(paper)
+
+        logger.info(f"arXiv: After deduplication: {len(unique_papers)} unique papers")
+        return unique_papers
+
+    def _generate_monthly_ranges(
+        self, start_date: str, end_date: str
+    ) -> list[tuple[str, str]]:
+        """Generate monthly date ranges for query splitting.
+
+        Args:
+            start_date: Start date in YYYY-MM format
+            end_date: End date in YYYY-MM format
+
+        Returns:
+            List of (start_date, end_date) tuples in YYYYMMDD format
+        """
+        ranges = []
+        current = datetime.strptime(start_date, "%Y-%m")
+        end = datetime.strptime(end_date, "%Y-%m")
+
+        while current <= end:
+            # Calculate next month
+            if current.month == 12:
+                next_month = current.replace(year=current.year + 1, month=1)
+            else:
+                next_month = current.replace(month=current.month + 1)
+
+            # Calculate last day of current month
+            last_day = next_month - timedelta(days=1)
+
+            ranges.append((current.strftime("%Y%m%d"), last_day.strftime("%Y%m%d")))
+
+            current = next_month
+
+        return ranges
+
+    def _search_with_category_splitting(
+        self, arxiv_query: str, max_results: int
+    ) -> list[Paper]:
+        """Split query by arXiv categories as fallback mechanism.
+
+        Args:
+            arxiv_query: Formatted arXiv query
+            max_results: Maximum total results to collect
+
+        Returns:
+            List of Paper objects
+        """
+        papers = []
+
+        # Target categories for LLM and wargaming research
+        categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.CR"]
+
+        logger.info(
+            f"arXiv: Using category splitting strategy with {len(categories)} categories"
+        )
+
+        for i, category in enumerate(categories):
+            if len(papers) >= max_results:
+                break
+
+            logger.info(
+                f"arXiv: Processing category {i+1}/{len(categories)}: {category}"
+            )
+
+            # Add category filter to existing query
+            category_query = f"({arxiv_query}) AND cat:{category}"
+
+            try:
+                search = arxiv.Search(
+                    query=category_query,
+                    max_results=min(100, max_results - len(papers)),
+                    sort_by=arxiv.SortCriterion.SubmittedDate,
+                    sort_order=arxiv.SortOrder.Descending,
+                )
+
+                batch_papers = []
+                batch_count = 0
+
+                # Collect results for this category
+                for result in search.results():
+                    paper = self._extract_paper(result)
+                    if paper:
+                        batch_papers.append(paper)
+                        batch_count += 1
+
+                    # Rate limiting
+                    time.sleep(self.delay_milliseconds / 1000.0)
+
+                    if batch_count >= min(100, max_results - len(papers)):
+                        break
+
+                papers.extend(batch_papers)
+
+                logger.info(
+                    f"arXiv: Category {category} yielded {len(batch_papers)} papers, total: {len(papers)}"
+                )
+
+                # Conservative delay between categories
+                time.sleep(2.0)
+
+            except Exception as e:
+                logger.error(f"arXiv: Error in category {category}: {e}")
+                continue
+
+        logger.info(
+            f"arXiv: Category splitting complete. Found {len(papers)} total papers"
+        )
+
+        # Deduplicate papers based on arXiv ID
+        seen_ids = set()
+        unique_papers = []
+        for paper in papers:
+            if paper.arxiv_id and paper.arxiv_id not in seen_ids:
+                seen_ids.add(paper.arxiv_id)
+                unique_papers.append(paper)
+            elif not paper.arxiv_id:
+                # If no arxiv_id, use title + year as deduplication key
+                key = f"{paper.title}_{paper.year}"
+                if key not in seen_ids:
+                    seen_ids.add(key)
+                    unique_papers.append(paper)
+
+        logger.info(f"arXiv: After deduplication: {len(unique_papers)} unique papers")
+        return unique_papers
+
+    def _search_with_pagination(
+        self, arxiv_query: str, max_results: int
+    ) -> list[Paper]:
+        """Search arXiv with pagination to collect all available results.
+
+        Args:
+            arxiv_query: Formatted arXiv query
+            max_results: Maximum total results to collect
+
+        Returns:
+            List of Paper objects
+        """
+        papers = []
+        page_size = 100  # arXiv API batch size
+        start = 0
+
+        while len(papers) < max_results:
+            current_page_size = min(page_size, max_results - len(papers))
+
+            logger.info(
+                f"arXiv: Fetching batch {start//page_size + 1}, "
+                f"start={start}, size={current_page_size}"
+            )
+
+            # Create search for this batch with offset
+            search = arxiv.Search(
+                query=arxiv_query,
+                max_results=current_page_size,
+                sort_by=arxiv.SortCriterion.SubmittedDate,
+                sort_order=arxiv.SortOrder.Descending,
+            )
+
+            batch_papers = []
+            batch_count = 0
+
+            try:
+                # Execute search and collect results for this batch
+                results_iter = search.results()
+
+                # Skip to correct offset
+                for _ in range(start):
+                    try:
+                        next(results_iter)
+                    except StopIteration:
+                        logger.info(f"arXiv: Reached end of results at offset {start}")
+                        return papers
+
+                # Collect this batch
+                for i in range(current_page_size):
+                    try:
+                        result = next(results_iter)
+                        paper = self._extract_paper(result)
+                        if paper:
+                            batch_papers.append(paper)
+                            logger.debug(
+                                f"arXiv: Added paper {start + i + 1}: {paper.title[:50]}..."
+                            )
+
+                        batch_count += 1
+
+                        # Rate limiting
+                        time.sleep(self.delay_milliseconds / 1000.0)
+
+                    except StopIteration:
+                        logger.info(
+                            f"arXiv: Reached end of results after {batch_count} papers in batch"
+                        )
+                        break
+                    except Exception as e:
+                        logger.error(
+                            f"arXiv: Error extracting paper {start + i + 1}: {e}"
+                        )
+                        continue
+
+                # If we got fewer results than requested, we've hit the end
+                if batch_count == 0:
+                    logger.info("arXiv: No more results available")
+                    break
+
+                papers.extend(batch_papers)
+                start += batch_count
+
+                logger.info(
+                    f"arXiv: Batch complete. Got {len(batch_papers)} papers, "
+                    f"total: {len(papers)}"
+                )
+
+                # If we got fewer than expected, we're at the end
+                if batch_count < current_page_size:
+                    logger.info("arXiv: Reached end of available results")
+                    break
+
+                # Additional delay between batches to be respectful
+                time.sleep(1.0)
+
+            except Exception as e:
+                logger.error(f"arXiv: Error in batch starting at {start}: {e}")
+                # Try to continue with next batch
+                start += page_size
+                continue
+
+        logger.info(f"arXiv: Pagination complete. Found {len(papers)} total papers")
         return papers
 
     def _build_arxiv_query(self, base_query: str) -> str:

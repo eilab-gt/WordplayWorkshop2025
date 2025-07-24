@@ -281,7 +281,7 @@ class Visualizer:
             ax.set_xlabel("AWScale Score", fontsize=12)
             ax.set_ylabel("Number of Papers", fontsize=12)
             ax.set_title(
-                "AWScale Distribution (Analytic ↔ Wild-Creative)",
+                "AWScale Distribution (Analytical<>Creative Scale)",
                 fontsize=14,
                 fontweight="bold",
             )

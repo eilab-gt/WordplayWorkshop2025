@@ -78,7 +78,7 @@ uv run python run.py export
 - `test_output/results/test_pipeline_results.zip` - Final export
 
 ### Configuration
-- `config/test_config.yaml` - Working test configuration
+- `config/config.yaml` - Comprehensive configuration file
 
 ## 💡 Quick Tips
 

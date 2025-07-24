@@ -90,8 +90,10 @@ def test_keyword_filtering():
     ]
 
     # Test different filter configurations
-    config = type("Config", (), {})()
-    harvester = BaseHarvester(config)
+    config = type(
+        "Config", (), {"rate_limits": {"arxiv": {"delay_milliseconds": 1000}}}
+    )()
+    harvester = ArxivHarvester(config)
 
     # Test 1: Include keywords
     print("\nTest 1: Include 'wargaming' OR 'LLM'")
@@ -122,8 +124,8 @@ def test_keyword_filtering():
         print(f"  ✓ {p.title}")
 
 
-def test_llm_service():
-    """Test LLM service connectivity."""
+def check_llm_service():
+    """Check LLM service connectivity."""
     print("\n=== Testing LLM Service ===")
 
     import requests
@@ -184,7 +186,7 @@ def test_enhanced_extractor():
     print("\n=== Testing Enhanced Extractor ===")
 
     # Load config
-    config = load_config("config/test_config.yaml")
+    config = load_config("config/config.yaml")
 
     # Create test DataFrame
     test_data = {
@@ -223,7 +225,7 @@ def run_integration_test():
     """Run a complete integration test."""
     print("\n=== Integration Test: 10 Papers ===")
 
-    config = load_config("config/test_config.yaml")
+    config = load_config("config/config.yaml")
 
     # Step 1: Harvest with filtering
     print("\n1. Harvesting papers...")
@@ -296,7 +298,7 @@ def main():
     test_keyword_filtering()
 
     # Test LLM service (if running)
-    if test_llm_service():
+    if check_llm_service():
         test_enhanced_extractor()
 
     # Run integration test

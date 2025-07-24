@@ -18,6 +18,7 @@ from src.lit_review.extraction.enhanced_llm_extractor import EnhancedLLMExtracto
 from src.lit_review.harvesters import SearchHarvester
 from src.lit_review.processing import Normalizer, PDFFetcher, ScreenUI
 from src.lit_review.utils import Exporter, load_config
+from src.lit_review.utils.content_cache import ContentCache
 from src.lit_review.visualization import Visualizer
 
 # Initialize rich console
@@ -35,7 +36,9 @@ def setup_logging(level: str = "INFO"):
 
 
 @click.group()
-@click.option("--config", default="config.yaml", help="Path to configuration file")
+@click.option(
+    "--config", default="config/config.yaml", help="Path to configuration file"
+)
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.pass_context
 def cli(ctx, config, log_level):
@@ -574,6 +577,108 @@ def status(ctx):
     console.print(f"  Parallel workers: {config.parallel_workers}")
 
 
+@cli.command("cache-stats")
+@click.pass_context
+def cache_stats(ctx):
+    """Show cache statistics and usage."""
+    config = ctx.obj["config"]
+    console = ctx.obj["console"]
+
+    console.print("\n[bold]Content Cache Statistics[/bold]")
+
+    # Initialize content cache
+    content_cache = ContentCache(config)
+    stats = content_cache.get_statistics()
+
+    # Create summary table
+    table = Table(title="Cache Summary")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("Total Entries", str(stats["total_entries"]))
+    table.add_row("Total Size", f"{stats['total_size_mb']:.1f} MB")
+    table.add_row("Cache Hits", str(stats["cache_hits"]))
+    table.add_row("Cache Misses", str(stats["cache_misses"]))
+    table.add_row("Hit Rate", f"{stats['hit_rate']:.1f}%")
+    table.add_row("Time Saved", f"{stats['time_saved_seconds']/60:.1f} minutes")
+    table.add_row("Bandwidth Saved", f"{stats['bytes_saved']/1024/1024:.1f} MB")
+
+    console.print(table)
+
+    # Show breakdown by type
+    if stats.get("by_type"):
+        type_table = Table(title="Cache by Content Type")
+        type_table.add_column("Type", style="cyan")
+        type_table.add_column("Count", style="green")
+        type_table.add_column("Size (MB)", style="green")
+
+        for content_type, type_stats in stats["by_type"].items():
+            type_table.add_row(
+                content_type.upper(),
+                str(type_stats["count"]),
+                f"{type_stats['total_size_mb']:.1f}",
+            )
+
+        console.print("\n")
+        console.print(type_table)
+
+
+@cli.command("cache-clean")
+@click.option("--type", help="Content type to clean (pdf, html, tex, or all)")
+@click.option("--days", default=90, help="Keep files newer than N days")
+@click.option("--force", is_flag=True, help="Skip confirmation")
+@click.pass_context
+def cache_clean(ctx, type, days, force):
+    """Clean content cache."""
+    config = ctx.obj["config"]
+    console = ctx.obj["console"]
+
+    content_cache = ContentCache(config)
+
+    # Get current stats before cleaning
+    stats = content_cache.get_statistics()
+
+    if type and type != "all":
+        # Clean specific type
+        if type not in ["pdf", "html", "tex"]:
+            console.print(
+                f"[red]Error:[/red] Invalid type '{type}'. Use pdf, html, tex, or all"
+            )
+            return
+
+        type_stats = stats.get("by_type", {}).get(type, {})
+        if not force and type_stats.get("count", 0) > 0:
+            if not click.confirm(
+                f"Remove {type_stats['count']} {type.upper()} files ({type_stats.get('total_size_mb', 0):.1f} MB)?"
+            ):
+                return
+
+        removed = content_cache.clear_cache(content_type=type)
+        console.print(
+            f"[green]✓[/green] Removed {removed} {type.upper()} cache entries"
+        )
+
+    elif days:
+        # Clean old entries
+        if not force:
+            if not click.confirm(f"Remove cache entries older than {days} days?"):
+                return
+
+        removed = content_cache.cleanup_old_entries(days=days)
+        console.print(f"[green]✓[/green] Removed {removed} old cache entries")
+
+    else:
+        # Clean all
+        if not force:
+            if not click.confirm(
+                f"Remove ALL {stats['total_entries']} cache entries ({stats['total_size_mb']:.1f} MB)?"
+            ):
+                return
+
+        removed = content_cache.clear_cache()
+        console.print(f"[green]✓[/green] Removed {removed} cache entries")
+
+
 @cli.command("clean-cache")
 @click.option("--pdfs", is_flag=True, help="Clean PDF cache")
 @click.option("--logs", is_flag=True, help="Clean logs")
@@ -581,9 +686,13 @@ def status(ctx):
 @click.option("--days", default=30, help="Keep files newer than N days")
 @click.pass_context
 def clean_cache(ctx, pdfs, logs, clean_all, days):
-    """Clean up cache and temporary files."""
+    """Clean up cache and temporary files (deprecated - use cache-clean)."""
     config = ctx.obj["config"]
     console = ctx.obj["console"]
+
+    console.print(
+        "[yellow]Note: This command is deprecated. Use 'cache-clean' for content cache management.[/yellow]"
+    )
 
     if clean_all:
         pdfs = logs = True

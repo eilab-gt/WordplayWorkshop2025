@@ -48,8 +48,8 @@ class TestArxivHarvester:
         # Should include CS category filter
         assert "cat:cs.*" in query
 
-    def test_build_arxiv_query_empty_terms(self, harvester):
-        """Test query building with empty terms."""
+    def test_builds_valid_query_even_with_empty_search_terms(self, harvester):
+        """Test query builder handles empty term lists gracefully."""
         harvester.config.wargame_terms = []
         harvester.config.llm_terms = []
 
@@ -92,34 +92,66 @@ class TestArxivHarvester:
         assert papers[0].pdf_url == "http://arxiv.org/pdf/2301.00001v1.pdf"
 
     @patch("arxiv.Search")
-    def test_search_with_year_filter(self, mock_search_class, harvester):
-        """Test search with year filtering."""
-        # Create results with different years
-        results = []
-        for year in [2019, 2021, 2023, 2025]:
-            mock_result = Mock()
-            mock_result.title = f"Paper {year}"
-            author = Mock()
-            author.name = "Author"
-            mock_result.authors = [author]
-            mock_result.published = datetime(year, 1, 1)
-            mock_result.summary = "Abstract"
-            mock_result.entry_id = f"http://arxiv.org/abs/{year}01.00001"
-            mock_result.doi = None
-            mock_result.pdf_url = f"http://arxiv.org/pdf/{year}01.00001.pdf"
-            mock_result.categories = ["cs.AI"]
-            mock_result.journal_ref = None
-            results.append(mock_result)
+    def test_filters_search_results_by_publication_year(
+        self, mock_search_class, harvester
+    ):
+        """Test only papers within configured year range are returned."""
+        # Track which date ranges have been queried
+        call_count = 0
 
-        mock_search = Mock()
-        mock_search.results.return_value = results
-        mock_search_class.return_value = mock_search
+        def create_mock_search(*args, **kwargs):
+            nonlocal call_count
+            mock_search = Mock()
+
+            # Return different papers based on the query (simulating date-range splitting)
+            if call_count == 0:
+                # First date range - return papers from 2019 and 2021
+                results = []
+                for year in [2019, 2021]:
+                    mock_result = Mock()
+                    mock_result.title = f"Paper {year}"
+                    author = Mock()
+                    author.name = "Author"
+                    mock_result.authors = [author]
+                    mock_result.published = datetime(year, 1, 1)
+                    mock_result.summary = "Abstract"
+                    mock_result.entry_id = f"http://arxiv.org/abs/{year}01.00001"
+                    mock_result.doi = None
+                    mock_result.pdf_url = f"http://arxiv.org/pdf/{year}01.00001.pdf"
+                    mock_result.categories = ["cs.AI"]
+                    mock_result.journal_ref = None
+                    results.append(mock_result)
+                mock_search.results.return_value = results
+            else:
+                # Subsequent date ranges - return papers from 2023 and 2025
+                results = []
+                for year in [2023, 2025]:
+                    mock_result = Mock()
+                    mock_result.title = f"Paper {year}"
+                    author = Mock()
+                    author.name = "Author"
+                    mock_result.authors = [author]
+                    mock_result.published = datetime(year, 1, 1)
+                    mock_result.summary = "Abstract"
+                    mock_result.entry_id = f"http://arxiv.org/abs/{year}01.00001"
+                    mock_result.doi = None
+                    mock_result.pdf_url = f"http://arxiv.org/pdf/{year}01.00001.pdf"
+                    mock_result.categories = ["cs.AI"]
+                    mock_result.journal_ref = None
+                    results.append(mock_result)
+                mock_search.results.return_value = results
+
+            call_count += 1
+            return mock_search
+
+        mock_search_class.side_effect = create_mock_search
 
         papers = harvester.search("test", max_results=10)
 
-        # Should only include papers from 2020-2024
+        # Should only include papers from 2020-2024 (2021 and 2023)
         assert len(papers) == 2
         assert all(2020 <= p.year <= 2024 for p in papers)
+        assert {p.year for p in papers} == {2021, 2023}
 
     @patch("arxiv.Search")
     def test_search_error_handling(self, mock_search_class, harvester):
@@ -134,8 +166,10 @@ class TestArxivHarvester:
         assert papers == []
 
     @patch("arxiv.Search")
-    def test_search_with_categories(self, mock_search_class, harvester):
-        """Test handling of different category formats."""
+    def test_extracts_categories_from_various_arxiv_formats(
+        self, mock_search_class, harvester
+    ):
+        """Test harvester handles both old and new arXiv category formats."""
         mock_result = Mock()
         mock_result.title = "Test Paper"
         mock_result.authors = []
@@ -159,16 +193,16 @@ class TestArxivHarvester:
         assert "cs.AI" in papers[0].keywords
         assert "cs.CL" in papers[0].keywords
 
-    def test_extract_paper_missing_title(self, harvester):
-        """Test extraction with missing title."""
+    def test_skips_papers_without_required_title_field(self, harvester):
+        """Test papers missing title are rejected during extraction."""
         mock_result = Mock()
         mock_result.title = None
 
         paper = harvester._extract_paper(mock_result)
         assert paper is None
 
-    def test_extract_paper_with_journal_ref(self, harvester):
-        """Test extraction with journal reference."""
+    def test_includes_journal_reference_as_venue_when_available(self, harvester):
+        """Test journal references are correctly mapped to venue field."""
         mock_result = Mock()
         mock_result.title = "Test Paper"
         mock_result.authors = []
@@ -212,8 +246,8 @@ class TestArxivHarvester:
         # through _build_arxiv_query which adds cat:cs.* by default
 
     @patch("arxiv.Search")
-    def test_get_paper_by_id(self, mock_search_class, harvester):
-        """Test getting paper by arXiv ID."""
+    def test_retrieves_specific_paper_by_arxiv_id(self, mock_search_class, harvester):
+        """Test fetching individual paper using its arXiv identifier."""
         mock_result = Mock()
         mock_result.title = "Specific Paper"
         mock_result.authors = []
@@ -237,8 +271,8 @@ class TestArxivHarvester:
         mock_search_class.assert_called_with(id_list=["2301.00234"])
 
     @patch("arxiv.Search")
-    def test_get_paper_by_id_not_found(self, mock_search_class, harvester):
-        """Test getting paper by ID when not found."""
+    def test_returns_none_when_arxiv_id_not_found(self, mock_search_class, harvester):
+        """Test graceful handling of non-existent arXiv IDs."""
         mock_search = Mock()
         mock_search.results.return_value = []
         mock_search_class.return_value = mock_search
@@ -247,8 +281,8 @@ class TestArxivHarvester:
         assert paper is None
 
     @patch("requests.get")
-    def test_fetch_tex_source_success(self, mock_get, harvester):
-        """Test successful TeX source fetching."""
+    def test_downloads_tex_source_from_arxiv_eprint_service(self, mock_get, harvester):
+        """Test successful download of LaTeX source from arXiv."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.content = (
@@ -267,8 +301,8 @@ class TestArxivHarvester:
         )
 
     @patch("requests.get")
-    def test_fetch_tex_source_not_tex(self, mock_get, harvester):
-        """Test TeX source fetch when content is not TeX."""
+    def test_rejects_non_tex_content_from_eprint_service(self, mock_get, harvester):
+        """Test detection and rejection of non-LaTeX content."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.content = b"This is not TeX content"
@@ -325,8 +359,8 @@ class TestArxivHarvester:
         html_content = harvester.fetch_html_source("2301.00234")
         assert html_content is None
 
-    def test_clean_text(self, harvester):
-        """Test text cleaning functionality."""
+    def test_removes_special_characters_and_normalizes_whitespace(self, harvester):
+        """Test text cleaning removes LaTeX artifacts and excess whitespace."""
         dirty_text = "  This   has\nextra\n\nspaces  "
         clean = harvester.clean_text(dirty_text)
         assert clean == "This has extra spaces"

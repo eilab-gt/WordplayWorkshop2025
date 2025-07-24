@@ -1,0 +1,683 @@
+# Literature Review Pipeline Configuration
+# Comprehensive configuration combining search optimization and production features
+# Version: 2.0.0
+
+# Search Parameters
+search:
+  years:
+    start: 2018
+    end: 2025
+
+  # Minimum LLM parameters (100M = GPT-2 baseline)
+  llm_min_params: 100_000_000
+
+  # Inclusion flags (papers must match at least one)
+  inclusion_flags:
+    - open_ended
+    - quantitative
+
+  # Wargame and simulation terms - comprehensive list
+  wargame_terms:
+    # Core wargaming terms
+    - "wargame"
+    - "war game"
+    - "wargaming"
+    - "war-game"
+    - "war gaming"
+
+    # Specific wargame types
+    - "tabletop exercise"
+    - "TTX"
+    - "matrix game"
+    - "matrix wargame"
+    - "seminar wargame"
+    - "seminar game"
+    - "policy game"
+    - "strategic game"
+    - "crisis game"
+    - "free kriegsspiel"
+
+    # Crisis and conflict simulation
+    - "crisis simulation"
+    - "conflict simulation"
+    - "crisis management simulation"
+    - "strategic simulation"
+    - "military simulation"
+    - "defense simulation"
+    - "diplomatic simulation"
+    - "geopolitical simulation"
+    - "national security simulation"
+
+    # Military/defense specific
+    - "military exercise"
+    - "defense exercise"
+    - "red team"
+    - "red teaming"
+    - "blue team"
+    - "operational planning"
+    - "strategic planning exercise"
+    - "threat assessment"
+
+    # Decision-making contexts
+    - "military decision-making"
+    - "diplomatic decision-making"
+    - "strategic decision-making"
+    - "crisis decision-making"
+
+    # Specific games/frameworks
+    - "Diplomacy game"
+    - "Snow Globe"
+    - "WarAgent"
+
+  # LLM and AI terms - comprehensive coverage
+  llm_terms:
+    # Core LLM terms
+    - "large language model"
+    - "LLM"
+    - "LLMs"
+    - "language model"
+    - "foundation model"
+    - "transformer model"
+    - "neural language model"
+    - "generative AI"
+    - "generative artificial intelligence"
+
+    # Specific models
+    - "GPT"
+    - "GPT-3"
+    - "GPT-3.5"
+    - "GPT-4"
+    - "ChatGPT"
+    - "InstructGPT"
+    - "Claude"
+    - "Claude-2"
+    - "Claude-3"
+    - "Anthropic"
+    - "PaLM"
+    - "PaLM-2"
+    - "Gemini"
+    - "Bard"
+    - "LLaMA"
+    - "LLaMA-2"
+    - "Llama"
+    - "Llama-2"
+    - "Alpaca"
+    - "Vicuna"
+    - "BERT"
+    - "T5"
+    - "Cicero"
+
+    # AI agent terms
+    - "AI agent"
+    - "artificial intelligence agent"
+    - "autonomous agent"
+    - "multi-agent"
+    - "multi-agent system"
+    - "agent-based"
+    - "LLM agent"
+    - "LLM-based agent"
+    - "LLM-powered agent"
+
+    # Related AI terms
+    - "artificial intelligence"
+    - "machine learning"
+    - "deep learning"
+    - "natural language processing"
+    - "NLP"
+    - "strategic reasoning"
+    - "automated reasoning"
+    - "transformer"
+    - "attention mechanism"
+
+  # Action and role terms
+  action_terms:
+    # Core actions
+    - "simulation"
+    - "simulate"
+    - "simulating"
+    - "play"
+    - "playing"
+    - "player"
+    - "participant"
+    - "agent"
+
+    # Analysis and support
+    - "analysis"
+    - "analyze"
+    - "evaluation"
+    - "evaluate"
+    - "assessment"
+    - "decision support"
+    - "decision-making support"
+    - "planning"
+    - "strategy"
+    - "modeling"
+    - "prediction"
+    - "benchmark"
+
+    # Generation and creation
+    - "scenario generation"
+    - "scenario creation"
+    - "narrative generation"
+    - "strategy generation"
+
+    # Specific roles
+    - "facilitator"
+    - "moderator"
+    - "adjudicator"
+    - "opponent"
+    - "advisor"
+    - "assistant"
+
+    # Behavioral terms
+    - "escalation"
+    - "de-escalation"
+    - "negotiation"
+    - "diplomacy"
+    - "strategic planning"
+    - "strategic reasoning"
+    - "human-AI team"
+    - "human-machine team"
+
+  # Inclusion indicators - must have at least one
+  inclusion_indicators:
+    # Military/defense context
+    - "military"
+    - "defense"
+    - "defence"
+    - "national security"
+    - "international security"
+    - "strategic"
+    - "tactical"
+    - "operational"
+
+    # Crisis and conflict
+    - "crisis"
+    - "conflict"
+    - "escalation"
+    - "deterrence"
+    - "nuclear"
+    - "cyber"
+    - "hybrid warfare"
+
+    # Specific methodologies
+    - "red team"
+    - "tabletop exercise"
+    - "after action"
+    - "lessons learned"
+    - "course of action"
+    - "COA"
+
+    # Research contexts
+    - "human-AI team"
+    - "human-machine team"
+    - "comparative study"
+    - "empirical study"
+    - "experimental study"
+
+  # Exclusion terms - filter out non-relevant papers
+  exclusion_terms:
+    # Entertainment/commercial games
+    - "video game"
+    - "computer game"
+    - "entertainment"
+    - "esports"
+    - "e-sports"
+    - "gaming industry"
+    - "game development"
+    - "game design tutorial"
+    - "Unity engine"
+    - "Unreal engine"
+
+    # Specific non-relevant games
+    - "chess"
+    - "chess engine"
+    - "Go game"
+    - "Go engine"
+    - "AlphaGo"
+    - "poker"
+    - "Texas Hold'em"
+    - "blackjack"
+    - "board game review"
+    - "Dungeons Dragons"
+    - "D&D"
+    - "Magic the Gathering"
+
+    # Video game titles
+    - "StarCraft"
+    - "Minecraft"
+    - "Fortnite"
+    - "League of Legends"
+    - "Dota"
+    - "Call of Duty"
+    - "Battlefield"
+    - "Grand Theft Auto"
+    - "Assassin's Creed"
+    - "World of Warcraft"
+    - "Civilization VI"
+    - "Total War"
+    - "Atari"
+
+    # Non-relevant AI applications
+    - "game engine AI"
+    - "NPC behavior"
+    - "pathfinding"
+    - "procedural generation"
+    - "game balance"
+
+# Query optimization strategies
+query_strategies:
+  # Primary strategy: Comprehensive boolean search
+  primary:
+    description: "Broad search combining wargame AND LLM terms"
+    template: "({wargame_terms}) AND ({llm_terms})"
+
+  # Secondary strategies for better recall
+  secondary:
+    - description: "LLM agents in strategic contexts"
+      template: "({llm_terms}) AND (strategic OR military OR defense) AND (simulation OR game OR exercise)"
+
+    - description: "Specific model applications"
+      template: "(GPT-4 OR GPT-3 OR Claude OR Gemini) AND (wargaming OR \"crisis simulation\" OR \"military planning\")"
+
+    - description: "Multi-agent simulations"
+      template: "\"multi-agent\" AND ({llm_terms}) AND (conflict OR crisis OR strategic)"
+
+    - description: "Escalation and decision-making"
+      template: "({llm_terms}) AND escalation AND (military OR diplomatic) AND decision"
+
+    - description: "Human-AI teaming"
+      template: "(human-AI OR human-machine) AND team AND ({wargame_terms})"
+
+# Source-specific optimizations
+source_optimizations:
+  arxiv:
+    # arXiv category filters
+    categories:
+      - "cs.AI"     # Artificial Intelligence
+      - "cs.GT"     # Computer Science and Game Theory
+      - "cs.MA"     # Multiagent Systems
+      - "cs.CL"     # Computation and Language
+      - "cs.CY"     # Computers and Society
+      - "cs.HC"     # Human-Computer Interaction
+
+  semantic_scholar:
+    # Field of study filters
+    fields:
+      - "Computer Science"
+      - "Political Science"
+      - "Military Science"
+      - "International Relations"
+
+  google_scholar:
+    # Include patents and theses
+    include_patents: false
+    include_citations: true
+
+# Failure Mode Vocabulary
+failure_vocab:
+  content:
+    - bias
+    - hallucination
+    - factual_error
+    - confabulation
+    - inconsistency
+
+  interactive:
+    - escalation
+    - deception
+    - prompt_sensitivity
+    - manipulation
+    - adversarial
+
+  security:
+    - data_leakage
+    - jailbreak
+    - prompt_injection
+    - privacy_breach
+
+  other:
+    - other
+    - unspecified
+    - unknown
+
+# API Configuration
+api_keys:
+  semantic_scholar: "${SEMANTIC_SCHOLAR_API_KEY}"
+  openai: "${OPENAI_API_KEY}"
+  unpaywall_email: "${UNPAYWALL_EMAIL}"
+
+# API Rate Limits - Production Scale
+rate_limits:
+  google_scholar:
+    requests_per_hour: 500
+    delay_seconds: 7.2
+    burst_limit: 10
+
+  semantic_scholar:
+    requests_per_second: 50
+    delay_milliseconds: 20
+    burst_limit: 100
+
+  arxiv:
+    requests_per_second: 10
+    delay_milliseconds: 100
+    burst_limit: 25
+
+  crossref:
+    requests_per_second: 100
+    delay_milliseconds: 10
+    burst_limit: 200
+
+# Paths
+paths:
+  cache_dir: "./pdf_cache"
+  output_dir: "./output"
+  data_dir: "./data"
+  log_dir: "./logs"
+  plugin_dir: "./plugins"
+
+  # Session management
+  progress_db: "./data/harvest_progress.db"
+  session_cache: "./data/sessions"
+
+  # Data files
+  raw_papers: "./data/raw/papers_raw.csv"
+  screening_progress: "./data/processed/screening_progress.csv"
+  extraction_results: "./data/extracted/extraction.csv"
+
+  # Database
+  logging_db: "./logs/logging.db"
+
+  # Backup
+  backup_dir: "./backup"
+
+# LLM Configuration
+llm:
+  model: "gpt-4o"
+  temperature: 0.1
+  max_tokens: 4000
+
+  # System prompts
+  extraction_prompt: |
+    You are an expert at extracting structured information from academic papers about LLM-powered wargames.
+    Extract the following fields based on the provided definitions:
+    - venue_type: conference/journal/tech-report/workshop
+    - game_type: seminar/matrix/digital/hybrid
+    - open_ended: yes/no (based on definition of unconstrained natural-language moves)
+    - quantitative: yes/no (tracks numeric scores/payoffs)
+    - llm_family: The specific LLM used (e.g., GPT-4, Claude, Llama-70B)
+    - llm_role: player/generator/analyst
+    - eval_metrics: Description of evaluation metrics used
+    - failure_modes: List of documented failure modes from the controlled vocabulary
+    - code_release: GitHub URL or "none"
+    - grey_lit_flag: true/false
+
+    Return your response as a JSON object with these exact field names.
+
+  awscale_prompt: |
+    Rate this paper on the AWScale (Analytical<>Creative Scale) from 1-5:
+    1 = Strictly analytic (deterministic tables, numeric payoff, no free narrative)
+    2 = Mostly analytic (limited free text, heavy scoring)
+    3 = Balanced (narrative <=> numeric balance)
+    4 = Mostly creative (free-form moves, light scoring)
+    5 = Wild-creative (storytelling, referee adjudication, emergent goals)
+
+    Return only the number (1-5).
+
+# Processing Configuration
+processing:
+  # Deduplication
+  dedup:
+    methods:
+      - doi_exact
+      - arxiv_id_exact
+      - title_fuzzy
+      - url_based
+    title_similarity_threshold: 0.9
+    enable_cross_source_dedup: true
+
+  # PDF Processing
+  pdf:
+    max_file_size_mb: 100
+    timeout_seconds: 60
+    parallel_downloads: 20
+    extract_images: false
+    enable_caching: true
+    cache_size_gb: 10
+
+  # Batch sizes
+  batch_sizes:
+    harvesting: 1000
+    pdf_download: 50
+    llm_extraction: 20
+    deduplication: 5000
+
+# Production Settings
+production:
+  # Batch processing
+  batch_size: 1000
+  checkpoint_interval: 100
+  max_concurrent_sources: 4
+
+  # Resume capabilities
+  enable_resume: true
+  session_timeout_hours: 24
+
+  # Error handling
+  max_retries: 5
+  backoff_factor: 2.0
+  max_backoff_seconds: 300
+
+  # Memory management
+  max_papers_in_memory: 10000
+  flush_interval: 1000
+
+  # Monitoring
+  enable_metrics: true
+  metrics_interval: 60
+
+  # Quality thresholds
+  min_success_rate: 0.8
+  max_error_rate: 0.1
+
+# Visualization Configuration
+visualization:
+  # Output format
+  format: "png"
+  dpi: 300
+
+  # Style
+  style: "seaborn-v0_8-darkgrid"
+  figsize: [10, 6]
+
+  # Color scheme
+  colors:
+    game_types:
+      seminar: "#1f77b4"
+      matrix: "#ff7f0e"
+      digital: "#2ca02c"
+      hybrid: "#d62728"
+
+    awscale:
+      1: "#d62728"  # Red - Strictly analytic
+      2: "#ff7f0e"  # Orange
+      3: "#ffbb78"  # Light orange - Balanced
+      4: "#2ca02c"  # Green
+      5: "#1f77b4"  # Blue - Wild-creative
+
+# Export Configuration
+export:
+  # Zenodo settings (optional)
+  zenodo:
+    enabled: false
+    access_token: "${ZENODO_ACCESS_TOKEN}"
+    community: "llm-wargames"
+
+  # Archive settings
+  compression: "zip"
+  include_pdfs: false
+  include_logs: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
+
+  # Multiple handlers
+  handlers:
+    - type: file
+      filename: "logs/pipeline.log"
+      max_bytes: 100000000  # 100MB
+      backup_count: 10
+    - type: file
+      filename: "logs/errors.log"
+      level: ERROR
+      max_bytes: 50000000   # 50MB
+      backup_count: 5
+    - type: console
+      level: INFO
+
+  # SQLite logging
+  db_schema:
+    table: "pipeline_logs"
+    retention_days: 30
+    columns:
+      - timestamp
+      - module
+      - function
+      - status
+      - message
+      - error_trace
+
+# Quality Control
+quality:
+  # Success rate monitoring
+  min_source_success_rate: 0.8
+  min_overall_success_rate: 0.9
+
+  # Data quality thresholds
+  min_confidence:
+    title_match: 0.8
+    pdf_extraction: 0.7
+    llm_extraction: 0.6
+    deduplication: 0.9
+
+  # Validation rules
+  validation:
+    require_doi: false
+    require_abstract: true
+    min_abstract_length: 50
+    min_year: 2018
+    max_year: 2025
+    max_title_length: 500
+
+# Monitoring and Alerting
+monitoring:
+  enable_metrics: true
+  metrics_port: 8080
+
+  # Alert thresholds
+  alerts:
+    error_rate_threshold: 0.1
+    success_rate_threshold: 0.8
+    memory_usage_threshold: 0.9
+    disk_usage_threshold: 0.9
+
+  # Health checks
+  health_check_interval: 300  # 5 minutes
+
+  # Performance tracking
+  track_performance: true
+  performance_log: "logs/performance.log"
+
+# Development Settings
+development:
+  debug: false
+  dry_run: false
+  sample_size: null  # Set to integer to limit processing
+  use_cache: true
+  parallel_workers: 8
+
+# Backup and Recovery
+backup:
+  enable_auto_backup: true
+  backup_interval_hours: 6
+  retention_days: 30
+  compress_backups: true
+
+  # What to backup
+  include:
+    - progress_db
+    - session_data
+    - configuration
+    - logs
+
+  exclude:
+    - pdf_cache
+    - temporary_files
+
+# Key venues to prioritize (from seed papers)
+priority_venues:
+  conferences:
+    - "FAccT"  # Fairness, Accountability, and Transparency
+    - "NeurIPS"
+    - "ICML"
+    - "AAAI"
+    - "AAMAS"  # Autonomous Agents and Multiagent Systems
+    - "CoG"    # IEEE Conference on Games
+
+  journals:
+    - "Science"
+    - "Nature"
+    - "International Security"
+    - "Journal of Strategic Studies"
+    - "Military Operations Research"
+    - "Simulation & Gaming"
+    - "Journal of Defense Modeling and Simulation"
+    - "Computers in Human Behavior"
+
+  preprint_servers:
+    - "arXiv"
+    - "SSRN"
+    - "ResearchGate"
+
+# Research groups and authors to track
+key_contributors:
+  groups:
+    - "RAND Corporation"
+    - "Center for Security and Emerging Technology (CSET)"
+    - "Naval Postgraduate School MOVES Institute"
+    - "MIT Security Studies Program"
+    - "Meta Fundamental AI Research (FAIR)"
+
+  authors:
+    # From seed papers
+    - "Daniel P. Hogan"
+    - "Andrea Brennen"
+    - "Jacquelyn Schneider"
+    - "Max Lamparth"
+    - "Juan-Pablo Rivera"
+    - "Harold Trinkunas"
+    - "Oriana Skylar Mastro"
+
+# Metrics for search quality
+quality_metrics:
+  minimum_precision: 0.7  # At least 70% of results should be relevant
+  target_recall: 0.9      # Aim to find 90% of relevant papers
+
+  relevance_indicators:
+    high:
+      - '"military decision-making" AND "LLM"'
+      - '"crisis simulation" AND "GPT"'
+      - '"wargaming" AND "language model"'
+      - '"escalation" AND "AI agent"'
+
+    medium:
+      - '"strategic planning" AND "AI"'
+      - '"simulation" AND "transformer"'
+      - '"defense" AND "machine learning"'
+
+    low:
+      - '"game" AND "AI" (without military context)'
+      - '"simulation" (without LLM/AI context)'

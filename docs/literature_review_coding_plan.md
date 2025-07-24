@@ -10,7 +10,7 @@ Build a **fully reproducible Python pipeline** that (i) harvests literature matc
 
 ```
               +-------------------+
-   config.yaml|                   | seeds.csv
+   config/config.yaml|                   | seeds.csv
    criteria.v1|                   |
               v                   |
 +-------------+-------+    +------+-----------+
@@ -44,7 +44,7 @@ Build a **fully reproducible Python pipeline** that (i) harvests literature matc
 
 | #     | Module              | Key functions                                                                                                                                                                                 | Packages / APIs                        |
 | ----- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **0** | `config.yaml`       | • criteria file path  • API keys  • query strings  • paths                                                                                                                                    | `PyYAML`                               |
+| **0** | `config/config.yaml`       | • criteria file path  • API keys  • query strings  • paths                                                                                                                                    | `PyYAML`                               |
 | **1** | **SearchHarvester** | `query_db()` wraps:  – Google Scholar (scholarly)  – arXiv (`arxiv` pkg)  – Semantic Scholar (REST)  – Crossref (works endpoint).  Returns unified list of dicts.                             | `scholarly` ≥ 1.7  `arxiv`  `requests` |
 | **2** | **Normaliser**      | • DOI harmonisation with Crossref  • string‑slug for titles  • `drop_duplicates(subset=['doi','title_slug'])`  • output `papers_raw.csv`                                                      | `pandas`  `rapidfuzz`                  |
 | **3** | **PDFFetcher**      | Bulk DOI‑to‑PDF (Unpaywall API), fallback to arXiv links; save under `pdf_cache/{first_author}_{year}.pdf`, record path and HTTP status.                                                      | `requests`                             |
@@ -80,7 +80,7 @@ NOT ("StarCraft" OR "AlphaGo" OR Atari)
 
 `wargame_terms` defaults: *wargame*, “seminar wargame”, “matrix wargame”, Diplomacy, “crisis simulation”.
 
-### 6 Configuration snippet (`config.yaml`)
+### 6 Configuration snippet (`config/config.yaml`)
 
 ```yaml
 years: [2018, 2025]
@@ -124,7 +124,7 @@ python run.py visualise --input extraction.csv
 
 | Day | Deliverable                                       | Who     |
 | --- | ------------------------------------------------- | ------- |
-| 1   | Repo + config.yaml scaffold                       | Dev 1   |
+| 1   | Repo + config/config.yaml scaffold                       | Dev 1   |
 | 2   | Harvester + Normaliser                            | Dev 1   |
 | 3   | PDF fetcher + logging                             | Dev 2   |
 | 4   | Screening sheet generated; start manual TA screen | All     |
@@ -143,4 +143,4 @@ python run.py visualise --input extraction.csv
 
 ### Hand‑off note
 
-> *“Coding agent, you now own the pipeline described in Part B.  All review criteria and definitions live in `criteria_v1.md` (attached).  Your first task is to instantiate `config.yaml`, populate the seed list, and implement Module 1 (SearchHarvester) with Google Scholar + arXiv support.  Follow the package list; no R dependencies allowed.  Adhere to the one‑plot‑per‑figure rule when you reach Visualization.”*
+> *“Coding agent, you now own the pipeline described in Part B.  All review criteria and definitions live in `criteria_v1.md` (attached).  Your first task is to instantiate `config/config.yaml`, populate the seed list, and implement Module 1 (SearchHarvester) with Google Scholar + arXiv support.  Follow the package list; no R dependencies allowed.  Adhere to the one‑plot‑per‑figure rule when you reach Visualization.”*

@@ -25,12 +25,12 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 uv pip install -e .
 
 # Copy configuration template
-cp config.yaml.example config.yaml
+cp config/config.yaml.example config/config.yaml
 ```
 
 ## Step 2: Configure API Keys
 
-Edit `config.yaml` and add your API keys:
+Edit `config/config.yaml` and add your API keys:
 
 ```yaml
 api_keys:
@@ -133,7 +133,7 @@ python run.py visualise --input data/extracted/extraction_results.csv
 - `failure_modes.png` - Common failure patterns
 - `llm_families.png` - Models used
 - `game_types.png` - Types of wargames
-- `awscale_distribution.png` - Analytic vs Wild spectrum
+- `awscale_distribution.png` - Analytical vs Creative spectrum
 
 ## Step 7: Export Dataset
 
@@ -153,8 +153,8 @@ Here's a complete workflow from start to finish:
 # 1. Setup
 uv venv && source .venv/bin/activate
 uv pip install -e .
-cp config.yaml.example config.yaml
-# Edit config.yaml with your API keys
+cp config/config.yaml.example config/config.yaml
+# Edit config/config.yaml with your API keys
 
 # 2. Harvest papers (searches all configured sources)
 python run.py harvest --query preset1 --max-results 100
@@ -208,7 +208,7 @@ python run.py status
 
 ### Extraction Optimization
 
-1. **Check PDF downloads**: 
+1. **Check PDF downloads**:
    ```bash
    ls -la pdf_cache/
    ```
@@ -265,7 +265,7 @@ python run.py status
 After completing your first review:
 
 1. **Refine search queries** based on discovered papers
-2. **Adjust failure vocabularies** in `config.yaml`
+2. **Adjust failure vocabularies** in `config/config.yaml`
 3. **Customize visualizations** for your analysis
 4. **Share your dataset** via Zenodo for DOI
 5. **Contribute improvements** via pull requests
