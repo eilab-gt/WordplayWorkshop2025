@@ -14,6 +14,10 @@ import yaml
 # Add project root to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# Import common test utilities and fixtures
+from tests.test_fixtures import *
+from tests.test_utils import *
+
 
 @pytest.fixture
 def temp_dir():
