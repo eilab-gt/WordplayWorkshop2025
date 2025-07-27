@@ -2,7 +2,7 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -24,23 +24,47 @@ class SearchHarvester:
         Args:
             config: Configuration object
         """
+        logger.info("SearchHarvester.__init__ called")
         self.config = config
 
-        # Initialize individual harvesters
-        self.harvesters = {
-            "google_scholar": GoogleScholarHarvester(config),
-            "arxiv": ArxivHarvester(config),
-            "semantic_scholar": SemanticScholarHarvester(config),
-            "crossref": CrossrefHarvester(config),
+        # Store harvester classes for lazy initialization
+        self._harvester_classes = {
+            "google_scholar": GoogleScholarHarvester,
+            "arxiv": ArxivHarvester,
+            "semantic_scholar": SemanticScholarHarvester,
+            "crossref": CrossrefHarvester,
         }
+
+        # Lazy initialization dict
+        self._harvesters: dict[str, Any] = {}
 
         # Track all results
         self.all_papers: list[Paper] = []
         self.unique_papers: list[Paper] = []
 
+    @property
+    def harvesters(self) -> dict[str, Any]:
+        """Get harvesters dict (for backward compatibility)."""
+        return self
+
+    def __getitem__(self, key: str) -> Any:
+        """Get a harvester, initializing it lazily if needed."""
+        if key not in self._harvesters and key in self._harvester_classes:
+            logger.info(f"Lazily initializing {key} harvester")
+            self._harvesters[key] = self._harvester_classes[key](self.config)
+        return self._harvesters[key]
+
+    def __contains__(self, key: str) -> bool:
+        """Check if a harvester is available."""
+        return key in self._harvester_classes
+
+    def keys(self):
+        """Get available harvester names."""
+        return self._harvester_classes.keys()
+
     def search_all(
         self,
-        sources: Optional[list[str]] = None,
+        sources: list[str] | None = None,
         max_results_per_source: int = 100,
         parallel: bool = True,
     ) -> pd.DataFrame:
@@ -89,8 +113,10 @@ class SearchHarvester:
         Returns:
             Query string
         """
-        # Use the base harvester's query builder
-        return self.harvesters["google_scholar"].build_query()
+        # Use ArxivHarvester's query builder as it doesn't require network setup
+        # All harvesters inherit from BaseHarvester which has build_query()
+        temp_harvester = ArxivHarvester(self.config)
+        return temp_harvester.build_query()
 
     def _search_sequential(self, sources: list[str], query: str, max_results: int):
         """Search sources sequentially.
@@ -207,7 +233,7 @@ class SearchHarvester:
 
         return df_dedup
 
-    def save_results(self, df: pd.DataFrame, output_path: Optional[str] = None):
+    def save_results(self, df: pd.DataFrame, output_path: str | None = None):
         """Save search results to CSV file.
 
         Args:

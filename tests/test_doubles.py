@@ -199,9 +199,11 @@ class FakeArxivAPI:
                         },
                     )()
                     self.categories = [
-                        type("Category", (), {"name": cat})()
+                        type("Category", (), {"name": cat, "term": cat})()
                         for cat in paper_dict.get("categories", [])
                     ]
+                    self.doi = paper_dict.get("doi", None)
+                    self.journal_ref = paper_dict.get("journal_ref", None)
 
             result_objects.append(FakeArxivResult(paper))
 
@@ -287,40 +289,78 @@ class FakePDFServer:
 
     def _generate_fake_pdf(self, arxiv_id: str) -> bytes:
         """Generate fake PDF content."""
-        # Create a simple text that simulates PDF content
-        content = f"""
-        %PDF-1.4
-        This is a fake PDF for paper {arxiv_id}
-
-        Title: Research on LLMs in Wargaming Contexts
-
-        Abstract:
-        This paper explores the application of large language models
-        in strategic wargaming scenarios. We present novel approaches
-        to integrating LLMs with traditional game theory frameworks.
-
-        1. Introduction
-        The intersection of artificial intelligence and strategic gaming
-        presents unique opportunities for enhancing decision-making...
-
-        2. Methodology
-        We employ a multi-agent framework where LLMs act as autonomous
-        agents in complex strategic scenarios...
-
-        3. Results
-        Our experiments demonstrate that LLM-augmented teams achieve
-        superior performance in various metrics...
-
-        4. Conclusion
-        This work contributes to the growing field of AI-assisted
-        strategic planning and decision support systems.
-
-        References:
-        [1] Smith et al., "LLMs in Gaming", 2023
-        [2] Jones et al., "Strategic AI", 2024
-
-        %%EOF
-        """
+        # Generate minimal valid PDF structure
+        # This creates a PDF with text that pdfminer can extract
+        content = f"""%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>
+endobj
+5 0 obj
+<< /Length 1000 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+(Research on LLMs in Wargaming Contexts) Tj
+0 -20 Td
+(Paper ID: {arxiv_id}) Tj
+0 -40 Td
+(Abstract:) Tj
+0 -20 Td
+(This paper explores the application of large language models) Tj
+0 -20 Td
+(in strategic wargaming scenarios. We present novel approaches) Tj
+0 -20 Td
+(to integrating LLMs with traditional game theory frameworks.) Tj
+0 -40 Td
+(1. Introduction) Tj
+0 -20 Td
+(The intersection of artificial intelligence and strategic gaming) Tj
+0 -20 Td
+(presents unique opportunities for enhancing decision-making.) Tj
+0 -40 Td
+(2. Methodology) Tj
+0 -20 Td
+(We employ a multi-agent framework where LLMs act as autonomous) Tj
+0 -20 Td
+(agents in complex strategic scenarios.) Tj
+0 -40 Td
+(3. Results) Tj
+0 -20 Td
+(Our experiments demonstrate that LLM-augmented teams achieve) Tj
+0 -20 Td
+(superior performance in various metrics.) Tj
+0 -40 Td
+(4. Conclusion) Tj
+0 -20 Td
+(This work contributes to the growing field of AI-assisted) Tj
+0 -20 Td
+(strategic planning and decision support systems.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000214 00000 n
+0000000312 00000 n
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1365
+%%EOF"""
         return content.encode("utf-8")
 
     def add_pdf(self, arxiv_id: str, content: bytes):
@@ -436,6 +476,28 @@ class RealConfigForTests:
         self.action_terms = ["simulation", "play", "analysis"]
         self.exclusion_terms = ["video game", "computer game"]
 
+        # Visualization settings
+        self.viz_format = "png"
+        self.viz_dpi = 300
+        self.viz_style = "seaborn-v0_8-darkgrid"
+        self.viz_figsize = (10, 8)
+        self.viz_colors = {
+            "game_types": {
+                "matrix": "#2E86AB",
+                "digital": "#A23B72",
+                "tabletop": "#F18F01",
+                "hybrid": "#C73E1D",
+                "other": "#808080",
+            },
+            "awscale": {
+                "1": "#d73027",
+                "2": "#fc8d59",
+                "3": "#fee08b",
+                "4": "#d9ef8b",
+                "5": "#1a9850",
+            },
+        }
+
         # Rate limits required by harvesters
         self.rate_limits = {
             "google_scholar": {"delay_seconds": 0.1, "requests_per_hour": 1000},
@@ -472,6 +534,20 @@ class RealConfigForTests:
         self.llm_timeout_seconds = 30
         self.llm_max_retries = 3
         self.sample_size = None
+
+        # Export settings
+        self.export_compression = True
+        self.export_include_pdfs = False  # Don't include PDFs in test exports
+        self.export_include_logs = False  # Don't include logs in test exports
+
+        # Zenodo settings
+        self.zenodo_enabled = False  # Disable Zenodo uploads in tests
+        self.zenodo_token = "test-token"  # noqa: S105
+        self.zenodo_community = "llm-wargames"
+
+        # Additional metadata attributes
+        self.inclusion_flags = []  # Empty list for test
+        self.logging_db_path = self.log_dir / "logs.db"
 
         # Apply overrides
         for key, value in overrides.items():

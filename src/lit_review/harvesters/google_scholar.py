@@ -19,12 +19,14 @@ class GoogleScholarHarvester(BaseHarvester):
         Args:
             config: Configuration object
         """
+        logger.info("GoogleScholarHarvester.__init__ called")
         super().__init__(config)
         self.rate_limits = config.rate_limits.get("google_scholar", {})
         self.delay_seconds = self.rate_limits.get("delay_seconds", 5)
         self.use_proxy = getattr(config, "use_proxy", True)
         self._proxy_initialized = False
 
+        logger.info(f"GoogleScholarHarvester: use_proxy = {self.use_proxy}")
         # Only setup proxy if enabled and not in test mode
         if self.use_proxy:
             self._setup_proxy()
