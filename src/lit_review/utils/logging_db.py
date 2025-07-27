@@ -8,7 +8,7 @@ import sqlite3
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 class SQLiteHandler(logging.Handler):
@@ -180,11 +180,11 @@ class LoggingDatabase:
 
     def query_logs(
         self,
-        module: str | None = None,
-        level: str | None = None,
-        status: str | None = None,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
+        module: Optional[str] = None,
+        level: Optional[str] = None,
+        status: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Query logs with filters.
@@ -328,7 +328,7 @@ class LoggingDatabase:
         """
         return self.query_logs(level="ERROR", limit=limit)
 
-    def export_to_csv(self, output_path: Path, filters: dict[str, Any] | None = None):
+    def export_to_csv(self, output_path: Path, filters: Optional[dict[str, Any]] = None):
         """Export logs to CSV file.
 
         Args:

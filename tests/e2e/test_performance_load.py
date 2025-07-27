@@ -16,7 +16,7 @@ import random
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, Union
 
 import pandas as pd
 import pytest
@@ -558,7 +558,7 @@ class TestPerformanceAndLoad:
 
         # Analyze scalability
         print("\n=== Scalability Analysis ===")
-        print("Size | Duration | Memory | Throughput")
+        print("Union[Size, Duration] | Union[Memory, Throughput]")
         print("-" * 45)
 
         for m in metrics:

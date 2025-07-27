@@ -124,7 +124,7 @@ class TestNormalizer:
         # Add some messy data
         df = sample_papers_df.copy()
         df.loc[0, "title"] = "  Deep Learning for NLP  "  # Extra whitespace
-        df.loc[1, "authors"] = "Johnson, Alice | Brown, Bob"  # Different separator
+        df.loc[1, "authors"] = "Johnson, Union[Alice, Brown], Bob"  # Different separator
         df.loc[2, "doi"] = "DOI:10.1234/test"  # DOI prefix
 
         normalized = normalizer._normalize_fields(df)
@@ -331,7 +331,7 @@ class TestNormalizer:
             "Smith, John; Doe, Jane",  # Already normalized
             "John Smith, Jane Doe",  # Different format
             "Smith J., Doe J.",  # Abbreviated
-            "SMITH John | DOE Jane",  # Pipe separator
+            "SMITH Union[John, DOE] Jane",  # Pipe separator
             "Smith, J. and Doe, J.",  # "and" separator
         ]
 

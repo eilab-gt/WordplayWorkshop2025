@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -135,7 +135,7 @@ class CrossrefHarvester(BaseHarvester):
             logger.error(f"Crossref: Request error: {e}")
             return [], 0
 
-    def _extract_paper(self, result: dict[str, Any]) -> Paper | None:
+    def _extract_paper(self, result: dict[str, Any]) -> Optional[Paper]:
         """Extract Paper object from Crossref result.
 
         Args:
@@ -212,7 +212,7 @@ class CrossrefHarvester(BaseHarvester):
             logger.error(f"Crossref: Failed to extract paper: {e}")
             return None
 
-    def get_paper_by_doi(self, doi: str) -> Paper | None:
+    def get_paper_by_doi(self, doi: str) -> Optional[Paper]:
         """Get a specific paper by DOI.
 
         Args:

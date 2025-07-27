@@ -102,7 +102,7 @@ AVAILABLE_MODELS = {
 }
 
 
-def get_extraction_prompt(text: str, fields: list[str] | None = None) -> str:
+def get_extraction_prompt(text: str, fields: Optional[list[str]] = None) -> str:
     """Generate extraction prompt based on requested fields."""
     base_fields = [
         "research_questions",

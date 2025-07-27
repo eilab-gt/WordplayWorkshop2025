@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -95,7 +95,7 @@ class Visualizer:
         logger.info(f"Created {len(saved_figures)} visualizations")
         return saved_figures
 
-    def plot_time_series(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_time_series(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot time series of publications.
 
         Args:
@@ -157,7 +157,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_game_types(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_game_types(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot distribution of game types.
 
         Args:
@@ -226,7 +226,7 @@ class Visualizer:
 
     def plot_awscale_distribution(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot AWScale distribution.
 
         Args:
@@ -321,7 +321,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_failure_modes(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_failure_modes(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot failure modes distribution.
 
         Args:
@@ -398,7 +398,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_llm_families(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_llm_families(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot LLM families distribution.
 
         Args:
@@ -459,7 +459,7 @@ class Visualizer:
 
     def plot_source_distribution(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot source database distribution.
 
         Args:
@@ -508,7 +508,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_venue_types(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_venue_types(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot venue types distribution.
 
         Args:
@@ -568,7 +568,7 @@ class Visualizer:
 
     def plot_game_characteristics(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot open-ended vs quantitative characteristics.
 
         Args:

@@ -3,7 +3,7 @@
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +17,13 @@ class Paper:
     year: int
     abstract: str
     source_db: str
-    url: str | None = None
-    doi: str | None = None
-    arxiv_id: str | None = None
-    venue: str | None = None
-    citations: int | None = None
-    pdf_url: str | None = None
-    keywords: list[str] | None = None
+    url: Optional[str] = None
+    doi: Optional[str] = None
+    arxiv_id: Optional[str] = None
+    venue: Optional[str] = None
+    citations: Optional[int] = None
+    pdf_url: Optional[str] = None
+    keywords: Optional[list[str]] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for DataFrame creation."""
@@ -113,7 +113,7 @@ class BaseHarvester(ABC):
 
         return filtered
 
-    def clean_text(self, text: str | None) -> str:
+    def clean_text(self, text: Optional[str]) -> str:
         """Clean and normalize text fields.
 
         Args:
@@ -133,7 +133,7 @@ class BaseHarvester(ABC):
 
         return text.strip()
 
-    def extract_doi(self, text: str) -> str | None:
+    def extract_doi(self, text: str) -> Optional[str]:
         """Extract DOI from text if present.
 
         Args:
@@ -153,8 +153,8 @@ class BaseHarvester(ABC):
     def filter_by_keywords(
         self,
         papers: list[Paper],
-        include_keywords: list[str] | None = None,
-        exclude_keywords: list[str] | None = None,
+        include_keywords: Optional[list[str]] = None,
+        exclude_keywords: Optional[list[str]] = None,
         min_matches: int = 1,
     ) -> list[Paper]:
         """Filter papers by abstract keywords.

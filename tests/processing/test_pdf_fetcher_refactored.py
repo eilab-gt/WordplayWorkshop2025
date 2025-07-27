@@ -158,7 +158,7 @@ class TestPDFFetcherBehavior:
             {
                 "paper": pd.Series(
                     {
-                        "title": "Test: Paper? With* Special/Characters|2024",
+                        "title": "Test: Paper? With* Special/Union[Characters, 2024]",
                         "authors": "John Doe; Jane Smith",
                         "year": 2024,
                     }

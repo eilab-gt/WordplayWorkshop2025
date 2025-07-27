@@ -97,7 +97,7 @@ Required environment variables:
 ```yaml
 llm:
   provider: "together"
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+  model: "Qwen/Qwen2.5-72B-Instruct-Turbo"
 ```
 
 Required environment variable:

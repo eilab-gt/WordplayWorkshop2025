@@ -101,7 +101,7 @@ class GoogleScholarHarvester(BaseHarvester):
 
         return papers
 
-    def _extract_paper(self, result: dict) -> Paper | None:
+    def _extract_paper(self, result: dict) -> Optional[Paper]:
         """Extract Paper object from Google Scholar result.
 
         Args:
@@ -162,7 +162,7 @@ class GoogleScholarHarvester(BaseHarvester):
                 # Extract arXiv ID from URL
                 import re
 
-                match = re.search(r"arxiv\.org/(?:abs|pdf)/(\d+\.\d+)", eprint)
+                match = re.search(r"arxiv\.org/(?:Union[abs, pdf])/(\d+\.\d+)", eprint)
                 if match:
                     paper.arxiv_id = match.group(1)
                     paper.pdf_url = f"https://arxiv.org/pdf/{match.group(1)}.pdf"
@@ -175,10 +175,10 @@ class GoogleScholarHarvester(BaseHarvester):
 
     def search_advanced(
         self,
-        title: str | None = None,
-        author: str | None = None,
-        pub_year_start: int | None = None,
-        pub_year_end: int | None = None,
+        title: Optional[str] = None,
+        author: Optional[str] = None,
+        pub_year_start: Optional[int] = None,
+        pub_year_end: Optional[int] = None,
         max_results: int = 100,
     ) -> list[Paper]:
         """Advanced search with specific fields.

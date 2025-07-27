@@ -7,7 +7,7 @@ import sqlite3
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -124,10 +124,10 @@ class ProductionHarvester(SearchHarvester):
 
     def search_production_scale(
         self,
-        sources: list[str] | None = None,
+        sources: Optional[list[str]] = None,
         max_results_total: int = 50000,  # Production scale
-        resume_session: str | None = None,
-        checkpoint_callback: "callable | None" = None,
+        resume_session: Optional[str] = None,
+        checkpoint_callback: "Optional[callable]" = None,
     ) -> pd.DataFrame:
         """Execute production-scale search with checkpointing and resume capability.
 
@@ -239,7 +239,7 @@ class ProductionHarvester(SearchHarvester):
         source: str,
         quota: int,
         session_id: str,
-        checkpoint_callback: "callable | None" = None,
+        checkpoint_callback: "Optional[callable]" = None,
     ) -> list[Paper]:
         """Harvest from single source with production optimizations."""
         harvester = self.harvesters[source]

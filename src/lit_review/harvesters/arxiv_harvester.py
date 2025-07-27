@@ -431,7 +431,7 @@ class ArxivHarvester(BaseHarvester):
 
         return arxiv_query
 
-    def _extract_paper(self, result: arxiv.Result) -> Paper | None:
+    def _extract_paper(self, result: arxiv.Result) -> Optional[Paper]:
         """Extract Paper object from arXiv result.
 
         Args:
@@ -507,7 +507,7 @@ class ArxivHarvester(BaseHarvester):
         # Use the base search method
         return self.search(category_query, max_results)
 
-    def get_paper_by_id(self, arxiv_id: str) -> Paper | None:
+    def get_paper_by_id(self, arxiv_id: str) -> Optional[Paper]:
         """Get a specific paper by arXiv ID.
 
         Args:
@@ -529,7 +529,7 @@ class ArxivHarvester(BaseHarvester):
             logger.error(f"arXiv: Error fetching paper {arxiv_id}: {e}")
             return None
 
-    def fetch_tex_source(self, arxiv_id: str) -> str | None:
+    def fetch_tex_source(self, arxiv_id: str) -> Optional[str]:
         """Fetch the TeX source for an arXiv paper.
 
         Args:
@@ -573,7 +573,7 @@ class ArxivHarvester(BaseHarvester):
             logger.error(f"Error fetching TeX source for {arxiv_id}: {e}")
             return None
 
-    def fetch_html_source(self, arxiv_id: str) -> str | None:
+    def fetch_html_source(self, arxiv_id: str) -> Optional[str]:
         """Fetch the HTML version of an arXiv paper if available.
 
         Args:

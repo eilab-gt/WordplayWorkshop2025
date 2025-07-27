@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +96,9 @@ class ContentCache:
         self,
         paper_id: str,
         content_type: str,
-        fetch_func: Callable[[], Any | None],
-        source_url: str | None = None,
-    ) -> tuple[Path | None, bool]:
+        fetch_func: Callable[[], Optional[Any]],
+        source_url: Optional[str] = None,
+    ) -> tuple[Optional[Path], bool]:
         """Get content from cache or fetch if not present.
 
         Args:
@@ -211,7 +211,7 @@ class ContentCache:
                 md5.update(chunk)
         return md5.hexdigest()
 
-    def _get_cache_entry(self, paper_id: str, content_type: str) -> dict | None:
+    def _get_cache_entry(self, paper_id: str, content_type: str) -> Optional[dict]:
         """Get cache entry from database."""
         conn = sqlite3.connect(str(self.cache_db))
         conn.row_factory = sqlite3.Row
@@ -237,7 +237,7 @@ class ContentCache:
         file_path: Path,
         file_hash: str,
         file_size: int,
-        source_url: str | None,
+        source_url: Optional[str],
     ):
         """Save or update cache entry in database."""
         conn = sqlite3.connect(str(self.cache_db))
@@ -348,7 +348,7 @@ class ContentCache:
         conn.close()
         return stats
 
-    def cleanup_old_entries(self, days: int | None = None) -> int:
+    def cleanup_old_entries(self, days: Optional[int] = None) -> int:
         """Remove cache entries older than specified days.
 
         Args:
@@ -389,7 +389,7 @@ class ContentCache:
         logger.info(f"Removed {len(entries_to_remove)} old cache entries")
         return len(entries_to_remove)
 
-    def clear_cache(self, content_type: str | None = None) -> int:
+    def clear_cache(self, content_type: Optional[str] = None) -> int:
         """Clear cache entries.
 
         Args:

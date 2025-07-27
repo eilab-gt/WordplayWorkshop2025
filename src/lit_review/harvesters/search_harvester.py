@@ -2,7 +2,7 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -40,7 +40,7 @@ class SearchHarvester:
 
     def search_all(
         self,
-        sources: list[str] | None = None,
+        sources: Optional[list[str]] = None,
         max_results_per_source: int = 100,
         parallel: bool = True,
     ) -> pd.DataFrame:
@@ -207,7 +207,7 @@ class SearchHarvester:
 
         return df_dedup
 
-    def save_results(self, df: pd.DataFrame, output_path: str | None = None):
+    def save_results(self, df: pd.DataFrame, output_path: Optional[str] = None):
         """Save search results to CSV file.
 
         Args:

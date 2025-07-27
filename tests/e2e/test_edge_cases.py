@@ -302,7 +302,7 @@ class TestEdgeCases:
 
         # Find unicode paper
         unicode_papers = results[
-            results["title"].str.contains("机器学习|émphasis|π", na=False, regex=True)
+            results["title"].str.contains("Union[机器学习, émphasis]|π", na=False, regex=True)
         ]
 
         if len(unicode_papers) > 0:
@@ -451,7 +451,7 @@ class TestEdgeCases:
         assert result is not None
 
         # Test 3: Special characters in ID
-        special_id = "paper/with\\special|characters:*?<>"
+        special_id = "paper/with\\Union[special, characters]:*?<>"
         result, cached = cache.get_or_fetch(special_id, "pdf", lambda: b"content")
         assert result is not None
 

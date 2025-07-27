@@ -93,7 +93,7 @@ class TestFullPipelineIntegration:
         pdf_fetcher = PDFFetcher(e2e_config)
         pdf_df = pdf_fetcher.fetch_pdfs(deduped_df)
 
-        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("downloaded|cached")]
+        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")]
         assert len(successful_pdfs) > 0, "Should download at least some PDFs"
 
         # Step 4: Extract insights
@@ -175,7 +175,7 @@ class TestFullPipelineIntegration:
         assert len(failed_pdfs) > 0, "Some PDFs should fail"
 
         # But some should succeed
-        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("downloaded|cached")]
+        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")]
         assert len(successful_pdfs) > 0, "Some PDFs should succeed"
 
         # Extraction should use fallback model

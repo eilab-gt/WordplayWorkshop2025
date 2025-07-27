@@ -4,7 +4,7 @@ import random
 import sqlite3
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -114,7 +114,7 @@ class FakeLLMService:
 class FakeArxivAPI:
     """Fake arXiv API that returns predictable results."""
 
-    def __init__(self, seed: int | None = 42):
+    def __init__(self, seed: Optional[int] = 42):
         self.generator = RealisticTestDataGenerator(seed=seed)
         self.papers = []
         self.call_count = 0
@@ -168,7 +168,7 @@ class FakeArxivAPI:
         results.sort(key=lambda x: x[0], reverse=True)
         return [paper for _, paper in results[:max_results]]
 
-    def get_paper(self, arxiv_id: str) -> dict[str, Any] | None:
+    def get_paper(self, arxiv_id: str) -> Optional[dict[str, Any]]:
         """Get specific paper by ID."""
         for paper in self.papers:
             if paper["id"] == arxiv_id:
@@ -179,7 +179,7 @@ class FakeArxivAPI:
         """Add a custom paper for testing."""
         self.papers.append(paper_dict)
 
-    def get_tex_source(self, arxiv_id: str) -> str | None:
+    def get_tex_source(self, arxiv_id: str) -> Optional[str]:
         """Return fake TeX source."""
         paper = self.get_paper(arxiv_id)
         if paper:

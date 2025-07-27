@@ -251,7 +251,7 @@ class LLMProvider:
             "openai": "gpt-3.5-turbo",  # Cheaper, faster fallback
             "anthropic": "claude-3-haiku-20240307",  # Cheaper Claude model
             "google": "gemini-pro",
-            "together": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "together": "Qwen/Qwen2.5-72B-Instruct-Turbo",  # High quality extraction
         }
         return fallback_models.get(provider, "gpt-3.5-turbo")
 

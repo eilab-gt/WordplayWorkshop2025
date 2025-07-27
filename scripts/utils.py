@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def find_latest_file(directory: Path, pattern: str = "*.csv") -> Path | None:
+def find_latest_file(directory: Path, pattern: str = "*.csv") -> Optional[Path]:
     """Find the most recent file matching pattern in directory.
 
     Args:

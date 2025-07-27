@@ -5,7 +5,7 @@ import logging
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import requests
@@ -39,7 +39,7 @@ class Exporter:
         extraction_df: pd.DataFrame,
         figures: list[Path],
         summary: dict[str, Any],
-        output_name: str | None = None,
+        output_name: Optional[str] = None,
     ) -> Path:
         """Create a complete export package.
 
@@ -499,7 +499,7 @@ If you use this data, please cite:
         except Exception as e:
             logger.error(f"Zenodo upload error: {e}")
 
-    def export_bibtex(self, df: pd.DataFrame, output_path: Path | None = None) -> Path:
+    def export_bibtex(self, df: pd.DataFrame, output_path: Optional[Path] = None) -> Path:
         """Export results as BibTeX file.
 
         Args:

@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import quote
 
 import requests
@@ -128,7 +128,7 @@ class SemanticScholarHarvester(BaseHarvester):
             logger.error(f"Semantic Scholar: Request error: {e}")
             return []
 
-    def _extract_paper(self, result: dict[str, Any]) -> Paper | None:
+    def _extract_paper(self, result: dict[str, Any]) -> Optional[Paper]:
         """Extract Paper object from Semantic Scholar result.
 
         Args:
@@ -188,7 +188,7 @@ class SemanticScholarHarvester(BaseHarvester):
             logger.error(f"Semantic Scholar: Failed to extract paper: {e}")
             return None
 
-    def get_paper_by_id(self, paper_id: str) -> Paper | None:
+    def get_paper_by_id(self, paper_id: str) -> Optional[Paper]:
         """Get a specific paper by Semantic Scholar ID or DOI.
 
         Args:

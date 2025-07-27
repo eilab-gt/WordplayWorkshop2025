@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Test script to verify LLM provider configuration."""
 
+import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -11,16 +13,49 @@ from src.lit_review.llm_providers import LLMProvider
 from src.lit_review.utils import load_config
 
 
-def test_provider():
-    """Test the configured LLM provider."""
-    print("🧪 Testing LLM Provider Configuration\n")
+def test_provider(provider_name=None, model_name=None):
+    """Test a specific LLM provider."""
+    print(f"🧪 Testing LLM Provider: {provider_name or 'configured'}\n")
 
     try:
         # Load configuration
         config = load_config("config/config.yaml")
+        
+        # Override provider if specified
+        if provider_name:
+            config.llm_provider = provider_name
+            # Set default model for provider
+            if not model_name:
+                default_models = {
+                    "openai": "gpt-3.5-turbo",
+                    "anthropic": "claude-3-sonnet-20240229",
+                    "google": "gemini-pro",
+                    "together": "Qwen/Qwen2.5-72B-Instruct-Turbo"
+                }
+                config.llm_model = default_models.get(provider_name, config.llm_model)
+            else:
+                config.llm_model = model_name
+        
         print("✓ Configuration loaded")
         print(f"  Provider: {config.llm_provider}")
         print(f"  Model: {config.llm_model}\n")
+
+        # Check API key
+        api_key_vars = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "google": "GOOGLE_API_KEY",
+            "together": "TOGETHER_API_KEY"
+        }
+        
+        key_var = api_key_vars.get(config.llm_provider)
+        if key_var:
+            if os.getenv(key_var):
+                print(f"✓ API key found: {key_var}")
+            else:
+                print(f"❌ API key missing: {key_var}")
+                print(f"   Please set {key_var} in your .env file")
+                return False
 
         # Initialize provider
         provider = LLMProvider(config)
@@ -28,87 +63,105 @@ def test_provider():
 
         # Test with a simple completion
         print("📝 Testing completion...")
+        messages = [
+            {"role": "user", "content": "What is 2+2? Reply with just the number."}
+        ]
+
         response = provider.chat_completion(
-            [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant. Answer concisely.",
-                },
-                {
-                    "role": "user",
-                    "content": "What LLM are you and what's your model name? Answer in one sentence.",
-                },
-            ],
-            temperature=0.1,
-            max_tokens=100,
+            messages=messages,
+            temperature=0,
+            max_tokens=10
         )
 
-        answer = response.choices[0].message.content
-        print(f"✓ Response received: {answer}\n")
+        if hasattr(response, 'choices'):
+            content = response.choices[0].message.content
+            print(f"✓ Response: {content}")
+        else:
+            print(f"✓ Response received (dict format)")
 
-        # Test JSON extraction capability
-        print("🔍 Testing JSON extraction...")
+        # Test extraction prompt
+        print("\n📊 Testing extraction...")
+        extraction_messages = [
+            {
+                "role": "system",
+                "content": "Extract key information from academic papers."
+            },
+            {
+                "role": "user",
+                "content": "Paper: 'LLMs in Wargaming'. Extract: game_type (one word)"
+            }
+        ]
+
         response = provider.chat_completion(
-            [
-                {
-                    "role": "system",
-                    "content": "Extract information and return as JSON.",
-                },
-                {
-                    "role": "user",
-                    "content": 'Extract: The paper "LLM Wargaming" by Smith et al. (2024) is about AI. Return JSON with title and year.',
-                },
-            ],
+            messages=extraction_messages,
             temperature=0.1,
-            max_tokens=100,
+            max_tokens=100
         )
 
-        json_response = response.choices[0].message.content
-        print(f"✓ JSON response: {json_response}\n")
+        if hasattr(response, 'choices'):
+            content = response.choices[0].message.content
+            print(f"✓ Extraction: {content}")
+        else:
+            print(f"✓ Extraction response received")
 
-        # Show token usage if available
-        if hasattr(response, "usage"):
-            print("📊 Token usage:")
-            print(f"  Prompt tokens: {response.usage.prompt_tokens}")
-            print(f"  Completion tokens: {response.usage.completion_tokens}")
-            print(f"  Total tokens: {response.usage.total_tokens}")
-
-            # Estimate cost
-            if hasattr(provider, "estimate_cost"):
-                cost = provider.estimate_cost(
-                    response.usage.prompt_tokens, response.usage.completion_tokens
-                )
-                print(f"  Estimated cost: ${cost:.4f}\n")
-
-        print("✅ All tests passed! Your LLM provider is configured correctly.\n")
-
-        # Test fallback if configured
-        if config.llm_provider != "openai":
-            print("🔄 Testing fallback to OpenAI...")
-            try:
-                fallback_response = provider.extract_with_fallback(
-                    [{"role": "user", "content": "Hello"}], fallback_provider="openai"
-                )
-                if fallback_response:
-                    print("✓ Fallback successful\n")
-                else:
-                    print(
-                        "⚠️  Fallback not available (OpenAI key might not be configured)\n"
-                    )
-            except Exception as e:
-                print(f"⚠️  Fallback test skipped: {e!s}\n")
+        print(f"\n✅ Provider '{config.llm_provider}' is working correctly!")
+        return True
 
     except Exception as e:
-        print(f"\n❌ Error: {e!s}")
-        print("\n🔍 Troubleshooting tips:")
-        print("1. Check that config/config.yaml exists")
-        print("2. Verify your .env file contains the required API key")
-        print("3. Ensure the provider and model names are correct")
-        print("4. Check your API key has sufficient credits/permissions")
-        return 1
+        print(f"\n❌ Error: {e}")
+        print("\nTroubleshooting:")
+        print("1. Check your .env file has the required API key")
+        print("2. Ensure config/config.yaml exists")
+        print("3. Verify your API key is valid")
+        return False
 
-    return 0
+
+def test_all_providers():
+    """Test all configured providers."""
+    providers = ["openai", "anthropic", "google", "together"]
+    results = {}
+    
+    print("🧪 Testing All Providers\n")
+    print("=" * 50)
+    
+    for provider in providers:
+        print(f"\nTesting {provider}...")
+        print("-" * 30)
+        success = test_provider(provider)
+        results[provider] = success
+        print("=" * 50)
+    
+    # Summary
+    print("\n📊 Summary:")
+    for provider, success in results.items():
+        status = "✅ Working" if success else "❌ Failed"
+        print(f"  {provider}: {status}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Test LLM provider configuration")
+    parser.add_argument(
+        "--provider", 
+        choices=["openai", "anthropic", "google", "together"],
+        help="Specific provider to test"
+    )
+    parser.add_argument(
+        "--model",
+        help="Specific model to test"
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Test all providers"
+    )
+    
+    args = parser.parse_args()
+    
+    if args.all:
+        test_all_providers()
+    else:
+        test_provider(args.provider, args.model)
 
 
 if __name__ == "__main__":
-    sys.exit(test_provider())
+    main()

@@ -4,7 +4,7 @@ import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import requests
@@ -397,7 +397,7 @@ class EnhancedLLMExtractor:
 
     def _llm_service_extract(
         self, content: str, paper: pd.Series
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Extract information using the LLM service."""
         try:
             # Prepare metadata

@@ -4,7 +4,7 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 from pdfminer.high_level import extract_text
@@ -292,7 +292,7 @@ Full Text (truncated if needed):
 
         return context
 
-    def _llm_extract(self, context: str) -> dict[str, Any] | None:
+    def _llm_extract(self, context: str) -> Optional[dict[str, Any]]:
         """Extract structured information using LLM.
 
         Args:
@@ -493,7 +493,7 @@ Relevant excerpt from paper:
         logger.info(f"  AWScale assignments: {self.stats['awscale_assignments']}")
 
     def extract_single_pdf(
-        self, pdf_path: str, paper_metadata: dict[str, Any] | None = None
+        self, pdf_path: str, paper_metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """Extract information from a single PDF file.
 

@@ -417,7 +417,10 @@ llm:
 
     together:
       # API key from TOGETHER_API_KEY env var
-      model: "mistralai/Mixtral-8x7B-Instruct-v0.1"  # or meta-llama/Llama-2-70b-chat-hf
+      model: "Qwen/Qwen2.5-72B-Instruct-Turbo"  # Excellent for structured extraction
+      # Other options:
+      # - "meta-llama/Llama-3.3-70B-Instruct"
+      # - "deepseek-ai/DeepSeek-V3"
 
   # System prompts
   extraction_prompt: |

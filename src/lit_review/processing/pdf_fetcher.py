@@ -5,7 +5,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import requests
@@ -289,7 +289,7 @@ class PDFFetcher:
 
         return f"{base_name}.pdf"
 
-    def _get_unpaywall_url(self, doi: str) -> str | None:
+    def _get_unpaywall_url(self, doi: str) -> Optional[str]:
         """Get PDF URL from Unpaywall.
 
         Args:
@@ -326,7 +326,7 @@ class PDFFetcher:
             logger.debug(f"Unpaywall error for DOI {doi}: {e}")
             return None
 
-    def _download_pdf_content(self, url: str) -> bytes | None:
+    def _download_pdf_content(self, url: str) -> Optional[bytes]:
         """Download PDF content from URL.
 
         Args:

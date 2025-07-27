@@ -236,7 +236,7 @@ class TestTagger:
             {
                 "screening_id": ["SCREEN_0001"],
                 "abstract": ["Study shows bias in outputs."],
-                "failure_modes": ["escalation|deception"],  # Existing tags
+                "failure_modes": ["Union[escalation, deception]"],  # Existing tags
             }
         )
 
