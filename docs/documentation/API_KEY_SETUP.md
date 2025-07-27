@@ -3,7 +3,7 @@
 ## Current Status
 
 Based on your `.env` file, you have configured:
-- ✅ OpenAI API Key 
+- ✅ OpenAI API Key
 - ✅ TogetherAI API Key
 - ✅ Semantic Scholar API Key
 - ✅ Unpaywall Email
@@ -50,7 +50,7 @@ Edit `config/config.yaml`:
 llm:
   # Choose: openai, anthropic, google, together
   provider: "openai"  # You can use this now
-  
+
   # Or try TogetherAI for open-source models:
   # provider: "together"
 ```

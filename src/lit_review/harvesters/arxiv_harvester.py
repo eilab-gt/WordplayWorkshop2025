@@ -203,8 +203,14 @@ class ArxivHarvester(BaseHarvester):
         """
         papers = []
 
-        # Target categories for LLM and wargaming research
-        categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.CR"]
+        # Get categories from config or use defaults
+        source_opts = getattr(self.config, "source_optimizations", {})
+        arxiv_opts = source_opts.get("arxiv", {})
+        categories = arxiv_opts.get("categories", [])
+
+        if not categories:
+            # Default categories for LLM and wargaming research
+            categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.CR"]
 
         logger.info(
             f"arXiv: Using category splitting strategy with {len(categories)} categories"

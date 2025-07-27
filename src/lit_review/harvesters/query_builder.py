@@ -14,6 +14,23 @@ class QueryBuilder:
         """Initialize the query builder."""
         self.parsed_terms = {}
 
+    def normalize_encoding(self, text: str) -> str:
+        """Normalize character encoding, particularly non-standard hyphens.
+
+        Args:
+            text: Text to normalize
+
+        Returns:
+            Normalized text
+        """
+        # Replace non-standard hyphens (U+2011) with standard hyphens
+        text = text.replace("\u2011", "-")  # Non-breaking hyphen
+        text = text.replace("\u2012", "-")  # Figure dash
+        text = text.replace("\u2013", "-")  # En dash
+        text = text.replace("\u2014", "-")  # Em dash
+
+        return text
+
     def parse_query_term(self, term: str) -> dict[str, Any]:
         """Parse a query term to identify NEAR operators, wildcards, and other patterns.
 
@@ -23,6 +40,9 @@ class QueryBuilder:
         Returns:
             Dictionary with parsed components
         """
+        # Normalize encoding first
+        term = self.normalize_encoding(term)
+
         # Check for NEAR operator pattern: "term1" NEAR/N (term2 OR term3)
         near_pattern = r'"([^"]+)"\s*NEAR/(\d+)\s*\(([^)]+)\)'
         near_match = re.match(near_pattern, term.strip())
@@ -72,10 +92,15 @@ class QueryBuilder:
         Returns:
             Query string for the base search
         """
-        # Parse all terms
-        parsed_wargame = [self.parse_query_term(t) for t in config.wargame_terms]
-        parsed_llm = [self.parse_query_term(t) for t in config.llm_terms]
-        parsed_exclusions = [self.parse_query_term(t) for t in config.exclusion_terms]
+        # Normalize all terms first
+        wargame_terms = [self.normalize_encoding(t) for t in config.wargame_terms]
+        llm_terms = [self.normalize_encoding(t) for t in config.llm_terms]
+        exclusion_terms = [self.normalize_encoding(t) for t in config.exclusion_terms]
+
+        # Parse all normalized terms
+        parsed_wargame = [self.parse_query_term(t) for t in wargame_terms]
+        parsed_llm = [self.parse_query_term(t) for t in llm_terms]
+        parsed_exclusions = [self.parse_query_term(t) for t in exclusion_terms]
 
         # Build the query with parsed terms
         wargame_part = self._build_term_group(parsed_wargame)
@@ -96,6 +121,59 @@ class QueryBuilder:
             query = f"{query} {' '.join(exclusion_parts)}"
 
         return query
+
+    def build_secondary_queries(self, config) -> list[dict[str, str]]:
+        """Build secondary queries from configuration templates.
+
+        Args:
+            config: Configuration object with query strategies
+
+        Returns:
+            List of dicts with 'description' and 'query' keys
+        """
+        secondary_queries = []
+
+        # Get secondary strategies from config
+        strategies = config.query_strategies.get("secondary", [])
+
+        for strategy in strategies:
+            template = strategy.get("template", "")
+            description = strategy.get("description", "")
+
+            # Replace template variables
+            query = template
+
+            # For policy/diplomacy, template already has specific terms
+            # For grey-lit, template has site: and filetype: operators
+            # We just need to replace exclusion_terms
+
+            # Build exclusion string
+            exclusion_parts = []
+            for term in config.exclusion_terms:
+                parsed = self.parse_query_term(term)
+                if parsed["type"] == "near":
+                    exclusion_parts.append(f"({self._format_parsed_term(parsed)})")
+                else:
+                    exclusion_parts.append(self._format_parsed_term(parsed))
+
+            exclusion_str = " OR ".join(exclusion_parts)
+            query = query.replace("{exclusion_terms}", exclusion_str)
+
+            # Also replace llm_terms if present
+            if "{llm_terms}" in query:
+                llm_parts = []
+                for term in config.llm_terms:
+                    parsed = self.parse_query_term(term)
+                    llm_parts.append(self._format_parsed_term(parsed))
+                llm_str = " OR ".join(llm_parts)
+                query = query.replace("{llm_terms}", llm_str)
+
+            # Clean up whitespace
+            query = " ".join(query.split())
+
+            secondary_queries.append({"description": description, "query": query})
+
+        return secondary_queries
 
     def _build_term_group(self, parsed_terms: list[dict[str, Any]]) -> str:
         """Build a term group from parsed terms.

@@ -7,7 +7,7 @@ import sqlite3
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -124,10 +124,10 @@ class ProductionHarvester(SearchHarvester):
 
     def search_production_scale(
         self,
-        sources: Optional[list[str]] = None,
+        sources: list[str] | None = None,
         max_results_total: int = 50000,  # Production scale
-        resume_session: Optional[str] = None,
-        checkpoint_callback: "Optional[callable]" = None,
+        resume_session: str | None = None,
+        checkpoint_callback: "callable | None" = None,
     ) -> pd.DataFrame:
         """Execute production-scale search with checkpointing and resume capability.
 
@@ -239,7 +239,7 @@ class ProductionHarvester(SearchHarvester):
         source: str,
         quota: int,
         session_id: str,
-        checkpoint_callback: "Optional[callable]" = None,
+        checkpoint_callback: "callable | None" = None,
     ) -> list[Paper]:
         """Harvest from single source with production optimizations."""
         harvester = self.harvesters[source]
@@ -300,14 +300,27 @@ class ProductionHarvester(SearchHarvester):
 
         if source == "arxiv":
             # Add category-specific queries for arXiv
-            categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA"]
+            # Get categories from config or use defaults
+            source_opts = getattr(self.config, "source_optimizations", {})
+            arxiv_opts = source_opts.get("arxiv", {})
+            categories = arxiv_opts.get("categories", [])
+
+            if not categories:
+                # Default categories
+                categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA"]
             for category in categories:
                 category_query = f"({base_query}) AND cat:{category}"
                 queries.append(category_query)
 
         elif source == "semantic_scholar":
-            # Add field-specific queries for Semantic Scholar
-            fields = ["Computer Science", "Political Science", "Economics"]
+            # Get fields from config or use defaults
+            source_opts = getattr(self.config, "source_optimizations", {})
+            ss_opts = source_opts.get("semantic_scholar", {})
+            fields = ss_opts.get("fields", [])
+
+            if not fields:
+                # Default fields
+                fields = ["Computer Science", "Political Science", "Economics"]
             for field in fields:
                 field_query = f"{base_query} AND field:{field}"
                 queries.append(field_query)
