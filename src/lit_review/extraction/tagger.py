@@ -109,14 +109,12 @@ class Tagger:
             re.compile(r"\bconfabulat\w+\b", re.IGNORECASE),
             re.compile(r"\bfabricat\w+\b", re.IGNORECASE),
             re.compile(r"\bmade[\s-]?up\b", re.IGNORECASE),
-            re.compile(
-                r"\bfalse\s+(?:Union[information, facts]?|claims?)\b", re.IGNORECASE
-            ),
+            re.compile(r"\bfalse\s+(?:information|facts?|claims?)\b", re.IGNORECASE),
         ]
 
         patterns["factual_error"] = [
             re.compile(
-                r"\bfactual(?:ly)?\s+(?:Union[error, incorrect]|wrong)\b", re.IGNORECASE
+                r"\bfactual(?:ly)?\s+(?:error|incorrect|wrong)\b", re.IGNORECASE
             ),
             re.compile(r"\binaccura\w+\b", re.IGNORECASE),
             re.compile(r"\bincorrect\s+(?:facts?|information)\b", re.IGNORECASE),
@@ -127,17 +125,15 @@ class Tagger:
             re.compile(r"\binconsisten\w+\b", re.IGNORECASE),
             re.compile(r"\bcontradict\w+\b", re.IGNORECASE),
             re.compile(r"\bincoher\w+\b", re.IGNORECASE),
-            re.compile(r"\bunstable\s+(?:Union[behavior, output])\b", re.IGNORECASE),
+            re.compile(r"\bunstable\s+(?:behavior|output)\b", re.IGNORECASE),
         ]
 
         # Interactive failures
         patterns["escalation"] = [
             re.compile(r"\bescalat\w+\b", re.IGNORECASE),
             re.compile(r"\bspiral(?:ing)?\b", re.IGNORECASE),
-            re.compile(
-                r"\baggressive\s+(?:Union[behavior, response])\b", re.IGNORECASE
-            ),
-            re.compile(r"\bconflict\s+(?:Union[escalation, spiral])\b", re.IGNORECASE),
+            re.compile(r"\baggressive\s+(?:behavior|response)\b", re.IGNORECASE),
+            re.compile(r"\bconflict\s+(?:escalation|spiral)\b", re.IGNORECASE),
         ]
 
         patterns["deception"] = [
@@ -149,25 +145,19 @@ class Tagger:
         ]
 
         patterns["prompt_sensitivity"] = [
-            re.compile(
-                r"\bprompt[\s-]?(?:Union[sensitiv, engineer]|hack)\w*\b", re.IGNORECASE
-            ),
+            re.compile(r"\bprompt[\s-]?(?:sensitiv|engineer|hack)\w*\b", re.IGNORECASE),
             re.compile(r"\bprompt[\s-]?injection\b", re.IGNORECASE),
-            re.compile(r"\bsensitive\s+to\s+(?:Union[prompt, input])\b", re.IGNORECASE),
-            re.compile(r"\bunstable\s+(?:Union[to, with])\s+prompt\b", re.IGNORECASE),
+            re.compile(r"\bsensitive\s+to\s+(?:prompt|input)\b", re.IGNORECASE),
+            re.compile(r"\bunstable\s+(?:to|with)\s+prompt\b", re.IGNORECASE),
         ]
 
         # Security failures
         patterns["data_leakage"] = [
             re.compile(r"\bdata[\s-]?leak\w*\b", re.IGNORECASE),
+            re.compile(r"\bprivacy[\s-]?(?:breach|violation|leak)\b", re.IGNORECASE),
+            re.compile(r"\bunauthorized\s+(?:access|disclosure)\b", re.IGNORECASE),
             re.compile(
-                r"\bprivacy[\s-]?(?:Union[breach, violation]|leak)\b", re.IGNORECASE
-            ),
-            re.compile(
-                r"\bunauthorized\s+(?:Union[access, disclosure])\b", re.IGNORECASE
-            ),
-            re.compile(
-                r"\bexpos(?:Union[e, ing])\s+(?:Union[private, sensitive])\b",
+                r"\bexpos(?:e|ing)\s+(?:private|sensitive)\b",
                 re.IGNORECASE,
             ),
         ]
@@ -175,12 +165,10 @@ class Tagger:
         patterns["jailbreak"] = [
             re.compile(r"\bjailbreak\w*\b", re.IGNORECASE),
             re.compile(
-                r"\bbypass\w*\s+(?:Union[safety, security]|guardrails)\b", re.IGNORECASE
+                r"\bbypass\w*\s+(?:safety|security|guardrails)\b", re.IGNORECASE
             ),
-            re.compile(
-                r"\bcircumvent\w*\s+(?:Union[restrictions, controls])\b", re.IGNORECASE
-            ),
-            re.compile(r"\bbreak\w*\s+(?:Union[out, free])\b", re.IGNORECASE),
+            re.compile(r"\bcircumvent\w*\s+(?:restrictions|controls)\b", re.IGNORECASE),
+            re.compile(r"\bbreak\w*\s+(?:out|free)\b", re.IGNORECASE),
         ]
 
         return patterns
@@ -200,21 +188,19 @@ class Tagger:
             "llama": re.compile(r"\bllama\b", re.IGNORECASE),
             "bert": re.compile(r"\bbert\b", re.IGNORECASE),
             # Game type detection
-            "matrix_game": re.compile(
-                r"\bmatrix\s+(?:Union[game, wargame])\b", re.IGNORECASE
-            ),
+            "matrix_game": re.compile(r"\bmatrix\s+(?:game|wargame)\b", re.IGNORECASE),
             "seminar_game": re.compile(
-                r"\bseminar\s+(?:Union[game, wargame])\b", re.IGNORECASE
+                r"\bseminar\s+(?:game|wargame)\b", re.IGNORECASE
             ),
             "digital_game": re.compile(
-                r"\bdigital\s+(?:Union[game, wargame]|simulation)\b", re.IGNORECASE
+                r"\bdigital\s+(?:game|wargame|simulation)\b", re.IGNORECASE
             ),
             # Evaluation metrics
             "win_rate": re.compile(r"\bwin[\s-]?rate\b", re.IGNORECASE),
             "accuracy": re.compile(r"\baccuracy\b", re.IGNORECASE),
             "f1_score": re.compile(r"\bf1[\s-]?score\b", re.IGNORECASE),
             "human_evaluation": re.compile(
-                r"\bhuman\s+(?:Union[evaluation, assessment]|rating)\b", re.IGNORECASE
+                r"\bhuman\s+(?:evaluation|assessment|rating)\b", re.IGNORECASE
             ),
             # Code availability
             "github": re.compile(r"github\.com/[\w-]+/[\w-]+", re.IGNORECASE),

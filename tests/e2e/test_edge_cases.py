@@ -43,6 +43,8 @@ class TestEdgeCases:
             cache_max_age_days=365,
             batch_size_pdf=50,
         )
+        # Disable secondary queries for edge case tests
+        config.query_strategies["secondary"] = []
         yield config
         config.cleanup()
 
@@ -70,10 +72,21 @@ class TestEdgeCases:
                     }
                 )
 
+        # Create fake services
+        from unittest.mock import Mock
+
+        # Mock Semantic Scholar API responses
+        ss = Mock()
+        ss.get = Mock(return_value=Mock(status_code=200, json=lambda: {"data": []}))
+        ss.post = Mock(return_value=Mock(status_code=200, json=lambda: {"data": []}))
+
+        pdf_server = FakePDFServer()
+
         return {
             "arxiv": arxiv,
+            "ss": ss,
             "llm": FakeLLMService(healthy=True),
-            "pdf": FakePDFServer(),
+            "pdf_server": pdf_server,
             "generator": generator,
         }
 
@@ -177,8 +190,67 @@ class TestEdgeCases:
 
         return edge_papers
 
+    def _patch_services(self, monkeypatch, services):
+        """Patch external services with test doubles."""
+        # Patch ArXiv API
+        monkeypatch.setattr(
+            "src.lit_review.harvesters.arxiv_harvester.arxiv.Search.results",
+            lambda self: services["arxiv"].search(self.query, self.max_results),
+        )
+
+        # Import Mock for the nested functions
+        from unittest.mock import Mock
+        
+        # Patch all requests (SS, CrossRef, Google Scholar)
+        def mock_get(*args, **kwargs):
+            # Return empty results for all API calls
+            return Mock(
+                status_code=200,
+                json=lambda: {"data": [], "results": [], "message": {"items": []}},
+                text="",
+                raise_for_status=lambda: None,
+            )
+
+        def mock_post(*args, **kwargs):
+            return Mock(
+                status_code=200,
+                json=lambda: {"data": [], "results": []},
+                raise_for_status=lambda: None,
+            )
+
+        monkeypatch.setattr("requests.get", mock_get)
+        monkeypatch.setattr("requests.post", mock_post)
+
+        # Patch Google Scholar BeautifulSoup parsing
+        monkeypatch.setattr(
+            "src.lit_review.harvesters.google_scholar.BeautifulSoup",
+            lambda html, parser: Mock(find_all=lambda *args, **kwargs: []),
+        )
+
+        # Patch PDF fetching
+        monkeypatch.setattr(
+            "src.lit_review.processing.pdf_fetcher.requests.get",
+            lambda url, **kwargs: services["pdf_server"].get_pdf(url),
+        )
+
+        # Patch LLM service
+        monkeypatch.setattr(
+            "src.lit_review.extraction.enhanced_llm_extractor.EnhancedLLMExtractor._check_llm_service",
+            lambda self: True,
+        )
+        monkeypatch.setattr(
+            "src.lit_review.extraction.enhanced_llm_extractor.requests.post",
+            lambda url, **kwargs: services["llm"].extract(
+                kwargs.get("json", {}).get("text", ""),
+                kwargs.get("json", {}).get("model", "gemini/gemini-pro"),
+            ),
+        )
+
     def test_empty_dataset_handling(self, edge_config, edge_services, monkeypatch):
         """Test pipeline with empty datasets at various stages."""
+        # Clear any papers from arxiv for empty test
+        edge_services["arxiv"].papers = []
+
         self._patch_services(monkeypatch, edge_services)
 
         # Test 1: Empty search results
@@ -302,7 +374,9 @@ class TestEdgeCases:
 
         # Find unicode paper
         unicode_papers = results[
-            results["title"].str.contains("Union[机器学习, émphasis]|π", na=False, regex=True)
+            results["title"].str.contains(
+                "(?:机器学习|émphasis)|π", na=False, regex=True
+            )
         ]
 
         if len(unicode_papers) > 0:

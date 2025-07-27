@@ -549,6 +549,9 @@ class RealConfigForTests:
         self.inclusion_flags = []  # Empty list for test
         self.logging_db_path = self.log_dir / "logs.db"
 
+        # Query strategies for v3.0.0
+        self.query_strategies = {"primary": ["standard_query"], "secondary": []}
+
         # Apply overrides
         for key, value in overrides.items():
             setattr(self, key, value)
