@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -67,7 +68,7 @@ class Tagger:
             regex_modes = self._extract_failure_modes(text_to_search)
 
             # Combine modes
-            all_modes = Union[existing_modes, regex_modes]
+            all_modes = existing_modes.union(regex_modes)
 
             # Update DataFrame
             df.at[idx, "failure_modes"] = (
