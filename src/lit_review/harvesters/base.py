@@ -3,7 +3,7 @@
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +17,13 @@ class Paper:
     year: int
     abstract: str
     source_db: str
-    url: Optional[str] = None
-    doi: Optional[str] = None
-    arxiv_id: Optional[str] = None
-    venue: Optional[str] = None
-    citations: Optional[int] = None
-    pdf_url: Optional[str] = None
-    keywords: Optional[list[str]] = None
+    url: str | None = None
+    doi: str | None = None
+    arxiv_id: str | None = None
+    venue: str | None = None
+    citations: int | None = None
+    pdf_url: str | None = None
+    keywords: list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for DataFrame creation."""
@@ -75,24 +75,11 @@ class BaseHarvester(ABC):
         Returns:
             Formatted query string
         """
-        # Build query components
-        wargame_part = (
-            f"({' OR '.join(f'"{term}"' for term in self.config.wargame_terms)})"
-        )
-        llm_part = f"({' OR '.join(f'"{term}"' for term in self.config.llm_terms)})"
-        action_part = (
-            f"({' OR '.join(f'"{term}"' for term in self.config.action_terms)})"
-        )
+        from .query_builder import QueryBuilder
 
-        # Build exclusions
-        exclusions = " ".join(f'NOT "{term}"' for term in self.config.exclusion_terms)
-
-        # Combine
-        query = f"{wargame_part} AND {llm_part} AND {action_part}"
-        if exclusions:
-            query = f"{query} {exclusions}"
-
-        return query
+        # Use the new QueryBuilder for advanced query handling
+        builder = QueryBuilder()
+        return builder.build_query_from_config(self.config)
 
     def filter_by_year(self, papers: list[Paper]) -> list[Paper]:
         """Filter papers by configured year range.
@@ -113,7 +100,7 @@ class BaseHarvester(ABC):
 
         return filtered
 
-    def clean_text(self, text: Optional[str]) -> str:
+    def clean_text(self, text: str | None) -> str:
         """Clean and normalize text fields.
 
         Args:
@@ -133,7 +120,7 @@ class BaseHarvester(ABC):
 
         return text.strip()
 
-    def extract_doi(self, text: str) -> Optional[str]:
+    def extract_doi(self, text: str) -> str | None:
         """Extract DOI from text if present.
 
         Args:
@@ -153,8 +140,8 @@ class BaseHarvester(ABC):
     def filter_by_keywords(
         self,
         papers: list[Paper],
-        include_keywords: Optional[list[str]] = None,
-        exclude_keywords: Optional[list[str]] = None,
+        include_keywords: list[str] | None = None,
+        exclude_keywords: list[str] | None = None,
         min_matches: int = 1,
     ) -> list[Paper]:
         """Filter papers by abstract keywords.

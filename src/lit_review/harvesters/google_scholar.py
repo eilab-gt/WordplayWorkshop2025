@@ -76,13 +76,20 @@ class GoogleScholarHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"Google Scholar: Starting search with query: {query}")
+            # Translate query for Google Scholar
+            from .query_builder import QueryBuilder
+
+            builder = QueryBuilder()
+            translated_query = builder.translate_for_google_scholar(query)
+
+            logger.info(f"Google Scholar: Original query: {query}")
+            logger.info(f"Google Scholar: Translated query: {translated_query}")
 
             # Execute search
             try:
                 from scholarly import scholarly
 
-                search_query = scholarly.search_pubs(query)
+                search_query = scholarly.search_pubs(translated_query)
             except Exception as e:
                 # Handle common scholarly errors
                 if "Cannot Fetch" in str(e) or "CAPTCHA" in str(e):

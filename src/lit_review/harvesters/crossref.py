@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -49,7 +49,14 @@ class CrossrefHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"Crossref: Starting search with query: {query}")
+            # Translate query for CrossRef
+            from .query_builder import QueryBuilder
+
+            builder = QueryBuilder()
+            translated_query = builder.translate_for_crossref(query)
+
+            logger.info(f"Crossref: Original query: {query[:100]}...")
+            logger.info(f"Crossref: Translated query: {translated_query}")
 
             # Crossref allows up to 1000 results per request, but we'll use smaller batches
             batch_size = min(100, max_results)
@@ -57,7 +64,9 @@ class CrossrefHarvester(BaseHarvester):
 
             while len(papers) < max_results:
                 # Execute search
-                results, total = self._search_batch(query, batch_size, offset)
+                results, total = self._search_batch(
+                    translated_query, batch_size, offset
+                )
 
                 if not results:
                     break
@@ -135,7 +144,7 @@ class CrossrefHarvester(BaseHarvester):
             logger.error(f"Crossref: Request error: {e}")
             return [], 0
 
-    def _extract_paper(self, result: dict[str, Any]) -> Optional[Paper]:
+    def _extract_paper(self, result: dict[str, Any]) -> Paper | None:
         """Extract Paper object from Crossref result.
 
         Args:
@@ -212,7 +221,7 @@ class CrossrefHarvester(BaseHarvester):
             logger.error(f"Crossref: Failed to extract paper: {e}")
             return None
 
-    def get_paper_by_doi(self, doi: str) -> Optional[Paper]:
+    def get_paper_by_doi(self, doi: str) -> Paper | None:
         """Get a specific paper by DOI.
 
         Args:

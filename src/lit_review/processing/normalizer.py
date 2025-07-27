@@ -193,7 +193,7 @@ class Normalizer:
             if author:
                 # Remove titles (Dr., Prof., etc.)
                 author = re.sub(
-                    r"\b(Union[Dr, Prof]|Union[Professor, Mr]|Union[Mrs, Ms]|Union[PhD, Ph]\.D)\b\.?",
+                    r"\b(Dr|Prof|Professor|Mr|Mrs|Ms|PhD|Ph\.D)\.?\b",
                     "",
                     author,
                 )

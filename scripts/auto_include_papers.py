@@ -170,6 +170,28 @@ def auto_include_papers(input_csv, output_csv, threshold=6):
     df.to_csv(output_csv, index=False)
     console.print(f"\n✅ Saved results to: {output_csv}")
 
+    # Save excluded papers separately for human review
+    excluded_csv = Path(output_csv).parent / "papers_excluded_for_review.csv"
+    df_excluded = df[~df["auto_include"]].copy()
+
+    # Add additional context for excluded papers
+    df_excluded["wargame_relevance"] = df_excluded.apply(
+        lambda row: (
+            "Yes" if check_wargame_relevance(row["title"], row["abstract"]) else "No"
+        ),
+        axis=1,
+    )
+    df_excluded["llm_relevance"] = df_excluded.apply(
+        lambda row: (
+            "Yes" if check_llm_relevance(row["title"], row["abstract"]) else "No"
+        ),
+        axis=1,
+    )
+
+    # Save excluded papers with context
+    df_excluded.to_csv(excluded_csv, index=False)
+    console.print(f"📄 Saved excluded papers for review to: {excluded_csv}")
+
     # Create exclusion report
     report_path = Path(output_csv).parent / "auto_inclusion_report.txt"
     with open(report_path, "w") as f:
@@ -185,6 +207,19 @@ def auto_include_papers(input_csv, output_csv, threshold=6):
         score_dist = df["auto_relevance_score"].value_counts().sort_index()
         for score, count in score_dist.items():
             f.write(f"Score {score}: {count} papers\n")
+
+        f.write("\nEXCLUDED PAPERS ANALYSIS\n")
+        f.write("-" * 30 + "\n")
+        f.write(
+            f"Papers with wargame terms: {len(df_excluded[df_excluded['wargame_relevance'] == 'Yes'])}\n"
+        )
+        f.write(
+            f"Papers with LLM terms: {len(df_excluded[df_excluded['llm_relevance'] == 'Yes'])}\n"
+        )
+        f.write(
+            f"Papers with both: {len(df_excluded[(df_excluded['wargame_relevance'] == 'Yes') & (df_excluded['llm_relevance'] == 'Yes')])}\n"
+        )
+        f.write(f"\nExcluded papers saved to: {excluded_csv.name}\n")
 
     console.print(f"📄 Report saved to: {report_path}")
 
