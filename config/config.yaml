@@ -38,10 +38,10 @@ wargame_terms:
   - "crisis game*"
   - "military exercise*"
   - "defen?e exercise*"
-  - "red team*" # NEAR/5 (exercise OR simulation OR wargame OR campaign OR tabletop)
+  - '"red team*" NEAR/5 (exercise OR simulation OR wargame OR campaign OR tabletop)'
   # Matrix-wargame only
   - "matrix wargame*"
-  - "matrix game*" # NEAR/5 (scenario OR crisis OR policy OR wargame OR tabletop OR seminar)
+  - '"matrix game*" NEAR/5 (scenario OR crisis OR policy OR wargame OR tabletop OR seminar)'
   # Crisis / policy / diplomacy
   - "crisis simulation*"
   - "crisis-management simulation*"
