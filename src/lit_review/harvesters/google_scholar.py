@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import Optional
 
 from requests.exceptions import RequestException
 from scholarly import ProxyGenerator, scholarly

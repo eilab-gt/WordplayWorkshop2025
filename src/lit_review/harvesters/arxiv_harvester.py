@@ -3,6 +3,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
+from typing import Optional
 
 import arxiv
 import requests
