@@ -130,3 +130,8 @@ checkpoints/*.pdf
 # Large content files
 *.html
 v1_pipeline_run/html/
+
+# Test outputs (keep seed_papers_*)
+output/test_*.csv
+output/test_*/
+scripts/fix_python39_compatibility.py
