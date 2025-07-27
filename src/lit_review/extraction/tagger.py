@@ -2,7 +2,6 @@
 
 import logging
 import re
-from typing import Optional, Union
 
 import pandas as pd
 
@@ -110,7 +109,9 @@ class Tagger:
             re.compile(r"\bconfabulat\w+\b", re.IGNORECASE),
             re.compile(r"\bfabricat\w+\b", re.IGNORECASE),
             re.compile(r"\bmade[\s-]?up\b", re.IGNORECASE),
-            re.compile(r"\bfalse\s+(?:Union[information, facts]?|claims?)\b", re.IGNORECASE),
+            re.compile(
+                r"\bfalse\s+(?:Union[information, facts]?|claims?)\b", re.IGNORECASE
+            ),
         ]
 
         patterns["factual_error"] = [
@@ -133,7 +134,9 @@ class Tagger:
         patterns["escalation"] = [
             re.compile(r"\bescalat\w+\b", re.IGNORECASE),
             re.compile(r"\bspiral(?:ing)?\b", re.IGNORECASE),
-            re.compile(r"\baggressive\s+(?:Union[behavior, response])\b", re.IGNORECASE),
+            re.compile(
+                r"\baggressive\s+(?:Union[behavior, response])\b", re.IGNORECASE
+            ),
             re.compile(r"\bconflict\s+(?:Union[escalation, spiral])\b", re.IGNORECASE),
         ]
 
@@ -146,7 +149,9 @@ class Tagger:
         ]
 
         patterns["prompt_sensitivity"] = [
-            re.compile(r"\bprompt[\s-]?(?:Union[sensitiv, engineer]|hack)\w*\b", re.IGNORECASE),
+            re.compile(
+                r"\bprompt[\s-]?(?:Union[sensitiv, engineer]|hack)\w*\b", re.IGNORECASE
+            ),
             re.compile(r"\bprompt[\s-]?injection\b", re.IGNORECASE),
             re.compile(r"\bsensitive\s+to\s+(?:Union[prompt, input])\b", re.IGNORECASE),
             re.compile(r"\bunstable\s+(?:Union[to, with])\s+prompt\b", re.IGNORECASE),
@@ -155,9 +160,16 @@ class Tagger:
         # Security failures
         patterns["data_leakage"] = [
             re.compile(r"\bdata[\s-]?leak\w*\b", re.IGNORECASE),
-            re.compile(r"\bprivacy[\s-]?(?:Union[breach, violation]|leak)\b", re.IGNORECASE),
-            re.compile(r"\bunauthorized\s+(?:Union[access, disclosure])\b", re.IGNORECASE),
-            re.compile(r"\bexpos(?:Union[e, ing])\s+(?:Union[private, sensitive])\b", re.IGNORECASE),
+            re.compile(
+                r"\bprivacy[\s-]?(?:Union[breach, violation]|leak)\b", re.IGNORECASE
+            ),
+            re.compile(
+                r"\bunauthorized\s+(?:Union[access, disclosure])\b", re.IGNORECASE
+            ),
+            re.compile(
+                r"\bexpos(?:Union[e, ing])\s+(?:Union[private, sensitive])\b",
+                re.IGNORECASE,
+            ),
         ]
 
         patterns["jailbreak"] = [
@@ -165,7 +177,9 @@ class Tagger:
             re.compile(
                 r"\bbypass\w*\s+(?:Union[safety, security]|guardrails)\b", re.IGNORECASE
             ),
-            re.compile(r"\bcircumvent\w*\s+(?:Union[restrictions, controls])\b", re.IGNORECASE),
+            re.compile(
+                r"\bcircumvent\w*\s+(?:Union[restrictions, controls])\b", re.IGNORECASE
+            ),
             re.compile(r"\bbreak\w*\s+(?:Union[out, free])\b", re.IGNORECASE),
         ]
 
@@ -186,7 +200,9 @@ class Tagger:
             "llama": re.compile(r"\bllama\b", re.IGNORECASE),
             "bert": re.compile(r"\bbert\b", re.IGNORECASE),
             # Game type detection
-            "matrix_game": re.compile(r"\bmatrix\s+(?:Union[game, wargame])\b", re.IGNORECASE),
+            "matrix_game": re.compile(
+                r"\bmatrix\s+(?:Union[game, wargame])\b", re.IGNORECASE
+            ),
             "seminar_game": re.compile(
                 r"\bseminar\s+(?:Union[game, wargame])\b", re.IGNORECASE
             ),
@@ -262,7 +278,7 @@ class Tagger:
 
         return detected_modes
 
-    def _map_to_vocab(self, category: str) -> Optional[str]:
+    def _map_to_vocab(self, category: str) -> str | None:
         """Map category to controlled vocabulary term.
 
         Args:
@@ -411,6 +427,11 @@ class Tagger:
         total_papers = len(
             df[df["failure_modes"].notna() & (df["failure_modes"] != "")]
         )
-        summary["percentage"] = (summary["count"] / total_papers * 100).round(1)
+
+        if total_papers > 0:
+            summary["percentage"] = (summary["count"] / total_papers * 100).round(1)
+        else:
+            # If no papers have failure modes, return empty summary
+            summary["percentage"] = pd.Series(dtype=float)
 
         return summary

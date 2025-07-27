@@ -4,7 +4,7 @@ import random
 import sqlite3
 import tempfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -114,7 +114,7 @@ class FakeLLMService:
 class FakeArxivAPI:
     """Fake arXiv API that returns predictable results."""
 
-    def __init__(self, seed: Optional[int] = 42):
+    def __init__(self, seed: int | None = 42):
         self.generator = RealisticTestDataGenerator(seed=seed)
         self.papers = []
         self.call_count = 0
@@ -166,9 +166,48 @@ class FakeArxivAPI:
 
         # Sort by score (descending) and return top results
         results.sort(key=lambda x: x[0], reverse=True)
-        return [paper for _, paper in results[:max_results]]
+        top_papers = [paper for _, paper in results[:max_results]]
 
-    def get_paper(self, arxiv_id: str) -> Optional[dict[str, Any]]:
+        # Convert to objects that mimic arxiv.Result
+        result_objects = []
+        for paper in top_papers:
+            # Create a simple object with the required attributes
+            class FakeArxivResult:
+                def __init__(self, paper_dict):
+                    self.title = paper_dict["title"]
+                    self.authors = [
+                        type("Author", (), {"name": author})()
+                        for author in paper_dict["authors"]
+                    ]
+                    self.published = type(
+                        "Published", (), {"year": int(paper_dict["published"][:4])}
+                    )()
+                    self.summary = paper_dict["abstract"]
+                    self.entry_id = f"http://arxiv.org/abs/{paper_dict['id']}"
+                    self.pdf_url = paper_dict.get(
+                        "pdf_url", f"http://arxiv.org/pdf/{paper_dict['id']}"
+                    )
+                    self.primary_category = type(
+                        "Category",
+                        (),
+                        {
+                            "name": (
+                                paper_dict["categories"][0]
+                                if paper_dict["categories"]
+                                else "cs.AI"
+                            )
+                        },
+                    )()
+                    self.categories = [
+                        type("Category", (), {"name": cat})()
+                        for cat in paper_dict.get("categories", [])
+                    ]
+
+            result_objects.append(FakeArxivResult(paper))
+
+        return result_objects
+
+    def get_paper(self, arxiv_id: str) -> dict[str, Any] | None:
         """Get specific paper by ID."""
         for paper in self.papers:
             if paper["id"] == arxiv_id:
@@ -179,7 +218,7 @@ class FakeArxivAPI:
         """Add a custom paper for testing."""
         self.papers.append(paper_dict)
 
-    def get_tex_source(self, arxiv_id: str) -> Optional[str]:
+    def get_tex_source(self, arxiv_id: str) -> str | None:
         """Return fake TeX source."""
         paper = self.get_paper(arxiv_id)
         if paper:
@@ -387,8 +426,23 @@ class RealConfigForTests:
         self.pdf_max_size_mb = 50
         self.cache_max_age_days = 90
         self.use_cache = True
+        self.use_proxy = False  # Disable proxy for tests
         self.llm_model = "gemini/gemini-pro"
         self.llm_temperature = 0.1
+
+        # Search terms required by harvesters
+        self.wargame_terms = ["wargame", "war game", "strategic game"]
+        self.llm_terms = ["LLM", "large language model", "GPT"]
+        self.action_terms = ["simulation", "play", "analysis"]
+        self.exclusion_terms = ["video game", "computer game"]
+
+        # Rate limits required by harvesters
+        self.rate_limits = {
+            "google_scholar": {"delay_seconds": 0.1, "requests_per_hour": 1000},
+            "arxiv": {"delay_milliseconds": 10},
+            "semantic_scholar": {"delay_milliseconds": 10},
+            "crossref": {"delay_milliseconds": 10},
+        }
         self.batch_size_pdf = 10
         self.unpaywall_email = "test@example.com"
 

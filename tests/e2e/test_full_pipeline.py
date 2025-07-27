@@ -1,8 +1,5 @@
 """End-to-end tests for the complete literature review pipeline."""
 
-import tempfile
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
@@ -24,22 +21,22 @@ from tests.test_doubles import (
 class TestFullPipelineIntegration:
     """Test complete pipeline from search to export."""
 
-    @pytest.fixture(scope="class")
-    def e2e_config(self):
+    @pytest.fixture
+    def e2e_config(self, tmp_path):
         """Create configuration for E2E tests."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            config = RealConfigForTests(
-                cache_dir=Path(tmpdir) / "cache",
-                output_dir=Path(tmpdir) / "output",
-                data_dir=Path(tmpdir) / "data",
-                log_dir=Path(tmpdir) / "logs",
-                # Smaller limits for E2E tests
-                search_years=(2023, 2024),
-                sample_size=5,  # Process only 5 papers
-                pdf_timeout_seconds=5,
-                parallel_workers=2,
-            )
-            yield config
+        tmpdir = tmp_path
+        config = RealConfigForTests(
+            cache_dir=tmpdir / "cache",
+            output_dir=tmpdir / "output",
+            data_dir=tmpdir / "data",
+            log_dir=tmpdir / "logs",
+            # Smaller limits for E2E tests
+            search_years=(2023, 2024),
+            sample_size=5,  # Process only 5 papers
+            pdf_timeout_seconds=5,
+            parallel_workers=2,
+        )
+        return config
 
     @pytest.fixture
     def fake_services(self):
@@ -93,7 +90,9 @@ class TestFullPipelineIntegration:
         pdf_fetcher = PDFFetcher(e2e_config)
         pdf_df = pdf_fetcher.fetch_pdfs(deduped_df)
 
-        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")]
+        successful_pdfs = pdf_df[
+            pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")
+        ]
         assert len(successful_pdfs) > 0, "Should download at least some PDFs"
 
         # Step 4: Extract insights
@@ -161,6 +160,7 @@ class TestFullPipelineIntegration:
 
         # Run simplified pipeline
         harvester = SearchHarvester(e2e_config)
+        harvester.harvesters = {"arxiv": harvester.harvesters["arxiv"]}
         search_results = self._mock_search(harvester, fake_services["arxiv"])
 
         # Process with failures
@@ -175,7 +175,9 @@ class TestFullPipelineIntegration:
         assert len(failed_pdfs) > 0, "Some PDFs should fail"
 
         # But some should succeed
-        successful_pdfs = pdf_df[pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")]
+        successful_pdfs = pdf_df[
+            pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")
+        ]
         assert len(successful_pdfs) > 0, "Some PDFs should succeed"
 
         # Extraction should use fallback model
@@ -195,6 +197,7 @@ class TestFullPipelineIntegration:
 
         # Start pipeline
         harvester = SearchHarvester(e2e_config)
+        harvester.harvesters = {"arxiv": harvester.harvesters["arxiv"]}
         search_results = self._mock_search(harvester, fake_services["arxiv"])
 
         # Save intermediate state
@@ -220,6 +223,7 @@ class TestFullPipelineIntegration:
         results = []
         for _run in range(2):
             harvester = SearchHarvester(e2e_config)
+            harvester.harvesters = {"arxiv": harvester.harvesters["arxiv"]}
             search_df = self._mock_search(harvester, fake_services["arxiv"])
 
             normalizer = Normalizer(e2e_config)
@@ -249,6 +253,7 @@ class TestFullPipelineIntegration:
 
         # Run mini pipeline
         harvester = SearchHarvester(e2e_config)
+        harvester.harvesters = {"arxiv": harvester.harvesters["arxiv"]}
         search_df = self._mock_search(harvester, fake_services["arxiv"], max_results=10)
 
         normalizer = Normalizer(e2e_config)
@@ -276,6 +281,13 @@ class TestFullPipelineIntegration:
 
     def _patch_external_services(self, monkeypatch, fake_services):
         """Patch all external service calls to use fakes."""
+
+        # Mock scholarly to prevent any network calls
+        from unittest.mock import MagicMock
+
+        mock_scholarly = MagicMock()
+        mock_scholarly.search_pubs = MagicMock(return_value=iter([]))
+        monkeypatch.setattr("scholarly.scholarly", mock_scholarly)
 
         # Patch arXiv
         def mock_arxiv_search(*args, **kwargs):
@@ -356,10 +368,9 @@ class TestFullPipelineIntegration:
     def _mock_search(self, harvester, fake_arxiv, max_results=5):
         """Perform a mock search using the harvester."""
         # The fake_arxiv already has realistic papers pre-generated
-        # Just run the search with appropriate query terms
+        # Just run the search with the configured query terms
         results = harvester.search_all(
             sources=["arxiv"],
             max_results_per_source=max_results,
-            custom_query="LLM wargaming strategic simulation multi-agent",
         )
         return results

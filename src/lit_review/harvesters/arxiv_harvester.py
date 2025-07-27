@@ -3,7 +3,6 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Optional
 
 import arxiv
 import requests
@@ -432,7 +431,7 @@ class ArxivHarvester(BaseHarvester):
 
         return arxiv_query
 
-    def _extract_paper(self, result: arxiv.Result) -> Optional[Paper]:
+    def _extract_paper(self, result: arxiv.Result) -> Paper | None:
         """Extract Paper object from arXiv result.
 
         Args:
@@ -469,7 +468,11 @@ class ArxivHarvester(BaseHarvester):
                 url=result.entry_id,
                 doi=result.doi,
                 arxiv_id=arxiv_id,
-                pdf_url=result.pdf_url,
+                pdf_url=(
+                    result.pdf_url + ".pdf"
+                    if result.pdf_url and not result.pdf_url.endswith(".pdf")
+                    else result.pdf_url
+                ),
                 keywords=[
                     cat.term if hasattr(cat, "term") else str(cat)
                     for cat in result.categories
@@ -508,7 +511,7 @@ class ArxivHarvester(BaseHarvester):
         # Use the base search method
         return self.search(category_query, max_results)
 
-    def get_paper_by_id(self, arxiv_id: str) -> Optional[Paper]:
+    def get_paper_by_id(self, arxiv_id: str) -> Paper | None:
         """Get a specific paper by arXiv ID.
 
         Args:
@@ -530,7 +533,7 @@ class ArxivHarvester(BaseHarvester):
             logger.error(f"arXiv: Error fetching paper {arxiv_id}: {e}")
             return None
 
-    def fetch_tex_source(self, arxiv_id: str) -> Optional[str]:
+    def fetch_tex_source(self, arxiv_id: str) -> str | None:
         """Fetch the TeX source for an arXiv paper.
 
         Args:
@@ -574,7 +577,7 @@ class ArxivHarvester(BaseHarvester):
             logger.error(f"Error fetching TeX source for {arxiv_id}: {e}")
             return None
 
-    def fetch_html_source(self, arxiv_id: str) -> Optional[str]:
+    def fetch_html_source(self, arxiv_id: str) -> str | None:
         """Fetch the HTML version of an arXiv paper if available.
 
         Args:

@@ -5,7 +5,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 import requests
@@ -157,12 +157,12 @@ class PDFFetcher:
             source = "direct"
 
         # 2. Try arXiv if we have an ID
-        elif paper.get("arxiv_id"):
+        elif paper.get("arxiv_id") and isinstance(paper.get("arxiv_id"), str):
             pdf_url = f"https://arxiv.org/pdf/{paper['arxiv_id']}.pdf"
             source = "arxiv"
 
         # 3. Try Unpaywall if we have a DOI
-        elif paper.get("doi") and self.email:
+        elif paper.get("doi") and self.email and isinstance(paper.get("doi"), str):
             unpaywall_url = self._get_unpaywall_url(paper["doi"])
             if unpaywall_url:
                 pdf_url = unpaywall_url
@@ -231,9 +231,9 @@ class PDFFetcher:
             Unique ID string
         """
         # Prefer DOI, then arXiv ID, then generate from title+authors
-        if paper.get("doi"):
+        if paper.get("doi") and isinstance(paper.get("doi"), str):
             return paper["doi"]
-        elif paper.get("arxiv_id"):
+        elif paper.get("arxiv_id") and isinstance(paper.get("arxiv_id"), str):
             return f"arxiv:{paper['arxiv_id']}"
         else:
             # Generate from title and first author
@@ -289,7 +289,7 @@ class PDFFetcher:
 
         return f"{base_name}.pdf"
 
-    def _get_unpaywall_url(self, doi: str) -> Optional[str]:
+    def _get_unpaywall_url(self, doi: str) -> str | None:
         """Get PDF URL from Unpaywall.
 
         Args:
@@ -326,7 +326,7 @@ class PDFFetcher:
             logger.debug(f"Unpaywall error for DOI {doi}: {e}")
             return None
 
-    def _download_pdf_content(self, url: str) -> Optional[bytes]:
+    def _download_pdf_content(self, url: str) -> bytes | None:
         """Download PDF content from URL.
 
         Args:

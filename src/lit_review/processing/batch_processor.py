@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -86,7 +86,7 @@ class BatchProcessor:
         papers_df: pd.DataFrame,
         processor_func: Callable,
         job_type: str = "processing",
-        resume_job_id: Optional[str] = None,
+        resume_job_id: str | None = None,
         **processor_kwargs,
     ) -> pd.DataFrame:
         """Process papers in optimized batches with progress tracking.
@@ -178,7 +178,7 @@ class BatchProcessor:
 
     def _process_single_batch(
         self, batch_df: pd.DataFrame, processor_func: Callable, batch_idx: int, **kwargs
-    ) -> pd.Optional[DataFrame]:
+    ) -> pd.DataFrame | None:
         """Process a single batch with error handling."""
         try:
             # Check if batch is too large for memory
@@ -197,7 +197,7 @@ class BatchProcessor:
 
     def _process_oversized_batch(
         self, batch_df: pd.DataFrame, processor_func: Callable, **kwargs
-    ) -> pd.Optional[DataFrame]:
+    ) -> pd.DataFrame | None:
         """Handle batches that are too large for memory by sub-dividing."""
         sub_batch_size = len(batch_df) // 4  # Quarter the size
         sub_results = []
@@ -220,7 +220,7 @@ class BatchProcessor:
         self,
         source_configs: list[dict[str, Any]],
         processor_func: Callable,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
     ) -> dict[str, pd.DataFrame]:
         """Process multiple sources in parallel.
 
@@ -263,7 +263,7 @@ class BatchProcessor:
         return results
 
     def chunked_deduplication(
-        self, df: pd.DataFrame, chunk_size: Optional[int] = None
+        self, df: pd.DataFrame, chunk_size: int | None = None
     ) -> pd.DataFrame:
         """Perform memory-efficient deduplication on large datasets."""
         chunk_size = chunk_size or self.batch_size
