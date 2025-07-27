@@ -4,7 +4,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -29,9 +29,9 @@ class Config:
     failure_vocab: dict[str, list] = field(default_factory=dict)
 
     # API keys
-    semantic_scholar_key: str | None = None
-    openai_key: str | None = None
-    unpaywall_email: str | None = None
+    semantic_scholar_key: Optional[str] = None
+    openai_key: Optional[str] = None
+    unpaywall_email: Optional[str] = None
 
     # Rate limits
     rate_limits: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -50,9 +50,11 @@ class Config:
     logging_db_path: Path = Path("./logs/logging.db")
 
     # LLM settings
+    llm_provider: str = "openai"  # Provider: openai, anthropic, google, together
     llm_model: str = "gpt-4o"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 4000
+    llm_provider_configs: dict[str, dict[str, Any]] = field(default_factory=dict)
     extraction_prompt: str = ""
     awscale_prompt: str = ""
 
@@ -79,7 +81,7 @@ class Config:
     export_include_pdfs: bool = False
     export_include_logs: bool = True
     zenodo_enabled: bool = False
-    zenodo_token: str | None = None
+    zenodo_token: Optional[str] = None
 
     # Logging
     log_level: str = "INFO"
@@ -88,7 +90,7 @@ class Config:
     # Development
     debug: bool = False
     dry_run: bool = False
-    sample_size: int | None = None
+    sample_size: Optional[int] = None
     use_cache: bool = True
     parallel_workers: int = 4
 
@@ -181,9 +183,11 @@ class ConfigLoader:
 
         # LLM settings
         llm = self._raw_config.get("llm", {})
+        config.llm_provider = llm.get("provider", "openai")
         config.llm_model = llm.get("model", "gpt-4o")
         config.llm_temperature = llm.get("temperature", 0.1)
         config.llm_max_tokens = llm.get("max_tokens", 4000)
+        config.llm_provider_configs = llm.get("providers", {})
         config.extraction_prompt = llm.get("extraction_prompt", "")
         config.awscale_prompt = llm.get("awscale_prompt", "")
 
@@ -240,7 +244,7 @@ class ConfigLoader:
 
         return config
 
-    def _resolve_env(self, value: str | None) -> str | None:
+    def _resolve_env(self, value: Optional[str]) -> Optional[str]:
         """Resolve environment variable references in config values.
 
         Args:

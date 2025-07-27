@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from openai import OpenAI
 from pdfminer.high_level import extract_text
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
+
+from ..llm_providers import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class LLMExtractor:
             config: Configuration object
         """
         self.config = config
-        self.client = OpenAI(api_key=config.openai_key)
+        self.llm_provider = LLMProvider(config)
         self.model = config.llm_model
         self.temperature = config.llm_temperature
         self.max_tokens = config.llm_max_tokens
@@ -301,15 +302,24 @@ Full Text (truncated if needed):
             Extracted information or None
         """
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.extraction_prompt},
-                    {"role": "user", "content": context},
-                ],
+            # Build messages
+            messages = [
+                {"role": "system", "content": self.extraction_prompt},
+                {"role": "user", "content": context},
+            ]
+
+            # Use JSON response format if supported
+            response_format = (
+                {"type": "json_object"}
+                if self.llm_provider._supports_json_mode()
+                else None
+            )
+
+            response = self.llm_provider.chat_completion(
+                messages=messages,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
-                response_format={"type": "json_object"},  # Force JSON response
+                response_format=response_format,
             )
 
             # Parse response
@@ -374,12 +384,13 @@ Relevant excerpt from paper:
 {context[:5000]}  # First part of context
 """
 
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.awscale_prompt},
-                    {"role": "user", "content": awscale_context},
-                ],
+            messages = [
+                {"role": "system", "content": self.awscale_prompt},
+                {"role": "user", "content": awscale_context},
+            ]
+
+            response = self.llm_provider.chat_completion(
+                messages=messages,
                 temperature=0.1,  # Low temperature for consistency
                 max_tokens=10,
             )

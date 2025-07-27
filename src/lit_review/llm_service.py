@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import litellm
 import uvicorn
@@ -35,11 +35,11 @@ class ExtractionRequest(BaseModel):
     model: str = Field(
         default="gemini/gemini-pro", description="Model to use for extraction"
     )
-    extraction_fields: list[str] | None = Field(
+    extraction_fields: Optional[list[str]] = Field(
         default=None, description="Specific fields to extract"
     )
     temperature: float = Field(default=0.1, ge=0, le=2, description="Model temperature")
-    max_tokens: int | None = Field(
+    max_tokens: Optional[int] = Field(
         default=4000, description="Maximum tokens in response"
     )
 
@@ -48,10 +48,10 @@ class ExtractionResponse(BaseModel):
     """Response model for extraction results."""
 
     success: bool
-    extracted_data: dict[str, Any] | None = None
-    error: str | None = None
+    extracted_data: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
     model_used: str
-    tokens_used: int | None = None
+    tokens_used: Optional[int] = None
 
 
 # Initialize FastAPI app
@@ -247,7 +247,7 @@ async def extract_paper_info(request: ExtractionRequest):
         return ExtractionResponse(success=False, error=str(e), model_used=request.model)
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8000):
+def run_server(host: str = "localhost", port: int = 8000):
     """Run the FastAPI server."""
     uvicorn.run(app, host=host, port=port)
 
