@@ -395,6 +395,8 @@ class RealConfigForTests:
         # Search settings
         self.wargame_terms = ["wargame", "wargaming", "war game"]
         self.llm_terms = ["LLM", "large language model", "GPT", "Claude"]
+        self.action_terms = ["employ", "simulate", "design", "implement"]
+        self.exclusion_terms = ["review", "survey"]
         self.search_years = (2020, 2024)
 
         # Rate limits
@@ -402,6 +404,20 @@ class RealConfigForTests:
             "arxiv": {"delay_milliseconds": 0},  # No delay in tests
             "semantic_scholar": {"requests_per_second": 100},
         }
+
+        # Missing attributes for tests
+        self.dedup_methods = ["doi_exact", "title_fuzzy"]
+        self.semantic_scholar_key = None
+        self.openai_key = "test-key"
+        self.title_similarity_threshold = 0.85
+
+        # Additional attributes from Config dataclass
+        self.failure_vocab = {}
+        self.llm_max_tokens = 4000
+        self.pdf_max_retries = 3
+        self.llm_timeout_seconds = 30
+        self.llm_max_retries = 3
+        self.sample_size = None
 
         # Apply overrides
         for key, value in overrides.items():

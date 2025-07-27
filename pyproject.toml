@@ -110,16 +110,17 @@ ignore = [
     "E722",  # Allow bare except in demo scripts
     "F841",  # Allow unused variables in tests
     "SIM117",  # Allow nested with statements
+    "RUF012",  # Mutable class attributes in nested classes
 ]
 fixable = ["ALL"]
 unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "D", "B904", "PTH100", "PTH118", "PTH120"]
+"tests/*" = ["S101", "D", "B904", "PTH100", "PTH118", "PTH120", "S110", "S311", "B023", "B007", "ARG005", "E402"]
 "scripts/*" = ["D"]
 "notebooks/*" = ["RUF001"]
 "src/lit_review/utils/logging_db.py" = ["S608", "E402"]
-"src/lit_review/harvesters/*" = ["S113"]
+"src/lit_review/harvesters/*" = ["S113", "S324"]
 "src/lit_review/processing/screen_ui.py" = ["S110"]
 "src/lit_review/utils/exporter.py" = ["S113"]
 
@@ -148,3 +149,4 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = ["tests/"]

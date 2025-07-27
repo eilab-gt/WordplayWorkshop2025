@@ -4,8 +4,13 @@ Demo script for the literature review pipeline.
 Shows a quick end-to-end example with sample data.
 """
 
-import time
+import shutil
+
+# Import constants from utils
+import sys
+from collections import Counter
 from pathlib import Path
+from time import sleep
 
 import click
 import pandas as pd
@@ -13,6 +18,9 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import track
+
+sys.path.append(str(Path(__file__).parent))
+from utils import DEMO_SLEEP_TIME, EXTRACTION_SLEEP_TIME
 
 console = Console()
 
@@ -234,7 +242,7 @@ def demo(full):
     papers = create_sample_papers()
 
     for _ in track(range(5), description="   Searching databases"):
-        time.sleep(0.2)  # Simulate search time
+        sleep(DEMO_SLEEP_TIME)  # Simulate search time
 
     papers_path = Path("demo_data/raw/papers_demo.csv")
     papers.to_csv(papers_path, index=False)
@@ -265,7 +273,7 @@ def demo(full):
     extraction_results = create_sample_extraction_results()
 
     for _ in track(range(5), description="   Processing papers"):
-        time.sleep(0.3)  # Simulate extraction time
+        sleep(EXTRACTION_SLEEP_TIME)  # Simulate extraction time
 
     extraction_path = Path("demo_data/extracted/extraction_demo.csv")
     extraction_results.to_csv(extraction_path, index=False)
@@ -299,13 +307,14 @@ def demo(full):
 
     # Show failure modes
     console.print("\n   [bold]Failure modes detected:[/bold]")
-    failure_counts = {}
-    for modes in extraction_results["failure_modes"]:
-        if modes:
-            for mode in modes.split("|"):
-                failure_counts[mode] = failure_counts.get(mode, 0) + 1
+    failure_counts = Counter(
+        mode.strip()
+        for modes in extraction_results["failure_modes"]
+        if modes
+        for mode in modes.split("|")
+    )
 
-    for mode, count in sorted(failure_counts.items(), key=lambda x: x[1], reverse=True):
+    for mode, count in failure_counts.most_common():
         console.print(f"   • {mode}: {count} papers")
 
     if full:
@@ -339,8 +348,6 @@ def demo(full):
 
     # Offer cleanup
     if click.confirm("\nClean up demo files?", default=True):
-        import shutil
-
         shutil.rmtree("demo_data", ignore_errors=True)
         shutil.rmtree("demo_outputs", ignore_errors=True)
         shutil.rmtree("demo_pdfs", ignore_errors=True)

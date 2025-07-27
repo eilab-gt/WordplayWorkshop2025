@@ -4,6 +4,7 @@ Generate statistics and reports from literature review data.
 """
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -14,15 +15,16 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+# Import shared utilities
+sys.path.append(str(Path(__file__).parent))
+from utils import (
+    BAR_CHART_SCALE,
+    find_latest_file,
+    parse_failure_modes,
+    safe_column_value,
+)
+
 console = Console()
-
-
-def find_latest_file(directory: Path, pattern: str) -> Path:
-    """Find the most recent file matching pattern in directory."""
-    files = list(directory.glob(pattern))
-    if not files:
-        return None
-    return max(files, key=lambda x: x.stat().st_mtime)
 
 
 def generate_paper_stats(df: pd.DataFrame) -> dict:
@@ -30,16 +32,8 @@ def generate_paper_stats(df: pd.DataFrame) -> dict:
     stats = {
         "total_papers": len(df),
         "date_range": {
-            "min_year": (
-                int(df["year"].min())
-                if "year" in df and not df["year"].isna().all()
-                else None
-            ),
-            "max_year": (
-                int(df["year"].max())
-                if "year" in df and not df["year"].isna().all()
-                else None
-            ),
+            "min_year": safe_column_value(df, "year", "min", None),
+            "max_year": safe_column_value(df, "year", "max", None),
         },
         "sources": {},
         "venues": {},
@@ -102,13 +96,7 @@ def generate_extraction_stats(df: pd.DataFrame) -> dict:
 
     # Failure modes
     if "failure_modes" in df:
-        all_failures = []
-        for modes in df["failure_modes"].dropna():
-            if "|" in str(modes):
-                all_failures.extend(modes.split("|"))
-            elif modes and str(modes) != "nan":
-                all_failures.append(str(modes))
-
+        all_failures = parse_failure_modes(df["failure_modes"])
         if all_failures:
             failure_counts = pd.Series(all_failures).value_counts()
             stats["failure_modes"] = failure_counts.to_dict()
@@ -255,7 +243,7 @@ def generate_stats(papers, extraction, output, format):
                 for scale, count in sorted(
                     extraction_stats["awscale_distribution"].items()
                 ):
-                    bar = "█" * int(count * 5)  # Simple bar chart
+                    bar = "█" * int(count * BAR_CHART_SCALE)  # Simple bar chart
                     console.print(f"  {scale}: {bar} ({count})")
 
     # Save to JSON if requested

@@ -81,7 +81,7 @@ class TestFullPipelineIntegration:
 
         # Step 2: Normalize and deduplicate
         normalizer = Normalizer(e2e_config)
-        normalized_df = normalizer.normalize(search_results)
+        normalized_df = normalizer.normalize_dataframe(search_results)
         deduped_df = normalizer.deduplicate(normalized_df)
 
         assert len(deduped_df) <= len(
@@ -165,7 +165,7 @@ class TestFullPipelineIntegration:
 
         # Process with failures
         normalizer = Normalizer(e2e_config)
-        normalized_df = normalizer.normalize(search_results)
+        normalized_df = normalizer.normalize_dataframe(search_results)
 
         pdf_fetcher = PDFFetcher(e2e_config)
         pdf_df = pdf_fetcher.fetch_pdfs(normalized_df)
@@ -207,7 +207,7 @@ class TestFullPipelineIntegration:
 
         # Continue processing
         normalizer = Normalizer(e2e_config)
-        normalized_df = normalizer.normalize(resumed_df)
+        normalized_df = normalizer.normalize_dataframe(resumed_df)
         assert len(normalized_df) == len(search_results)
 
     def test_pipeline_produces_reproducible_results(
@@ -218,12 +218,12 @@ class TestFullPipelineIntegration:
 
         # Run pipeline twice
         results = []
-        for run in range(2):
+        for _run in range(2):
             harvester = SearchHarvester(e2e_config)
             search_df = self._mock_search(harvester, fake_services["arxiv"])
 
             normalizer = Normalizer(e2e_config)
-            normalized_df = normalizer.normalize(search_df)
+            normalized_df = normalizer.normalize_dataframe(search_df)
             deduped_df = normalizer.deduplicate(normalized_df)
 
             # Sort for comparison
@@ -252,7 +252,7 @@ class TestFullPipelineIntegration:
         search_df = self._mock_search(harvester, fake_services["arxiv"], max_results=10)
 
         normalizer = Normalizer(e2e_config)
-        normalized_df = normalizer.normalize(search_df)
+        normalized_df = normalizer.normalize_dataframe(search_df)
 
         pdf_fetcher = PDFFetcher(e2e_config)
         pdf_df = pdf_fetcher.fetch_pdfs(normalized_df)

@@ -59,21 +59,8 @@ pre-commit install
 # Create necessary directories
 echo ""
 echo "📁 Creating directory structure..."
-directories=(
-    "data/raw"
-    "data/processed" 
-    "data/extracted"
-    "data/templates"
-    "outputs"
-    "pdf_cache"
-    "logs"
-    "notebooks"
-)
-
-for dir in "${directories[@]}"; do
-    mkdir -p "$dir"
-    echo "   ✅ $dir"
-done
+mkdir -p data/{raw,processed,extracted,templates} outputs pdf_cache logs notebooks
+echo "   ✅ Directories created"
 
 # Copy configuration template
 echo ""
@@ -119,10 +106,12 @@ fi
 # Run initial tests
 echo ""
 echo "🧪 Running quick tests..."
-python -c "import lit_review; print('✅ Package imports successfully')" || {
-    echo "❌ Package import failed"
-    exit 1
-}
+python -c "
+import lit_review
+from lit_review.harvesters import get_harvester
+from lit_review.extraction import LLMExtractor
+print('✅ All core imports successful')
+" || { echo "❌ Import test failed"; exit 1; }
 
 # Display next steps
 echo ""

@@ -127,7 +127,7 @@ class ProductionHarvester(SearchHarvester):
         sources: list[str] | None = None,
         max_results_total: int = 50000,  # Production scale
         resume_session: str | None = None,
-        checkpoint_callback: callable | None = None,
+        checkpoint_callback: "callable | None" = None,
     ) -> pd.DataFrame:
         """Execute production-scale search with checkpointing and resume capability.
 
@@ -239,7 +239,7 @@ class ProductionHarvester(SearchHarvester):
         source: str,
         quota: int,
         session_id: str,
-        checkpoint_callback: callable | None = None,
+        checkpoint_callback: "callable | None" = None,
     ) -> list[Paper]:
         """Harvest from single source with production optimizations."""
         harvester = self.harvesters[source]

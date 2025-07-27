@@ -4,6 +4,7 @@
 import argparse
 import subprocess
 import sys
+from pathlib import Path
 
 # Test suite definitions
 TEST_SUITES = {
@@ -34,7 +35,9 @@ TEST_SUITES = {
         "options": [],
     },
     "no-mocks": {
-        "path": "tests/extraction/test_*_refactored.py tests/processing/test_*_refactored.py",
+        "path": str(Path("tests/extraction/test_*_refactored.py"))
+        + " "
+        + str(Path("tests/processing/test_*_refactored.py")),
         "description": "Refactored tests without heavy mocking",
         "options": [],
     },
@@ -87,7 +90,12 @@ def run_tests(suite: str, extra_args: list[str], verbose: bool = False) -> int:
     print(f"Running: {' '.join(cmd)}")
     print("-" * 60)
 
-    return subprocess.call(cmd)
+    try:
+        result = subprocess.run(cmd)
+        return result.returncode
+    except Exception as e:
+        print(f"Error running tests: {e}")
+        return 1
 
 
 def main():

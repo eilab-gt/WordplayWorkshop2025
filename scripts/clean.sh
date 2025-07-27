@@ -1,5 +1,6 @@
 #!/bin/bash
 # Clean up temporary files and cache
+# shellcheck disable=SC2086,SC2046
 
 set -e
 
@@ -13,6 +14,15 @@ get_size() {
         du -sh "$1" 2>/dev/null | cut -f1 || echo "0"
     else
         echo "0"
+    fi
+}
+
+# Function to clean directory
+clean_directory() {
+    local dir=$1
+    local pattern=${2:-"*"}
+    if [ -d "$dir" ]; then
+        rm -rf "${dir:?}/${pattern}" 2>/dev/null || true
     fi
 }
 
@@ -39,9 +49,8 @@ echo "🗑️  Cleaning temporary files..."
 
 # Clean Python cache
 echo "   Removing Python cache..."
+find . -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete 2>/dev/null || true
 find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-find . -type f -name "*.pyc" -delete 2>/dev/null || true
-find . -type f -name "*.pyo" -delete 2>/dev/null || true
 
 # Clean test artifacts
 echo "   Removing test artifacts..."
@@ -64,9 +73,9 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "   Cleaning data directories..."
-    rm -rf data/raw/* 2>/dev/null || true
-    rm -rf data/processed/* 2>/dev/null || true
-    rm -rf data/extracted/* 2>/dev/null || true
+    clean_directory "data/raw"
+    clean_directory "data/processed"
+    clean_directory "data/extracted"
     # Keep template files
     echo "   ✅ Data directories cleaned (templates preserved)"
 fi
@@ -78,7 +87,7 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "   Cleaning PDF cache..."
-    rm -rf pdf_cache/* 2>/dev/null || true
+    clean_directory "pdf_cache"
     echo "   ✅ PDF cache cleaned"
 fi
 
@@ -89,7 +98,7 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "   Cleaning outputs..."
-    rm -rf outputs/* 2>/dev/null || true
+    clean_directory "outputs"
     echo "   ✅ Outputs cleaned"
 fi
 
@@ -100,8 +109,8 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "   Cleaning logs..."
-    rm -f logs/*.db 2>/dev/null || true
-    rm -f logs/*.log 2>/dev/null || true
+    clean_directory "logs" "*.db"
+    clean_directory "logs" "*.log"
     echo "   ✅ Logs cleaned"
 fi
 

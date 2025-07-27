@@ -3,8 +3,10 @@
 Check if all required dependencies are installed and working.
 """
 
+import os
 import sys
 from importlib import import_module
+from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
@@ -41,8 +43,7 @@ OPTIONAL_PACKAGES = {"jupyter": "jupyter", "notebook": "notebook", "ipython": "I
 def check_package(import_name: str) -> tuple[bool, str]:
     """Check if a package can be imported."""
     try:
-        module = import_module(import_name)
-        version = getattr(module, "__version__", "unknown")
+        version = getattr(import_module(import_name), "__version__", "unknown")
         return True, version
     except ImportError:
         return False, "not installed"
@@ -52,8 +53,6 @@ def check_package(import_name: str) -> tuple[bool, str]:
 
 def check_api_setup():
     """Check if API keys are configured."""
-    import os
-    from pathlib import Path
 
     api_status = {}
 
@@ -126,7 +125,6 @@ def main():
 
     # Check directories
     console.print("\n[bold]Directory Structure:[/bold]")
-    from pathlib import Path
 
     required_dirs = ["data", "outputs", "pdf_cache", "logs", "src/lit_review"]
     for dir_name in required_dirs:
@@ -154,4 +152,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit(main())

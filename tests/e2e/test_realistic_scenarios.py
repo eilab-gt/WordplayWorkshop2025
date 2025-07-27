@@ -127,7 +127,7 @@ References:
 
         all_results = []
         for query in search_queries:
-            results = harvester.search_arxiv(query, max_results=5)
+            results = harvester.search_all(query, max_results=5)
             all_results.append(results)
 
         # Combine results
@@ -138,7 +138,7 @@ References:
 
         # Step 2: Process and deduplicate
         normalizer = Normalizer(realistic_config)
-        normalized_df = normalizer.normalize(combined_df)
+        normalized_df = normalizer.normalize_dataframe(combined_df)
         deduped_df = normalizer.deduplicate(normalized_df)
 
         print(
@@ -259,7 +259,7 @@ References:
 
         # Session 1: Initial exploration
         harvester = SearchHarvester(realistic_config)
-        session1_results = harvester.search_arxiv("LLM wargaming", max_results=10)
+        session1_results = harvester.search_all("LLM wargaming", max_results=10)
 
         # Save session 1 results
         checkpoint_file = realistic_config.data_dir / "session1_checkpoint.csv"
@@ -279,14 +279,14 @@ References:
         # Refined search
         if keywords:
             refined_query = f"LLM {' OR '.join(set(keywords))}"
-            session2_results = harvester.search_arxiv(refined_query, max_results=10)
+            session2_results = harvester.search_all(refined_query, max_results=10)
 
             # Combine sessions
             combined = pd.concat([session1_df, session2_results], ignore_index=True)
 
             # Deduplicate across sessions
             normalizer = Normalizer(realistic_config)
-            final_df = normalizer.deduplicate(normalizer.normalize(combined))
+            final_df = normalizer.deduplicate(normalizer.normalize_dataframe(combined))
 
             assert len(final_df) >= len(
                 session1_df
@@ -303,9 +303,7 @@ References:
 
         # Multiple researchers working on same dataset
         harvester = SearchHarvester(realistic_config)
-        base_results = harvester.search_arxiv(
-            "LLM strategic simulation", max_results=15
-        )
+        base_results = harvester.search_all("LLM strategic simulation", max_results=15)
 
         # Researcher 1: Focus on technical aspects
         researcher1_annotations = []
@@ -365,9 +363,9 @@ References:
         )
 
         # Should still complete workflow
-        results = harvester.search_arxiv("LLM wargaming", max_results=10)
+        results = harvester.search_all("LLM wargaming", max_results=10)
         normalizer = Normalizer(realistic_config)
-        normalized = normalizer.normalize(results)
+        normalized = normalizer.normalize_dataframe(results)
 
         pdf_fetcher = PDFFetcher(realistic_config)
         pdf_results = pdf_fetcher.fetch_pdfs(normalized)
@@ -423,14 +421,14 @@ References:
         # Parallel search simulation
         all_results = []
         for query in queries:
-            results = harvester.search_arxiv(query, max_results=20)
+            results = harvester.search_all(query, max_results=20)
             all_results.append(results)
 
         combined = pd.concat(all_results, ignore_index=True)
 
         # Full pipeline processing
         normalizer = Normalizer(realistic_config)
-        normalized = normalizer.normalize(combined)
+        normalized = normalizer.normalize_dataframe(combined)
         deduped = normalizer.deduplicate(normalized)
 
         # Measure performance

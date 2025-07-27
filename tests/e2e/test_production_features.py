@@ -210,7 +210,7 @@ class TestProductionFeatures:
 
         # Create large dataset
         large_dataset = []
-        for i in range(1000):
+        for _i in range(1000):
             paper = production_services["generator"].generate_paper()
             paper["long_text"] = "X" * 10000  # 10KB per paper
             large_dataset.append(paper)
@@ -301,7 +301,7 @@ class TestProductionFeatures:
         papers = []
 
         # Original papers
-        for i in range(100):
+        for _i in range(100):
             paper = production_services["generator"].generate_paper()
             paper["source_batch"] = "batch1"
             papers.append(paper)
@@ -334,7 +334,7 @@ class TestProductionFeatures:
             batch_df = pd.DataFrame(batch)
 
             # Normalize and deduplicate within batch
-            normalized = normalizer.normalize(batch_df)
+            normalized = normalizer.normalize_dataframe(batch_df)
             deduped = normalizer.deduplicate(normalized)
             all_deduped.append(deduped)
 
@@ -365,14 +365,14 @@ class TestProductionFeatures:
         fetch_times = []
 
         # First pass - populate cache
-        for i in range(100):
-            paper_id = f"scale_test_{i}"
+        for _i in range(100):
+            paper_id = f"scale_test_{_i}"
 
             start = time.time()
             path, was_cached = cache.get_or_fetch(
                 paper_id,
                 "pdf",
-                lambda: f"Content for paper {i}".encode() * 1000,  # ~10KB each
+                lambda i=_i: f"Content for paper {i}".encode() * 1000,  # ~10KB each
             )
             duration = time.time() - start
 
@@ -382,8 +382,8 @@ class TestProductionFeatures:
                 fetch_times.append(duration)
 
         # Second pass - all from cache
-        for i in range(100):
-            paper_id = f"scale_test_{i}"
+        for _i in range(100):
+            paper_id = f"scale_test_{_i}"
 
             start = time.time()
             path, was_cached = cache.get_or_fetch(
@@ -437,7 +437,7 @@ class TestProductionFeatures:
                     break
 
                 # Process batch (this would normally include PDF fetch and extraction)
-                for _, paper in batch.iterrows():
+                for _, _paper in batch.iterrows():
                     try:
                         # Simulate processing
                         if random.random() < 0.8:  # 80% success
@@ -467,7 +467,7 @@ class TestProductionFeatures:
 
         # Create realistic dataset
         papers = []
-        for i in range(50):
+        for _i in range(50):
             paper = production_services["generator"].generate_paper()
             extraction = production_services["generator"].generate_extraction_results(
                 paper
@@ -551,7 +551,7 @@ class TestProductionFeatures:
 
             processed_batches = []
             for batch in batch_processor.process_dataframe(
-                combined_df, lambda b: normalizer.normalize(b), batch_size=25
+                combined_df, lambda b: normalizer.normalize_dataframe(b), batch_size=25
             ):
                 processed_batches.append(batch)
 

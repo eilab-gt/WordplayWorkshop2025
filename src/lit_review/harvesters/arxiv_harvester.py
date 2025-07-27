@@ -70,7 +70,7 @@ class ArxivHarvester(BaseHarvester):
         """
         papers = []
 
-        # Generate monthly date ranges from 2018-01 to 2025-12
+        # Generate monthly date ranges from 2018-01 to current date (max 2025-12)
         date_ranges = self._generate_monthly_ranges("2018-01", "2025-12")
 
         logger.info(
@@ -164,6 +164,11 @@ class ArxivHarvester(BaseHarvester):
         current = datetime.strptime(start_date, "%Y-%m")
         end = datetime.strptime(end_date, "%Y-%m")
 
+        # Don't search beyond the current date
+        today = datetime.now()
+        if end > today:
+            end = today.replace(day=1)  # Use first day of current month for simplicity
+
         while current <= end:
             # Calculate next month
             if current.month == 12:
@@ -173,6 +178,10 @@ class ArxivHarvester(BaseHarvester):
 
             # Calculate last day of current month
             last_day = next_month - timedelta(days=1)
+
+            # If this is the current month, don't go beyond today
+            if current.year == today.year and current.month == today.month:
+                last_day = min(last_day, today)
 
             ranges.append((current.strftime("%Y%m%d"), last_day.strftime("%Y%m%d")))
 

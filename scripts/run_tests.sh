@@ -21,36 +21,46 @@ fi
 
 # Install test dependencies if needed
 echo "📦 Checking test dependencies..."
-uv pip install pytest pytest-cov pytest-mock --quiet
+if ! python -c "import pytest" 2>/dev/null; then
+    echo "   Installing test dependencies..."
+    uv pip install pytest pytest-cov pytest-mock --quiet
+else
+    echo "   ✅ Test dependencies already installed"
+fi
 
 # Run tests with coverage
 echo ""
 echo "🚀 Running tests with coverage..."
 echo ""
 
-# Run all tests
-pytest
+# Set pytest arguments based on test type
+PYTEST_ARGS=""
+TEST_TYPE="all"
 
-# Run specific test categories if requested
-if [ "$1" = "unit" ]; then
-    echo ""
-    echo "🔬 Running unit tests only..."
-    pytest -m unit
-elif [ "$1" = "integration" ]; then
-    echo ""
-    echo "🔗 Running integration tests only..."
-    pytest -m integration
-elif [ "$1" = "fast" ]; then
-    echo ""
-    echo "⚡ Running fast tests only..."
-    pytest -m "not slow"
-fi
+case "$1" in
+    unit)
+        PYTEST_ARGS="-m unit"
+        TEST_TYPE="unit"
+        echo "🔬 Running unit tests only..."
+        ;;
+    integration)
+        PYTEST_ARGS="-m integration"
+        TEST_TYPE="integration"
+        echo "🔗 Running integration tests only..."
+        ;;
+    fast)
+        PYTEST_ARGS="-m 'not slow'"
+        TEST_TYPE="fast"
+        echo "⚡ Running fast tests only..."
+        ;;
+    *)
+        echo "🚀 Running all tests with coverage..."
+        ;;
+esac
 
-# Generate coverage report
+# Run tests once with coverage
 echo ""
-echo "📊 Coverage Report Summary:"
-echo ""
-pytest --cov=src/lit_review --cov-report=term-missing --no-header --tb=no -q
+pytest $PYTEST_ARGS --cov=src/lit_review --cov-report=term-missing --cov-report=html
 
 echo ""
 echo "✨ Testing complete! HTML coverage report available at htmlcov/index.html"

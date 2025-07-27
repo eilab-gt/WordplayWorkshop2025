@@ -169,12 +169,13 @@ def extraction(csv, stats):
     """Inspect extraction results."""
     if not csv:
         # Try to find extraction results
-        data_dir = Path("data/extracted")
-        csv_files = list(data_dir.glob("*.csv"))
-        if not csv_files:
+        from utils import find_latest_file
+
+        latest_file = find_latest_file(Path("data/extracted"))
+        if not latest_file:
             console.print("[red]No extraction CSV files found in data/extracted/[/red]")
             return
-        csv = str(max(csv_files, key=lambda x: x.stat().st_mtime))
+        csv = str(latest_file)
         console.print(f"[blue]Using most recent file: {csv}[/blue]")
 
     df = pd.read_csv(csv)

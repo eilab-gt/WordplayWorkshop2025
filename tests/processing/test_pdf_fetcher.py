@@ -1,5 +1,6 @@
 """Tests for the PDFFetcher module."""
 
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -79,8 +80,9 @@ class TestPDFFetcher:
         """Test arXiv PDF fetching."""
         fetcher = PDFFetcher(sample_config)
 
-        with patch.object(fetcher, "_download_pdf") as mock_download:
-            mock_download.return_value = True
+        with patch.object(fetcher, "_download_pdf_content") as mock_download:
+            # Mock successful PDF download
+            mock_download.return_value = b"%PDF-1.4 fake pdf content"
 
             # Create test paper with arXiv ID
             paper = pd.Series(
@@ -213,32 +215,41 @@ class TestPDFFetcher:
         """Test that existing PDFs are not re-downloaded."""
         fetcher = PDFFetcher(sample_config)
 
-        # Create a fake existing PDF with proper filename
+        # Create a fake existing PDF in the proper cache location
         paper = pd.Series(
-            {"title": "Existing Paper", "authors": "Test Author", "year": 2024}
-        )
-        filename = fetcher._generate_filename(paper)
-        existing_pdf = fetcher.cache_dir / filename
-        existing_pdf.write_bytes(b"%PDF-1.4 existing content")
-
-        # Create DataFrame with paper that should map to existing PDF
-        df = pd.DataFrame(
             {
-                "screening_id": ["SCREEN_0001"],
-                "title": ["Existing Paper"],
-                "authors": ["Test Author"],
-                "year": [2024],
-                "arxiv_id": ["2301.12345"],
+                "title": "Existing Paper",
+                "authors": "Test Author",
+                "year": 2024,
+                "arxiv_id": "2301.12345",
             }
         )
 
-        with patch.object(fetcher, "_download_pdf") as mock_download:
+        # Mock the content cache to return cached result
+        fake_path = Path(temp_dir) / "pdfs" / "cached_paper.pdf"
+        fake_path.parent.mkdir(exist_ok=True)
+        fake_path.write_bytes(b"%PDF-1.4 existing content")
+
+        with patch.object(fetcher.content_cache, "get_or_fetch") as mock_cache:
+            # Return cached result (path, was_cached=True)
+            mock_cache.return_value = (fake_path, True)
+
+            # Create DataFrame with paper that should map to existing PDF
+            df = pd.DataFrame(
+                {
+                    "screening_id": ["SCREEN_0001"],
+                    "title": ["Existing Paper"],
+                    "authors": ["Test Author"],
+                    "year": [2024],
+                    "arxiv_id": ["2301.12345"],
+                }
+            )
+
             updated_df = fetcher.fetch_pdfs(df, parallel=False)
 
-            # Should not attempt to download
-            mock_download.assert_not_called()
+            # Should have used the cache
             assert updated_df.loc[0, "pdf_status"] == "cached"
-            assert updated_df.loc[0, "pdf_path"] == str(existing_pdf)
+            assert updated_df.loc[0, "pdf_path"] == str(fake_path)
 
     def test_parallel_download(self, sample_config):
         """Test parallel PDF downloading."""
@@ -294,8 +305,9 @@ class TestPDFFetcher:
             }
         )
 
-        with patch.object(fetcher, "_download_pdf") as mock_download:
-            mock_download.return_value = True
+        with patch.object(fetcher, "_download_pdf_content") as mock_download:
+            # Mock successful PDF download
+            mock_download.return_value = b"%PDF-1.4 fake pdf content"
 
             # Non-PDF URL should not trigger download from URL field alone
             result1 = fetcher._fetch_single_pdf(paper_non_pdf)

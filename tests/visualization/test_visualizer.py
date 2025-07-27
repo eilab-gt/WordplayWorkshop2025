@@ -15,108 +15,111 @@ from tests.test_doubles import RealConfigForTests
 matplotlib.use("Agg")
 
 
+@pytest.fixture
+def config(tmp_path):
+    """Create test configuration."""
+    config = RealConfigForTests(
+        output_dir=tmp_path / "output",
+        viz_format="png",
+        viz_dpi=100,  # Lower DPI for faster tests
+        viz_style="default",
+        viz_figsize=(8, 6),
+        viz_colors={
+            "awscale": {
+                "1": "#d62728",  # red
+                "2": "#ff7f0e",  # orange
+                "3": "#bcbd22",  # yellow-green
+                "4": "#2ca02c",  # green
+                "5": "#1f77b4",  # blue
+            }
+        },
+    )
+    yield config
+    config.cleanup()
+
+
+@pytest.fixture
+def visualizer(config):
+    """Create visualizer instance."""
+    return Visualizer(config)
+
+
 class TestVisualizerBehavior:
     """Test visualizer creates correct charts and statistics."""
 
-    @pytest.fixture
-    def config(self, tmp_path):
-        """Create test configuration."""
-        config = RealConfigForTests(
-            output_dir=tmp_path / "output",
-            viz_format="png",
-            viz_dpi=100,  # Lower DPI for faster tests
-            viz_style="default",
-            viz_figsize=(8, 6),
-            viz_colors={
-                "awscale": {
-                    "1": "#d62728",  # red
-                    "2": "#ff7f0e",  # orange
-                    "3": "#bcbd22",  # yellow-green
-                    "4": "#2ca02c",  # green
-                    "5": "#1f77b4",  # blue
-                }
+
+@pytest.fixture
+def sample_papers_df():
+    """Create comprehensive sample data for testing."""
+    return pd.DataFrame(
+        [
+            {
+                "title": "LLM Wargaming Paper 1",
+                "year": 2022,
+                "awscale": 4,
+                "game_type": "Matrix Game",
+                "failure_modes": "Hallucination; Context Limits",
+                "llm_family": "GPT",
+                "source_db": "arxiv",
+                "venue": "NeurIPS",
+                "venue_type": "conference",
+                "open_ended": True,
+                "quantitative": False,
             },
-        )
-        yield config
-        config.cleanup()
-
-    @pytest.fixture
-    def visualizer(self, config):
-        """Create visualizer instance."""
-        return Visualizer(config)
-
-    @pytest.fixture
-    def sample_papers_df(self):
-        """Create comprehensive sample data for testing."""
-        return pd.DataFrame(
-            [
-                {
-                    "title": "LLM Wargaming Paper 1",
-                    "year": 2022,
-                    "awscale": 4,
-                    "game_type": "Matrix Game",
-                    "failure_modes": "Hallucination; Context Limits",
-                    "llm_family": "GPT",
-                    "source_db": "arxiv",
-                    "venue": "NeurIPS",
-                    "venue_type": "conference",
-                    "open_ended": True,
-                    "quantitative": False,
-                },
-                {
-                    "title": "AI Strategy Game Study",
-                    "year": 2023,
-                    "awscale": 3,
-                    "game_type": "Digital Simulation",
-                    "failure_modes": "Bias; Hallucination",
-                    "llm_family": "Claude",
-                    "source_db": "semantic_scholar",
-                    "venue": "ICML",
-                    "venue_type": "conference",
-                    "open_ended": False,
-                    "quantitative": True,
-                },
-                {
-                    "title": "Human-AI Team Wargaming",
-                    "year": 2023,
-                    "awscale": 5,
-                    "game_type": "Tabletop Exercise",
-                    "failure_modes": "Context Limits",
-                    "llm_family": "GPT",
-                    "source_db": "arxiv",
-                    "venue": "AI Magazine",
-                    "venue_type": "journal",
-                    "open_ended": True,
-                    "quantitative": True,
-                },
-                {
-                    "title": "Automated Planning Research",
-                    "year": 2024,
-                    "awscale": 2,
-                    "game_type": "Digital Simulation",
-                    "failure_modes": "Reasoning Errors; Bias",
-                    "llm_family": "LLaMA",
-                    "source_db": "crossref",
-                    "venue": "AAAI",
-                    "venue_type": "conference",
-                    "open_ended": False,
-                    "quantitative": True,
-                },
-                {
-                    "title": "Crisis Management Simulation",
-                    "year": 2024,
-                    "awscale": 4,
-                    "game_type": "Matrix Game",
-                    "failure_modes": None,  # Test missing data
-                    "llm_family": "Other",
-                    "source_db": "arxiv",
-                    "venue": None,  # Test missing venue
-                    "venue_type": None,
-                    "open_ended": True,
-                    "quantitative": False,
-                },
-            ]
-        )
+            {
+                "title": "AI Strategy Game Study",
+                "year": 2023,
+                "awscale": 3,
+                "game_type": "Digital Simulation",
+                "failure_modes": "Bias; Hallucination",
+                "llm_family": "Claude",
+                "source_db": "semantic_scholar",
+                "venue": "ICML",
+                "venue_type": "conference",
+                "open_ended": False,
+                "quantitative": True,
+            },
+            {
+                "title": "Human-AI Team Wargaming",
+                "year": 2023,
+                "awscale": 5,
+                "game_type": "Tabletop Exercise",
+                "failure_modes": "Context Limits",
+                "llm_family": "GPT",
+                "source_db": "arxiv",
+                "venue": "AI Magazine",
+                "venue_type": "journal",
+                "open_ended": True,
+                "quantitative": True,
+            },
+            {
+                "title": "Automated Planning Research",
+                "year": 2024,
+                "awscale": 2,
+                "game_type": "Digital Simulation",
+                "failure_modes": "Reasoning Errors; Bias",
+                "llm_family": "LLaMA",
+                "source_db": "crossref",
+                "venue": "AAAI",
+                "venue_type": "conference",
+                "open_ended": False,
+                "quantitative": True,
+            },
+            {
+                "title": "Crisis Management Simulation",
+                "year": 2024,
+                "awscale": 4,
+                "game_type": "Matrix Game",
+                "failure_modes": None,  # Test missing data
+                "llm_family": "Other",
+                "source_db": "arxiv",
+                "venue": None,  # Test missing venue
+                "venue_type": None,
+                "open_ended": True,
+                "quantitative": False,
+            },
+        ]
+    )
 
     @pytest.mark.fast
     def test_initializes_with_correct_output_directory(self, visualizer, config):

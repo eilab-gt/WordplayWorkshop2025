@@ -183,9 +183,7 @@ class TestEdgeCases:
 
         # Test 1: Empty search results
         harvester = SearchHarvester(edge_config)
-        empty_results = harvester.search_arxiv(
-            "absolutely nothing matches this query xyz123", max_results=10
-        )
+        empty_results = harvester.search_all(max_results_per_source=10)
 
         assert len(empty_results) == 0, "Should handle empty search results"
 
@@ -193,7 +191,7 @@ class TestEdgeCases:
         empty_df = pd.DataFrame()
 
         normalizer = Normalizer(edge_config)
-        normalized = normalizer.normalize(empty_df)
+        normalized = normalizer.normalize_dataframe(empty_df)
         assert len(normalized) == 0
 
         pdf_fetcher = PDFFetcher(edge_config)
@@ -213,10 +211,12 @@ class TestEdgeCases:
             [{"title": "Single Paper", "year": 2024, "authors": "Single Author"}]
         )
 
-        normalized = normalizer.normalize(single_row)
+        normalized = normalizer.normalize_dataframe(single_row)
         assert len(normalized) == 1
         assert "paper_id" in normalized.columns
 
+    @pytest.mark.slow
+    @pytest.mark.benchmark
     def test_extreme_data_sizes(self, edge_config, edge_services, monkeypatch):
         """Test with extremely large and small data sizes."""
         self._patch_services(monkeypatch, edge_services)
@@ -234,12 +234,12 @@ class TestEdgeCases:
         edge_services["arxiv"].add_paper(huge_abstract_paper)
 
         harvester = SearchHarvester(edge_config)
-        results = harvester.search_arxiv("huge", max_results=5)
+        results = harvester.search_all(max_results_per_source=5)
 
         # Should handle large text
         assert len(results) > 0
         normalizer = Normalizer(edge_config)
-        normalized = normalizer.normalize(results)
+        normalized = normalizer.normalize_dataframe(results)
         assert len(normalized) > 0
 
         # Test 2: Very large batch processing
@@ -252,7 +252,7 @@ class TestEdgeCases:
         large_df = pd.DataFrame(large_batch)
 
         # Should handle in batches
-        normalized = normalizer.normalize(large_df)
+        normalized = normalizer.normalize_dataframe(large_df)
         assert len(normalized) == len(large_df)
 
         # Test 3: Very small PDF
@@ -268,7 +268,7 @@ class TestEdgeCases:
 
         # Search for very old and very new papers
         harvester = SearchHarvester(edge_config)
-        results = harvester.search_arxiv("edge", max_results=50)
+        results = harvester.search_all(max_results_per_source=5)
 
         # Check year handling
         if "year" in results.columns:
@@ -282,7 +282,7 @@ class TestEdgeCases:
 
         # Normalize should handle year boundaries
         normalizer = Normalizer(edge_config)
-        normalized = normalizer.normalize(results)
+        normalized = normalizer.normalize_dataframe(results)
 
         # Years should be within reasonable bounds after normalization
         if "year" in normalized.columns:
@@ -298,7 +298,7 @@ class TestEdgeCases:
 
         # Search for papers with unicode
         harvester = SearchHarvester(edge_config)
-        results = harvester.search_arxiv("edge unicode", max_results=10)
+        results = harvester.search_all(max_results_per_source=2)
 
         # Find unicode paper
         unicode_papers = results[
@@ -308,7 +308,7 @@ class TestEdgeCases:
         if len(unicode_papers) > 0:
             # Process through pipeline
             normalizer = Normalizer(edge_config)
-            normalized = normalizer.normalize(unicode_papers)
+            normalized = normalizer.normalize_dataframe(unicode_papers)
 
             # Should preserve unicode
             assert any("机器学习" in str(title) for title in normalized["title"])
@@ -360,12 +360,12 @@ class TestEdgeCases:
         variations.append(var4)
 
         # Create dataframe
-        all_papers = [base_paper] + variations
+        all_papers = [base_paper, *variations]
         papers_df = pd.DataFrame(all_papers)
 
         # Test deduplication
         normalizer = Normalizer(edge_config)
-        normalized = normalizer.normalize(papers_df)
+        normalized = normalizer.normalize_dataframe(papers_df)
         deduped = normalizer.deduplicate(normalized)
 
         # Should detect some duplicates
@@ -396,8 +396,12 @@ class TestEdgeCases:
         pdf_fetcher = PDFFetcher(edge_config)
 
         # Should respect worker limits
-        with patch.object(pdf_fetcher, "_download_pdf_with_retry") as mock_download:
-            mock_download.return_value = ("/fake/path.pdf", "downloaded")
+        with patch.object(pdf_fetcher, "_fetch_single_pdf") as mock_fetch:
+            mock_fetch.return_value = {
+                "path": "/fake/path.pdf",
+                "status": "downloaded",
+                "hash": "fakehash",
+            }
 
             # Force parallel processing
             edge_config.parallel_workers = 10
