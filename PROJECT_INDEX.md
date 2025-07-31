@@ -36,17 +36,23 @@ raw.csv → cleaned → unique_papers → pdf_cache → extracted → metrics �
 - **SemanticScholar**: S2 API integration
 - **ProductionHarvester**: Enhanced production-ready harvesting
 - **QueryOptimizer**: Query expansion & optimization
+- **QueryBuilder**: Query construction and formatting
 
 ### Processing (`src/lit_review/processing/`)
 - **Normalizer**: Data cleaning & standardization
 - **PDFFetcher**: Multi-source PDF retrieval (incl. Sci-Hub)
 - **BatchProcessor**: Parallel processing orchestration
 - **ScreenUI**: Excel generation for manual screening
+- **Disambiguator**: Author and paper disambiguation
 
 ### Extraction (`src/lit_review/extraction/`)
 - **LLMExtractor**: OpenAI GPT extraction
 - **EnhancedLLMExtractor**: Production-grade extraction
 - **Tagger**: Failure mode detection via regex
+
+### Core Services (`src/lit_review/`)
+- **LLMProviders**: Multi-provider LLM interface using LiteLLM
+- **LLMService**: Unified LLM service abstraction
 
 ### Utils (`src/lit_review/utils/`)
 - **Config**: YAML configuration management
@@ -64,6 +70,14 @@ extract      # LLM information extraction
 visualise    # Generate analysis charts
 export       # Package for sharing
 status       # Pipeline monitoring
+```
+
+### Additional Commands
+```bash
+search       # Search for specific papers
+cache-stats  # Display cache statistics
+cache-clean  # Clean cache by type and age
+clean-cache  # Clean PDF and log caches
 ```
 
 ### Advanced Options
@@ -87,6 +101,16 @@ preset3: '"GPT" AND ("military simulation" OR "defense game")'
 - **bias**: [bias, biased, unfair, skew]
 - **hallucination**: [hallucination, confabulate, fabricate]
 - **transparency**: [opaque, "black box", unexplainable]
+
+### AWScale (Analytical-Wargaming Scale)
+**Range**: 1-7 (Creative-first to Analytical)
+- **1**: Ultra-Creative (unlimited proposals, pure expert storytelling)
+- **2**: Strongly Creative (encouraged invention, expert narrative judgment)
+- **3**: Moderately Creative (many novel actions, free interpretation)
+- **4**: Balanced (equal creativity/rules, mixed models + judgment)
+- **5**: Moderately Analytical (occasional novel ideas, rule-driven)
+- **6**: Strongly Analytical (narrow choices, detailed rules)
+- **7**: Ultra-Analytical (fixed script/moves, deterministic tables)
 
 ## 🧪 Testing Infrastructure
 
@@ -125,7 +149,8 @@ preset3: '"GPT" AND ("military simulation" OR "defense game")'
   "llm_family": str,
   "llm_role": str,
   "evaluation_approach": str,
-  "failure_modes": List[str]
+  "failure_modes": List[str],
+  "awscale": int  // 1-7 (Creative-Analytical Scale)
 }
 ```
 
@@ -194,6 +219,11 @@ make test        # Full test suite
 - ✅ Error handling & recovery
 
 ## 📝 Recent Changes
+- **v3.0.0 Implementation**: NEAR operators for complex queries, enhanced search precision
+- **AWScale Update**: Reversed scale from 1-5 (analytical-first) to 1-7 (creative-first)
+- **LLM Provider Abstraction**: Added LiteLLM for multi-provider support
+- **Enhanced Query Building**: New QueryBuilder and improved exclusion exports
+- **Automated Paper Inclusion**: Full pipeline automation improvements
 - Enhanced production harvesting capabilities
 - Comprehensive test suite implementation
 - Git LFS integration for PDF caching
@@ -203,13 +233,19 @@ make test        # Full test suite
 ## 🔗 Integration Points
 
 ### External Services
-- OpenAI API (GPT-3.5/4)
-- Google Scholar
-- arXiv API
-- CrossRef API
-- Semantic Scholar API
-- Sci-Hub (fallback)
-- Zenodo (export)
+- LLM Providers (via LiteLLM):
+  - OpenAI API (GPT-3.5/4)
+  - Anthropic Claude
+  - Google Gemini
+  - Other LiteLLM-supported providers
+- Academic APIs:
+  - Google Scholar
+  - arXiv API
+  - CrossRef API
+  - Semantic Scholar API
+- Other Services:
+  - Sci-Hub (fallback PDF retrieval)
+  - Zenodo (dataset export)
 
 ### File Formats
 - Input: CSV, JSON
