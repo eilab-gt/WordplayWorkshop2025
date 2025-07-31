@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -25,7 +25,7 @@ class ScreenUI:
     def prepare_screening_sheet(
         self,
         df: pd.DataFrame,
-        output_path: Path | None = None,
+        output_path: Optional[Path] = None,
         include_asreview: bool = False,
     ) -> pd.DataFrame:
         """Prepare a screening sheet from paper data.
@@ -440,7 +440,7 @@ class ScreenUI:
         except Exception as e:
             logger.warning(f"Could not prepare ASReview format: {e}")
 
-    def load_screening_progress(self, path: Path | None = None) -> pd.DataFrame:
+    def load_screening_progress(self, path: Optional[Path] = None) -> pd.DataFrame:
         """Load existing screening progress.
 
         Args:

@@ -203,8 +203,14 @@ class ArxivHarvester(BaseHarvester):
         """
         papers = []
 
-        # Target categories for LLM and wargaming research
-        categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.CR"]
+        # Get categories from config or use defaults
+        source_opts = getattr(self.config, "source_optimizations", {})
+        arxiv_opts = source_opts.get("arxiv", {})
+        categories = arxiv_opts.get("categories", [])
+
+        if not categories:
+            # Default categories for LLM and wargaming research
+            categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.CR"]
 
         logger.info(
             f"arXiv: Using category splitting strategy with {len(categories)} categories"
@@ -392,42 +398,19 @@ class ArxivHarvester(BaseHarvester):
         Returns:
             arXiv-formatted query
         """
-        # arXiv uses different query syntax
-        # Convert quoted terms and boolean operators
+        # Use the new QueryBuilder for arXiv translation
+        from .query_builder import QueryBuilder
 
-        # For arXiv, we'll search in title and abstract
-        # and focus on CS categories
+        builder = QueryBuilder()
 
-        # Extract key terms from our config
-        terms = []
-
-        # Add wargame terms
-        for term in self.config.wargame_terms:
-            terms.append(f'(ti:"{term}" OR abs:"{term}")')
-
-        # Add LLM terms
-        llm_terms = []
-        for term in self.config.llm_terms:
-            llm_terms.append(f'(ti:"{term}" OR abs:"{term}")')
-
-        # Combine with AND
-        query_parts = []
-
-        # At least one wargame term
-        if terms:
-            query_parts.append(f"({' OR '.join(terms)})")
-
-        # At least one LLM term
-        if llm_terms:
-            query_parts.append(f"({' OR '.join(llm_terms)})")
-
-        # Combine
-        arxiv_query = " AND ".join(query_parts)
+        # Translate the base query for arXiv
+        arxiv_query = builder.translate_for_arxiv(base_query)
 
         # Add category filter for CS
         arxiv_query = f"({arxiv_query}) AND (cat:cs.*)"
 
-        logger.debug(f"arXiv query: {arxiv_query}")
+        logger.info(f"arXiv: Original query: {base_query[:100]}...")
+        logger.info(f"arXiv: Translated query: {arxiv_query[:100]}...")
 
         return arxiv_query
 
@@ -468,7 +451,11 @@ class ArxivHarvester(BaseHarvester):
                 url=result.entry_id,
                 doi=result.doi,
                 arxiv_id=arxiv_id,
-                pdf_url=result.pdf_url,
+                pdf_url=(
+                    result.pdf_url + ".pdf"
+                    if result.pdf_url and not result.pdf_url.endswith(".pdf")
+                    else result.pdf_url
+                ),
                 keywords=[
                     cat.term if hasattr(cat, "term") else str(cat)
                     for cat in result.categories

@@ -64,6 +64,9 @@ class Normalizer:
         self.stats["total_output"] = len(df)
         self._log_statistics()
 
+        # Debug logging
+        logger.info(f"Final columns in normalize_dataframe: {list(df.columns)}")
+
         return df
 
     def _normalize_fields(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -75,6 +78,12 @@ class Normalizer:
         Returns:
             DataFrame with normalized fields
         """
+        # Ensure required columns exist
+        required_cols = ["title", "doi", "authors", "abstract", "url", "year"]
+        for col in required_cols:
+            if col not in df.columns:
+                df[col] = ""
+
         # Normalize titles
         df["title_normalized"] = df["title"].apply(self._normalize_title)
 
@@ -184,7 +193,9 @@ class Normalizer:
             if author:
                 # Remove titles (Dr., Prof., etc.)
                 author = re.sub(
-                    r"\b(Dr|Prof|Professor|Mr|Mrs|Ms|PhD|Ph\.D)\b\.?", "", author
+                    r"\b(Dr|Prof|Professor|Mr|Mrs|Ms|PhD|Ph\.D)\.?\b",
+                    "",
+                    author,
                 )
                 # Normalize whitespace
                 author = " ".join(author.split())

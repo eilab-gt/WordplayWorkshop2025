@@ -4,14 +4,15 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
-from openai import OpenAI
 from pdfminer.high_level import extract_text
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
+
+from ..llm_providers import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class LLMExtractor:
             config: Configuration object
         """
         self.config = config
-        self.client = OpenAI(api_key=config.openai_key)
+        self.llm_provider = LLMProvider(config)
         self.model = config.llm_model
         self.temperature = config.llm_temperature
         self.max_tokens = config.llm_max_tokens
@@ -291,7 +292,7 @@ Full Text (truncated if needed):
 
         return context
 
-    def _llm_extract(self, context: str) -> dict[str, Any] | None:
+    def _llm_extract(self, context: str) -> Optional[dict[str, Any]]:
         """Extract structured information using LLM.
 
         Args:
@@ -301,15 +302,24 @@ Full Text (truncated if needed):
             Extracted information or None
         """
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.extraction_prompt},
-                    {"role": "user", "content": context},
-                ],
+            # Build messages
+            messages = [
+                {"role": "system", "content": self.extraction_prompt},
+                {"role": "user", "content": context},
+            ]
+
+            # Use JSON response format if supported
+            response_format = (
+                {"type": "json_object"}
+                if self.llm_provider._supports_json_mode()
+                else None
+            )
+
+            response = self.llm_provider.chat_completion(
+                messages=messages,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
-                response_format={"type": "json_object"},  # Force JSON response
+                response_format=response_format,
             )
 
             # Parse response
@@ -360,7 +370,7 @@ Full Text (truncated if needed):
             extracted: Already extracted information
 
         Returns:
-            AWScale rating (1-5)
+            AWScale rating (1-7) where 1=Ultra-Creative, 7=Ultra-Analytical
         """
         try:
             # Prepare focused context for AWScale
@@ -374,12 +384,13 @@ Relevant excerpt from paper:
 {context[:5000]}  # First part of context
 """
 
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.awscale_prompt},
-                    {"role": "user", "content": awscale_context},
-                ],
+            messages = [
+                {"role": "system", "content": self.awscale_prompt},
+                {"role": "user", "content": awscale_context},
+            ]
+
+            response = self.llm_provider.chat_completion(
+                messages=messages,
                 temperature=0.1,  # Low temperature for consistency
                 max_tokens=10,
             )
@@ -390,7 +401,7 @@ Relevant excerpt from paper:
             # Try to extract number
             try:
                 score = int(content[0])  # Get first character as number
-                if 1 <= score <= 5:
+                if 1 <= score <= 7:
                     self.stats["awscale_assignments"] += 1
                     return score
             except (ValueError, IndexError):
@@ -410,27 +421,33 @@ Relevant excerpt from paper:
             extracted: Extracted information
 
         Returns:
-            AWScale rating (1-5)
+            AWScale rating (1-7) where 1=Ultra-Creative, 7=Ultra-Analytical
         """
-        score = 3  # Default to balanced
+        score = 4  # Default to balanced
 
-        # Adjust based on game type
+        # Adjust based on game type (reversed: lower=creative, higher=analytical)
         game_type = extracted.get("game_type", "").lower()
-        if "matrix" in game_type or "seminar" in game_type:
-            score += 1
-        elif "digital" in game_type:
-            score -= 1
+        if "seminar" in game_type:
+            score = 2  # Strongly Creative
+        elif "matrix" in game_type:
+            score = 3  # Moderately Creative
+        elif "digital" in game_type or "computer" in game_type:
+            score = 6  # Strongly Analytical
 
         # Adjust based on quantitative nature
         if extracted.get("quantitative") == "yes":
-            score -= 1
+            score = min(score + 1, 7)  # More analytical
+        elif extracted.get("quantitative") == "no":
+            score = max(score - 1, 1)  # More creative
 
         # Adjust based on open-ended nature
         if extracted.get("open_ended") == "yes":
-            score += 1
+            score = max(score - 1, 1)  # More creative
+        elif extracted.get("open_ended") == "no":
+            score = min(score + 1, 7)  # More analytical
 
         # Ensure score is in valid range
-        return max(1, min(5, score))
+        return max(1, min(7, score))
 
     def _calculate_confidence(self, extracted: dict[str, Any]) -> float:
         """Calculate confidence score for extraction.
@@ -482,7 +499,7 @@ Relevant excerpt from paper:
         logger.info(f"  AWScale assignments: {self.stats['awscale_assignments']}")
 
     def extract_single_pdf(
-        self, pdf_path: str, paper_metadata: dict[str, Any] | None = None
+        self, pdf_path: str, paper_metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """Extract information from a single PDF file.
 

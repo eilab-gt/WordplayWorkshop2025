@@ -4,7 +4,6 @@ import logging
 import time
 
 from requests.exceptions import RequestException
-from scholarly import ProxyGenerator, scholarly
 
 from .base import BaseHarvester, Paper
 
@@ -20,22 +19,49 @@ class GoogleScholarHarvester(BaseHarvester):
         Args:
             config: Configuration object
         """
+        logger.info("GoogleScholarHarvester.__init__ called")
         super().__init__(config)
         self.rate_limits = config.rate_limits.get("google_scholar", {})
         self.delay_seconds = self.rate_limits.get("delay_seconds", 5)
-        self._setup_proxy()
+        self.use_proxy = getattr(config, "use_proxy", True)
+        self._proxy_initialized = False
+
+        logger.info(f"GoogleScholarHarvester: use_proxy = {self.use_proxy}")
+        # Only setup proxy if enabled and not in test mode
+        if self.use_proxy:
+            self._setup_proxy()
 
     def _setup_proxy(self):
         """Set up proxy for Google Scholar if needed."""
+        if self._proxy_initialized:
+            return
+
         try:
-            # Try to use free proxies to avoid rate limiting
+            # Only import and setup proxy when actually needed
+            logger.info("Google Scholar: Setting up FreeProxies...")
+            from scholarly import ProxyGenerator, scholarly
+
             pg = ProxyGenerator()
-            # Skip FreeProxies() as it's causing issues with the current scholarly version
-            # Just initialize without proxy for now
-            logger.info("Google Scholar: Running without proxy (proxy setup disabled)")
+
+            # Use FreeProxies with reasonable timeout
+            success = pg.FreeProxies(timeout=1)
+
+            if success:
+                scholarly.use_proxy(pg)
+                logger.info("Google Scholar: FreeProxies configured successfully")
+            else:
+                logger.warning(
+                    "Google Scholar: FreeProxies setup returned False, continuing without proxy"
+                )
+
+            self._proxy_initialized = True
+
         except Exception as e:
             logger.warning(f"Google Scholar: Could not set up proxy: {e}")
-            # Continue without proxy
+            logger.info(
+                "Google Scholar: Continuing without proxy - may hit rate limits"
+            )
+            self._proxy_initialized = True
 
     def search(self, query: str, max_results: int = 100) -> list[Paper]:
         """Search Google Scholar for papers.
@@ -50,11 +76,20 @@ class GoogleScholarHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"Google Scholar: Starting search with query: {query}")
+            # Translate query for Google Scholar
+            from .query_builder import QueryBuilder
+
+            builder = QueryBuilder()
+            translated_query = builder.translate_for_google_scholar(query)
+
+            logger.info(f"Google Scholar: Original query: {query}")
+            logger.info(f"Google Scholar: Translated query: {translated_query}")
 
             # Execute search
             try:
-                search_query = scholarly.search_pubs(query)
+                from scholarly import scholarly
+
+                search_query = scholarly.search_pubs(translated_query)
             except Exception as e:
                 # Handle common scholarly errors
                 if "Cannot Fetch" in str(e) or "CAPTCHA" in str(e):
@@ -162,7 +197,7 @@ class GoogleScholarHarvester(BaseHarvester):
                 # Extract arXiv ID from URL
                 import re
 
-                match = re.search(r"arxiv\.org/(?:abs|pdf)/(\d+\.\d+)", eprint)
+                match = re.search(r"arxiv\.org/(?:Union[abs, pdf])/(\d+\.\d+)", eprint)
                 if match:
                     paper.arxiv_id = match.group(1)
                     paper.pdf_url = f"https://arxiv.org/pdf/{match.group(1)}.pdf"

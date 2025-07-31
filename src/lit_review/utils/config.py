@@ -28,6 +28,18 @@ class Config:
     # Failure vocabulary
     failure_vocab: dict[str, list] = field(default_factory=dict)
 
+    # Disambiguation rules
+    disambiguation: dict[str, dict] = field(default_factory=dict)
+
+    # Grey literature sources
+    grey_lit_sources: list = field(default_factory=list)
+
+    # Query strategies
+    query_strategies: dict = field(default_factory=dict)
+
+    # Quality metrics
+    quality_metrics: dict = field(default_factory=dict)
+
     # API keys
     semantic_scholar_key: str | None = None
     openai_key: str | None = None
@@ -50,9 +62,11 @@ class Config:
     logging_db_path: Path = Path("./logs/logging.db")
 
     # LLM settings
+    llm_provider: str = "openai"  # Provider: openai, anthropic, google, together
     llm_model: str = "gpt-4o"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 4000
+    llm_provider_configs: dict[str, dict[str, Any]] = field(default_factory=dict)
     extraction_prompt: str = ""
     awscale_prompt: str = ""
 
@@ -90,6 +104,7 @@ class Config:
     dry_run: bool = False
     sample_size: int | None = None
     use_cache: bool = True
+    use_proxy: bool = True  # Enable proxy for Google Scholar
     parallel_workers: int = 4
 
 
@@ -137,16 +152,38 @@ class ConfigLoader:
         # Search parameters
         search = self._raw_config.get("search", {})
         years = search.get("years", {})
-        config.search_years = (years.get("start", 2018), years.get("end", 2025))
+        config.search_years = (years.get("start", 2022), years.get("end", 2025))
         config.llm_min_params = search.get("llm_min_params", 100_000_000)
         config.inclusion_flags = search.get("inclusion_flags", [])
-        config.wargame_terms = search.get("wargame_terms", [])
-        config.llm_terms = search.get("llm_terms", [])
-        config.action_terms = search.get("action_terms", [])
-        config.exclusion_terms = search.get("exclusion_terms", [])
+
+        # Note: In v3.0.0, terms are at root level, not under 'search'
+        config.wargame_terms = self._raw_config.get(
+            "wargame_terms", search.get("wargame_terms", [])
+        )
+        config.llm_terms = self._raw_config.get(
+            "llm_terms", search.get("llm_terms", [])
+        )
+        config.action_terms = self._raw_config.get(
+            "action_terms", search.get("action_terms", [])
+        )
+        config.exclusion_terms = self._raw_config.get(
+            "exclusion_terms", search.get("exclusion_terms", [])
+        )
 
         # Failure vocabulary
         config.failure_vocab = self._raw_config.get("failure_vocab", {})
+
+        # Disambiguation rules
+        config.disambiguation = self._raw_config.get("disambiguation", {})
+
+        # Grey literature sources
+        config.grey_lit_sources = self._raw_config.get("grey_lit_sources", [])
+
+        # Query strategies
+        config.query_strategies = self._raw_config.get("query_strategies", {})
+
+        # Quality metrics
+        config.quality_metrics = self._raw_config.get("quality_metrics", {})
 
         # API keys (with environment variable substitution)
         api_keys = self._raw_config.get("api_keys", {})
@@ -181,9 +218,11 @@ class ConfigLoader:
 
         # LLM settings
         llm = self._raw_config.get("llm", {})
+        config.llm_provider = llm.get("provider", "openai")
         config.llm_model = llm.get("model", "gpt-4o")
         config.llm_temperature = llm.get("temperature", 0.1)
         config.llm_max_tokens = llm.get("max_tokens", 4000)
+        config.llm_provider_configs = llm.get("providers", {})
         config.extraction_prompt = llm.get("extraction_prompt", "")
         config.awscale_prompt = llm.get("awscale_prompt", "")
 
@@ -233,6 +272,7 @@ class ConfigLoader:
         config.dry_run = dev.get("dry_run", False)
         config.sample_size = dev.get("sample_size")
         config.use_cache = dev.get("use_cache", True)
+        config.use_proxy = dev.get("use_proxy", True)
         config.parallel_workers = dev.get("parallel_workers", 4)
 
         # Create directories if they don't exist

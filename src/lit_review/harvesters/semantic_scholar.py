@@ -46,7 +46,14 @@ class SemanticScholarHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"Semantic Scholar: Starting search with query: {query}")
+            # Translate query for Semantic Scholar
+            from .query_builder import QueryBuilder
+
+            builder = QueryBuilder()
+            translated_query = builder.translate_for_semantic_scholar(query)
+
+            logger.info(f"Semantic Scholar: Original query: {query[:100]}...")
+            logger.info(f"Semantic Scholar: Translated query: {translated_query}")
 
             # Semantic Scholar limits to 100 results per request
             batch_size = min(100, max_results)
@@ -54,7 +61,7 @@ class SemanticScholarHarvester(BaseHarvester):
 
             while len(papers) < max_results:
                 # Execute search
-                results = self._search_batch(query, batch_size, offset)
+                results = self._search_batch(translated_query, batch_size, offset)
 
                 if not results:
                     break

@@ -133,7 +133,7 @@ python run.py visualise --input data/extracted/extraction_results.csv
 - `failure_modes.png` - Common failure patterns
 - `llm_families.png` - Models used
 - `game_types.png` - Types of wargames
-- `awscale_distribution.png` - Analytical vs Creative spectrum
+- `awscale_distribution.png` - Creative vs Analytical spectrum (1-7 scale)
 
 ## Step 7: Export Dataset
 

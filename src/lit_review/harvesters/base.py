@@ -75,24 +75,11 @@ class BaseHarvester(ABC):
         Returns:
             Formatted query string
         """
-        # Build query components
-        wargame_part = (
-            f"({' OR '.join(f'"{term}"' for term in self.config.wargame_terms)})"
-        )
-        llm_part = f"({' OR '.join(f'"{term}"' for term in self.config.llm_terms)})"
-        action_part = (
-            f"({' OR '.join(f'"{term}"' for term in self.config.action_terms)})"
-        )
+        from .query_builder import QueryBuilder
 
-        # Build exclusions
-        exclusions = " ".join(f'NOT "{term}"' for term in self.config.exclusion_terms)
-
-        # Combine
-        query = f"{wargame_part} AND {llm_part} AND {action_part}"
-        if exclusions:
-            query = f"{query} {exclusions}"
-
-        return query
+        # Use the new QueryBuilder for advanced query handling
+        builder = QueryBuilder()
+        return builder.build_query_from_config(self.config)
 
     def filter_by_year(self, papers: list[Paper]) -> list[Paper]:
         """Filter papers by configured year range.

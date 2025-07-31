@@ -182,7 +182,7 @@ def create_sample_extraction_results():
                 "escalation",
                 "bias",
                 "hallucination",
-                "bias|hallucination|escalation",
+                "Union[bias, hallucination]|escalation",
                 "",
             ],
             "awscale": [3, 4, 2, 3, 5],

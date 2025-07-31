@@ -68,7 +68,7 @@ Final extraction output showing:
 - Open-ended vs quantitative categorization
 - LLM families and roles
 - Failure modes detected
-- AWScale ratings (1-5)
+- AWScale ratings (1-7, where 1=Ultra-Creative, 7=Ultra-Analytical)
 - Code availability
 
 ## How to Use This Data
@@ -122,12 +122,14 @@ Compare your results against these examples:
 - **Digital**: Computer-based simulations
 - **Hybrid**: Mixed approaches
 
-### AWScale (Analytical<>Creative Scale)
-1. Highly Analytical (rigid, quantitative)
-2. Mostly Analytical
-3. Balanced
-4. Mostly Creative
-5. Highly Creative (open-ended, exploratory)
+### AWScale (Creative<->Analytical Scale)
+1. Ultra-Creative (unlimited proposals, pure expert storytelling)
+2. Strongly Creative (encouraged invention, expert narrative judgment)
+3. Moderately Creative (many novel actions, free interpretation)
+4. Balanced (equal creativity/rules, mixed models + judgment)
+5. Moderately Analytical (occasional novel ideas, rule-driven + minor calls)
+6. Strongly Analytical (narrow choices, detailed rules, minimal interpretation)
+7. Ultra-Analytical (fixed script/moves, deterministic tables only)
 
 ### Failure Modes
 - **escalation**: Unnecessary conflict escalation

@@ -300,14 +300,27 @@ class ProductionHarvester(SearchHarvester):
 
         if source == "arxiv":
             # Add category-specific queries for arXiv
-            categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA"]
+            # Get categories from config or use defaults
+            source_opts = getattr(self.config, "source_optimizations", {})
+            arxiv_opts = source_opts.get("arxiv", {})
+            categories = arxiv_opts.get("categories", [])
+
+            if not categories:
+                # Default categories
+                categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA"]
             for category in categories:
                 category_query = f"({base_query}) AND cat:{category}"
                 queries.append(category_query)
 
         elif source == "semantic_scholar":
-            # Add field-specific queries for Semantic Scholar
-            fields = ["Computer Science", "Political Science", "Economics"]
+            # Get fields from config or use defaults
+            source_opts = getattr(self.config, "source_optimizations", {})
+            ss_opts = source_opts.get("semantic_scholar", {})
+            fields = ss_opts.get("fields", [])
+
+            if not fields:
+                # Default fields
+                fields = ["Computer Science", "Political Science", "Economics"]
             for field in fields:
                 field_query = f"{base_query} AND field:{field}"
                 queries.append(field_query)

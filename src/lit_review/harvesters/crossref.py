@@ -49,7 +49,14 @@ class CrossrefHarvester(BaseHarvester):
         papers = []
 
         try:
-            logger.info(f"Crossref: Starting search with query: {query}")
+            # Translate query for CrossRef
+            from .query_builder import QueryBuilder
+
+            builder = QueryBuilder()
+            translated_query = builder.translate_for_crossref(query)
+
+            logger.info(f"Crossref: Original query: {query[:100]}...")
+            logger.info(f"Crossref: Translated query: {translated_query}")
 
             # Crossref allows up to 1000 results per request, but we'll use smaller batches
             batch_size = min(100, max_results)
@@ -57,7 +64,9 @@ class CrossrefHarvester(BaseHarvester):
 
             while len(papers) < max_results:
                 # Execute search
-                results, total = self._search_batch(query, batch_size, offset)
+                results, total = self._search_batch(
+                    translated_query, batch_size, offset
+                )
 
                 if not results:
                     break

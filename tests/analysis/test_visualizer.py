@@ -74,10 +74,10 @@ class TestVisualizer:
         df = pd.DataFrame(
             {
                 "failure_modes": [
-                    "escalation|bias",
+                    "Union[escalation, bias]",
                     "hallucination",
-                    "bias|prompt_sensitivity",
-                    "escalation|hallucination|bias",
+                    "Union[bias, prompt_sensitivity]",
+                    "Union[escalation, hallucination]|bias",
                     "",
                 ]
             }
@@ -164,7 +164,7 @@ class TestVisualizer:
             {
                 "year": [2022, 2023, 2024] * 3,
                 "venue_type": ["conference", "journal", "workshop"] * 3,
-                "failure_modes": ["bias", "escalation|bias", ""] * 3,
+                "failure_modes": ["bias", "Union[escalation, bias]", ""] * 3,
                 "llm_family": ["GPT-4", "Claude", "Llama"] * 3,
                 "game_type": ["matrix", "seminar", "digital"] * 3,
                 "awscale": [1, 3, 5] * 3,
@@ -260,7 +260,7 @@ class TestVisualizer:
             {
                 "year": [2022, 2023, 2024],
                 "venue_type": ["conference", "journal", "workshop"],
-                "failure_modes": ["bias", "escalation|bias", ""],
+                "failure_modes": ["bias", "Union[escalation, bias]", ""],
                 "llm_family": ["GPT-4", "Claude", "Llama"],
                 "game_type": ["matrix", "seminar", "digital"],
                 "awscale": [1, 3, 5],

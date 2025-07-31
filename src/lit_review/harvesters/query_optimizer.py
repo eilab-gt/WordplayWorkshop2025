@@ -310,7 +310,14 @@ class QueryOptimizer:
         queries = []
 
         # Category-focused queries
-        categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.HC"]
+        # Get categories from config or use defaults
+        source_opts = getattr(self.config, "source_optimizations", {})
+        arxiv_opts = source_opts.get("arxiv", {})
+        categories = arxiv_opts.get("categories", [])
+
+        if not categories:
+            # Default categories
+            categories = ["cs.AI", "cs.CL", "cs.LG", "cs.GT", "cs.MA", "cs.HC"]
 
         for category in categories:
             # Focused queries per category
@@ -335,14 +342,20 @@ class QueryOptimizer:
         """Generate Semantic Scholar optimized queries."""
         queries = []
 
-        # Field-specific searches
-        fields = [
-            "Computer Science",
-            "Political Science",
-            "Economics",
-            "Psychology",
-            "Mathematics",
-        ]
+        # Get fields from config or use defaults
+        source_opts = getattr(self.config, "source_optimizations", {})
+        ss_opts = source_opts.get("semantic_scholar", {})
+        fields = ss_opts.get("fields", [])
+
+        if not fields:
+            # Default fields
+            fields = [
+                "Computer Science",
+                "Political Science",
+                "Economics",
+                "Psychology",
+                "Mathematics",
+            ]
 
         for field in fields:
             # Core query with field filter

@@ -40,6 +40,8 @@ class Exporter:
         figures: list[Path],
         summary: dict[str, Any],
         output_name: str | None = None,
+        excluded_df: pd.DataFrame | None = None,
+        disambiguation_report: dict[str, Any] | None = None,
     ) -> Path:
         """Create a complete export package.
 
@@ -48,6 +50,8 @@ class Exporter:
             figures: List of figure paths
             summary: Summary statistics dictionary
             output_name: Name for the output file (without extension)
+            excluded_df: DataFrame with excluded papers (optional)
+            disambiguation_report: Disambiguation statistics report (optional)
 
         Returns:
             Path to the created package
@@ -83,24 +87,34 @@ class Exporter:
             if self.include_logs:
                 self._copy_logs(temp_dir)
 
-            # 7. Create README
-            self._create_readme(extraction_df, temp_dir)
+            # 7. Save excluded papers if provided
+            if excluded_df is not None:
+                self._save_excluded_papers(excluded_df, temp_dir)
 
-            # 8. Create archive
+            # 8. Save disambiguation report if provided
+            if disambiguation_report is not None:
+                self._save_disambiguation_report(disambiguation_report, temp_dir)
+
+            # 9. Create README
+            self._create_readme(
+                extraction_df, temp_dir, excluded_df, disambiguation_report
+            )
+
+            # 10. Create archive
             if self.compression == "zip":
                 archive_path = self._create_zip_archive(temp_dir, output_name)
             else:
                 # Could add support for tar.gz, etc.
                 archive_path = self._create_zip_archive(temp_dir, output_name)
 
-            # 9. Clean up temp directory
+            # 11. Clean up temp directory
             import shutil
 
             shutil.rmtree(temp_dir)
 
             logger.info(f"Export package created: {archive_path}")
 
-            # 10. Optionally upload to Zenodo
+            # 12. Optionally upload to Zenodo
             if self.zenodo_enabled and self.zenodo_token:
                 self._upload_to_zenodo(archive_path, extraction_df)
 
@@ -321,12 +335,72 @@ class Exporter:
                 dest_path = logs_dir / log_file.name
                 shutil.copy2(log_file, dest_path)
 
-    def _create_readme(self, df: pd.DataFrame, output_dir: Path):
+    def _save_excluded_papers(self, excluded_df: pd.DataFrame, output_dir: Path):
+        """Save excluded papers data.
+
+        Args:
+            excluded_df: DataFrame with excluded papers
+            output_dir: Output directory
+        """
+        excluded_dir = output_dir / "excluded_papers"
+        excluded_dir.mkdir(exist_ok=True)
+
+        # Save as CSV
+        csv_path = excluded_dir / "excluded_papers.csv"
+        excluded_df.to_csv(csv_path, index=False)
+        logger.debug(f"Saved excluded papers CSV: {csv_path}")
+
+        # Save summary statistics
+        summary_data = {
+            "total_excluded": len(excluded_df),
+            "exclusion_reasons": (
+                excluded_df["disambiguation_reason"].value_counts().to_dict()
+                if "disambiguation_reason" in excluded_df.columns
+                else {}
+            ),
+            "by_year": (
+                excluded_df["year"].value_counts().sort_index().to_dict()
+                if "year" in excluded_df.columns
+                else {}
+            ),
+            "by_source": (
+                excluded_df["source_db"].value_counts().to_dict()
+                if "source_db" in excluded_df.columns
+                else {}
+            ),
+        }
+
+        summary_path = excluded_dir / "excluded_summary.json"
+        with open(summary_path, "w") as f:
+            json.dump(summary_data, f, indent=2)
+        logger.debug(f"Saved excluded papers summary: {summary_path}")
+
+    def _save_disambiguation_report(self, report: dict[str, Any], output_dir: Path):
+        """Save disambiguation report.
+
+        Args:
+            report: Disambiguation report dictionary
+            output_dir: Output directory
+        """
+        report_path = output_dir / "disambiguation_report.json"
+        with open(report_path, "w") as f:
+            json.dump(report, f, indent=2)
+        logger.debug(f"Saved disambiguation report: {report_path}")
+
+    def _create_readme(
+        self,
+        df: pd.DataFrame,
+        output_dir: Path,
+        excluded_df: pd.DataFrame | None = None,
+        disambiguation_report: dict[str, Any] | None = None,
+    ):
         """Create README file for the export.
 
         Args:
             df: DataFrame with data
             output_dir: Output directory
+            excluded_df: DataFrame with excluded papers (optional)
+            disambiguation_report: Disambiguation statistics report (optional)
         """
         readme_content = f"""# Literature Review Export
 
@@ -340,6 +414,16 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 - `metadata.json`: Export metadata and configuration
 """
 
+        if excluded_df is not None:
+            readme_content += (
+                "- `excluded_papers/`: Papers excluded by disambiguation filters\n"
+            )
+
+        if disambiguation_report is not None:
+            readme_content += (
+                "- `disambiguation_report.json`: Detailed disambiguation statistics\n"
+            )
+
         if self.include_pdfs:
             readme_content += "- `pdfs/`: PDF files of papers\n"
 
@@ -351,7 +435,18 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 - Total papers: {len(df)}
 - Date range: {df["year"].min()}-{df["year"].max()}
-- Sources: {", ".join(df["source_db"].unique()) if "source_db" in df.columns else "N/A"}
+- Sources: {", ".join(df["source_db"].unique()) if "source_db" in df.columns else "N/A"}"""
+
+        if excluded_df is not None:
+            readme_content += f"""
+- Excluded papers: {len(excluded_df)}
+- Exclusion rate: {len(excluded_df) / (len(df) + len(excluded_df)) * 100:.1f}%"""
+
+        if disambiguation_report is not None:
+            readme_content += f"""
+- Grey literature papers: {disambiguation_report.get('grey_literature', {}).get('count', 0)}"""
+
+        readme_content += """
 
 ## Data Dictionary
 

@@ -212,10 +212,12 @@ result = extractor.extract_single(paper_series)
 
 ### AWScale Calculation
 
-Automatically calculates Analytic ↔ Wild scale (1-5) based on:
-- Quantitative only: 1-2 (Analytic)
-- Both: 3 (Balanced)
-- Open-ended only: 4-5 (Wild)
+Automatically calculates Creative ↔ Analytical scale (1-7) based on:
+- Seminar/Red Team games: 1-2 (Ultra/Strongly Creative)
+- Matrix/Tabletop games: 3 (Moderately Creative)
+- Mixed approaches: 4 (Balanced)
+- Course of Action games: 5 (Moderately Analytical)
+- Digital/Computer games: 6-7 (Strongly/Ultra Analytical)
 
 ## Tagger
 
@@ -274,7 +276,7 @@ venue_path = viz.create_venue_distribution(df, 'venues.png')
 3. **Failure Modes**: Frequency of each failure type
 4. **LLM Families**: Distribution of models used
 5. **Game Types**: Types of wargames
-6. **AWScale**: Analytic ↔ Wild distribution
+6. **AWScale**: Creative ↔ Analytical distribution (1-7 scale)
 
 ### Customization
 

@@ -308,9 +308,23 @@ def extract(
         df = pd.read_csv(input_path)
 
     # Filter to included papers
-    if "include_ft" in df.columns:
+    if "include_ft" in df.columns and df["include_ft"].notna().any():
         included_df = df[df["include_ft"] == "yes"].copy()
-        console.print(f"Processing {len(included_df)} papers marked for inclusion")
+        console.print(
+            f"Processing {len(included_df)} papers marked for full-text inclusion"
+        )
+    elif "include_ta" in df.columns and df["include_ta"].notna().any():
+        # Use title-abstract screening if no full-text screening done
+        included_df = df[df["include_ta"] == 1].copy()
+        console.print(
+            f"Processing {len(included_df)} papers marked for inclusion (title/abstract)"
+        )
+    elif "auto_include" in df.columns:
+        # Use automated inclusion if available
+        included_df = df[df["auto_include"] == True].copy()
+        console.print(
+            f"Processing {len(included_df)} papers marked by automated inclusion"
+        )
     else:
         included_df = df.copy()
         console.print(f"Processing all {len(included_df)} papers (no screening data)")

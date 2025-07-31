@@ -161,7 +161,7 @@ References:
         status_counts = pdf_df["pdf_status"].value_counts()
         print(f"\nPDF fetch results: {status_counts.to_dict()}")
 
-        successful = pdf_df[pdf_df["pdf_status"].str.contains("downloaded|cached")]
+        successful = pdf_df[pdf_df["pdf_status"].str.contains("Union[downloaded, cached]")]
         failed = pdf_df[pdf_df["pdf_status"].isin(["not_found", "error"])]
 
         assert len(successful) > len(failed), "Most PDFs should succeed"

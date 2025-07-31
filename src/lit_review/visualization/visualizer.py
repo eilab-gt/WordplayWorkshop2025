@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -95,7 +95,7 @@ class Visualizer:
         logger.info(f"Created {len(saved_figures)} visualizations")
         return saved_figures
 
-    def plot_time_series(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_time_series(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot time series of publications.
 
         Args:
@@ -157,7 +157,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_game_types(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_game_types(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot distribution of game types.
 
         Args:
@@ -226,7 +226,7 @@ class Visualizer:
 
     def plot_awscale_distribution(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot AWScale distribution.
 
         Args:
@@ -257,12 +257,12 @@ class Visualizer:
 
             # Get colors
             colors_map = self.colors.get("awscale", {})
-            bar_colors = [colors_map.get(str(i), "gray") for i in range(1, 6)]
+            bar_colors = [colors_map.get(str(i), "gray") for i in range(1, 8)]
 
             # Create histogram
-            counts = [sum(awscale_values == i) for i in range(1, 6)]
+            counts = [sum(awscale_values == i) for i in range(1, 8)]
             bars = ax.bar(
-                range(1, 6), counts, color=bar_colors, alpha=0.8, edgecolor="black"
+                range(1, 8), counts, color=bar_colors, alpha=0.8, edgecolor="black"
             )
 
             # Add value labels on bars
@@ -281,18 +281,20 @@ class Visualizer:
             ax.set_xlabel("AWScale Score", fontsize=12)
             ax.set_ylabel("Number of Papers", fontsize=12)
             ax.set_title(
-                "AWScale Distribution (Analytical<>Creative Scale)",
+                "AWScale Distribution (Creative<->Analytical Scale)",
                 fontsize=14,
                 fontweight="bold",
             )
-            ax.set_xticks(range(1, 6))
+            ax.set_xticks(range(1, 8))
             ax.set_xticklabels(
                 [
-                    "1\n(Strictly\nAnalytic)",
-                    "2\n(Mostly\nAnalytic)",
-                    "3\n(Balanced)",
-                    "4\n(Mostly\nCreative)",
-                    "5\n(Wild-\nCreative)",
+                    "1\n(Ultra-\nCreative)",
+                    "2\n(Strongly\nCreative)",
+                    "3\n(Moderately\nCreative)",
+                    "4\n(Balanced)",
+                    "5\n(Moderately\nAnalytical)",
+                    "6\n(Strongly\nAnalytical)",
+                    "7\n(Ultra-\nAnalytical)",
                 ]
             )
 
@@ -321,7 +323,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_failure_modes(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_failure_modes(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot failure modes distribution.
 
         Args:
@@ -398,7 +400,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_llm_families(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_llm_families(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot LLM families distribution.
 
         Args:
@@ -459,7 +461,7 @@ class Visualizer:
 
     def plot_source_distribution(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot source database distribution.
 
         Args:
@@ -508,7 +510,7 @@ class Visualizer:
             plt.close()
             return None
 
-    def plot_venue_types(self, df: pd.DataFrame, save: bool = True) -> Path | None:
+    def plot_venue_types(self, df: pd.DataFrame, save: bool = True) -> Optional[Path]:
         """Plot venue types distribution.
 
         Args:
@@ -568,7 +570,7 @@ class Visualizer:
 
     def plot_game_characteristics(
         self, df: pd.DataFrame, save: bool = True
-    ) -> Path | None:
+    ) -> Optional[Path]:
         """Plot open-ended vs quantitative characteristics.
 
         Args:

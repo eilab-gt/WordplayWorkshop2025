@@ -24,25 +24,50 @@ class SearchHarvester:
         Args:
             config: Configuration object
         """
+        logger.info("SearchHarvester.__init__ called")
         self.config = config
 
-        # Initialize individual harvesters
-        self.harvesters = {
-            "google_scholar": GoogleScholarHarvester(config),
-            "arxiv": ArxivHarvester(config),
-            "semantic_scholar": SemanticScholarHarvester(config),
-            "crossref": CrossrefHarvester(config),
+        # Store harvester classes for lazy initialization
+        self._harvester_classes = {
+            "google_scholar": GoogleScholarHarvester,
+            "arxiv": ArxivHarvester,
+            "semantic_scholar": SemanticScholarHarvester,
+            "crossref": CrossrefHarvester,
         }
+
+        # Lazy initialization dict
+        self._harvesters: dict[str, Any] = {}
 
         # Track all results
         self.all_papers: list[Paper] = []
         self.unique_papers: list[Paper] = []
+
+    @property
+    def harvesters(self) -> dict[str, Any]:
+        """Get harvesters dict (for backward compatibility)."""
+        return self
+
+    def __getitem__(self, key: str) -> Any:
+        """Get a harvester, initializing it lazily if needed."""
+        if key not in self._harvesters and key in self._harvester_classes:
+            logger.info(f"Lazily initializing {key} harvester")
+            self._harvesters[key] = self._harvester_classes[key](self.config)
+        return self._harvesters[key]
+
+    def __contains__(self, key: str) -> bool:
+        """Check if a harvester is available."""
+        return key in self._harvester_classes
+
+    def keys(self):
+        """Get available harvester names."""
+        return self._harvester_classes.keys()
 
     def search_all(
         self,
         sources: list[str] | None = None,
         max_results_per_source: int = 100,
         parallel: bool = True,
+        include_secondary: bool = True,
     ) -> pd.DataFrame:
         """Search all configured sources and combine results.
 
@@ -50,6 +75,7 @@ class SearchHarvester:
             sources: List of sources to search (None = all sources)
             max_results_per_source: Maximum results from each source
             parallel: Whether to search sources in parallel
+            include_secondary: Whether to run secondary query strategies
 
         Returns:
             DataFrame of combined results
@@ -66,7 +92,7 @@ class SearchHarvester:
         # Clear previous results
         self.all_papers = []
 
-        # Build query
+        # Build primary query
         query = self._build_combined_query()
 
         if parallel and len(sources) > 1:
@@ -75,6 +101,10 @@ class SearchHarvester:
         else:
             # Sequential search
             self._search_sequential(sources, query, max_results_per_source)
+
+        # Run secondary queries if enabled
+        if include_secondary:
+            self._run_secondary_queries(sources, max_results_per_source, parallel)
 
         # Convert to DataFrame
         df = self._papers_to_dataframe(self.all_papers)
@@ -89,8 +119,55 @@ class SearchHarvester:
         Returns:
             Query string
         """
-        # Use the base harvester's query builder
-        return self.harvesters["google_scholar"].build_query()
+        # Use ArxivHarvester's query builder as it doesn't require network setup
+        # All harvesters inherit from BaseHarvester which has build_query()
+        temp_harvester = ArxivHarvester(self.config)
+        return temp_harvester.build_query()
+
+    def _run_secondary_queries(
+        self, sources: list[str], max_results: int, parallel: bool
+    ):
+        """Run secondary query strategies.
+
+        Args:
+            sources: List of source names
+            max_results: Maximum results per source
+            parallel: Whether to search in parallel
+        """
+        from .query_builder import QueryBuilder
+
+        builder = QueryBuilder()
+        secondary_queries = builder.build_secondary_queries(self.config)
+
+        if not secondary_queries:
+            return
+
+        logger.info(f"Running {len(secondary_queries)} secondary query strategies")
+
+        for query_info in secondary_queries:
+            description = query_info["description"]
+            query = query_info["query"]
+
+            logger.info(f"Running secondary query: {description}")
+
+            # For grey-lit query with site: operators, only use Google Scholar
+            if "site:" in query or "filetype:" in query:
+                if "google_scholar" in sources:
+                    try:
+                        harvester = self["google_scholar"]
+                        papers = harvester.search(query, max_results)
+                        logger.info(
+                            f"Secondary query '{description}' found {len(papers)} papers"
+                        )
+                        self.all_papers.extend(papers)
+                    except Exception as e:
+                        logger.error(f"Error in secondary query '{description}': {e}")
+            else:
+                # For other secondary queries, use all sources
+                if parallel and len(sources) > 1:
+                    self._search_parallel(sources, query, max_results // 2)
+                else:
+                    self._search_sequential(sources, query, max_results // 2)
 
     def _search_sequential(self, sources: list[str], query: str, max_results: int):
         """Search sources sequentially.

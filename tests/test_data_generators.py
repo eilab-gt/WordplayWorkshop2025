@@ -2,7 +2,7 @@
 
 import random
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 
 
 class RealisticTestDataGenerator:
@@ -386,7 +386,7 @@ class RealisticTestDataGenerator:
         "International Journal of Human-Computer Studies",
     ]
 
-    def __init__(self, seed: int | None = None):
+    def __init__(self, seed: Optional[int] = None):
         """Initialize generator with optional seed for reproducibility."""
         if seed is not None:
             random.seed(seed)
@@ -583,7 +583,7 @@ class RealisticTestDataGenerator:
             journal = random.choice(self.JOURNALS)
             return {"venue": journal, "venue_full": journal, "venue_type": "journal"}
 
-    def generate_paper(self, year: int | None = None) -> dict[str, Any]:
+    def generate_paper(self, year: Optional[int] = None) -> dict[str, Any]:
         """Generate a complete realistic paper entry."""
         if year is None:
             year = random.randint(2020, 2024)
@@ -653,7 +653,7 @@ class RealisticTestDataGenerator:
         return paper
 
     def generate_paper_batch(
-        self, count: int, year_range: tuple | None = None
+        self, count: int, year_range: Optional[tuple] = None
     ) -> list[dict[str, Any]]:
         """Generate multiple papers with consistent distribution."""
         papers = []

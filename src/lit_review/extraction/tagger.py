@@ -67,7 +67,7 @@ class Tagger:
             regex_modes = self._extract_failure_modes(text_to_search)
 
             # Combine modes
-            all_modes = existing_modes | regex_modes
+            all_modes = existing_modes.union(regex_modes)
 
             # Update DataFrame
             df.at[idx, "failure_modes"] = (
@@ -156,7 +156,10 @@ class Tagger:
             re.compile(r"\bdata[\s-]?leak\w*\b", re.IGNORECASE),
             re.compile(r"\bprivacy[\s-]?(?:breach|violation|leak)\b", re.IGNORECASE),
             re.compile(r"\bunauthorized\s+(?:access|disclosure)\b", re.IGNORECASE),
-            re.compile(r"\bexpos(?:e|ing)\s+(?:private|sensitive)\b", re.IGNORECASE),
+            re.compile(
+                r"\bexpos(?:e|ing)\s+(?:private|sensitive)\b",
+                re.IGNORECASE,
+            ),
         ]
 
         patterns["jailbreak"] = [
@@ -410,6 +413,11 @@ class Tagger:
         total_papers = len(
             df[df["failure_modes"].notna() & (df["failure_modes"] != "")]
         )
-        summary["percentage"] = (summary["count"] / total_papers * 100).round(1)
+
+        if total_papers > 0:
+            summary["percentage"] = (summary["count"] / total_papers * 100).round(1)
+        else:
+            # If no papers have failure modes, return empty summary
+            summary["percentage"] = pd.Series(dtype=float)
 
         return summary

@@ -1,12 +1,18 @@
 # Literature Review Pipeline Configuration
-# Comprehensive configuration combining search optimization and production features
-# Version: 2.0.0
+# Search config for LLM-powered open-ended wargaming & crisis sims
+# Version: 3.0.0
 
-# Search Parameters
+# ============================================================================
+# 0.  Administrative ----------------------------------------------------------------
+version: 3.0.0
+description: "Search config for LLM-powered open-ended wargaming & crisis sims"
+
+# ============================================================================
+# 1.  Temporal window ---------------------------------------------------------
 search:
   years:
-    start: 2018
-    end: 2025
+    start: 2022          # beginning of large-model era in wargaming
+    end:   2025
 
   # Minimum LLM parameters (100M = GPT-2 baseline)
   llm_min_params: 100_000_000
@@ -15,304 +21,264 @@ search:
   inclusion_flags:
     - open_ended
     - quantitative
+    - qualitative
+    - mixed_methods
+    - exploratory
 
-  # Wargame and simulation terms - comprehensive list
-  wargame_terms:
-    # Core wargaming terms
-    - "wargame"
-    - "war game"
-    - "wargaming"
-    - "war-game"
-    - "war gaming"
+# ============================================================================
+# 2.  Positive vocabulary -----------------------------------------------------
+wargame_terms:
+  # Core
+  - "wargame*"
+  - "war game*"
+  - "war gaming"
+  - "tabletop exercise*"
+  - "TTX"
+  - "seminar wargame*"
+  - "policy game*"
+  - "policy gaming"
+  - "strategic game*"
+  - "crisis game*"
+  - "military exercise*"
+  - "defen?e exercise*"
+  - '"red team*" NEAR/5 (exercise OR simulation OR wargame OR campaign OR tabletop)'
+  # Matrix-wargame only
+  - "matrix wargame*"
+  - '"matrix game*" NEAR/5 (scenario OR crisis OR policy OR wargame OR tabletop OR seminar)'
+  # Crisis / policy / diplomacy
+  - "crisis simulation*"
+  - "crisis-management simulation*"
+  - "military crisis simulation*"
+  - "crisis decision-making exercise*"
+  - "diplomacy simulation*"
+  - "diplomatic game*"
+  - "negotiation game*"
+  - "negotiation simulation*"
+  - "crisis-negotiation exercise*"
+  - "policy simulation*"
+  - "statecraft simulation*"
+  - "Model Diplomacy"
+  # Named LLM-wargame systems
+  - "Snow Globe"
+  - "WarAgent"
+  # Business and corporate wargaming
+  - "business wargam*"
+  - "corporate wargam*"
+  - "commercial wargam*"
+  - "competitive simulation*"
+  - "market simulation*"
+  - "strategic simulation*"
+  - "business strategy game*"
+  - "competitive intelligence game*"
+  - "market wargam*"
+  # Named crisis simulations
+  - "Dark Winter"
+  - "Crimson Contagion"
+  - "Atlantic Storm"
+  - "Clade X"
+  - "Event 201"
 
-    # Specific wargame types
-    - "tabletop exercise"
-    - "TTX"
-    - "matrix game"
-    - "matrix wargame"
-    - "seminar wargame"
-    - "seminar game"
-    - "policy game"
-    - "strategic game"
-    - "crisis game"
-    - "free kriegsspiel"
+llm_terms:
+  - "large language model*"
+  - LLM
+  - "foundation model*"
+  - transformer*
+  - "generative AI"
+  - "generative artificial intelligence"
+  # Specific models
+  - GPT
+  - GPT-3
+  - GPT-3.5
+  - GPT-4
+  - ChatGPT
+  - InstructGPT
+  - Claude
+  - "Claude-2"
+  - "Claude-3"
+  - PaLM
+  - "PaLM-2"
+  - Gemini
+  - Bard
+  - LLaMA
+  - "LLaMA-2"
+  - Alpaca
+  - Vicuna
+  - BERT
+  - T5
+  - Cicero
+  # Agent terms
+  - "AI agent"
+  - "LLM agent"
+  - "multi-agent"
+  - "autonomous agent*"
 
-    # Crisis and conflict simulation
-    - "crisis simulation"
-    - "conflict simulation"
-    - "crisis management simulation"
-    - "strategic simulation"
-    - "military simulation"
-    - "defense simulation"
-    - "diplomatic simulation"
-    - "geopolitical simulation"
-    - "national security simulation"
+# ============================================================================
+# 3.  Exclusion vocabulary (hard filters) ------------------------------------
+exclusion_terms:
+  # Game-theory noise
+  - '"matrix game*" NEAR/5 (Nash OR equilibrium OR payoff OR "normal form" OR "game theory")'
+  - AlphaZero
+  - '"reinforcement learning" NEAR/5 (Go OR chess OR poker OR "board game" OR Atari)'
+  # Red-teaming jailbreak noise
+  - '"red teaming" NEAR/5 (LLM OR "language model" OR ChatGPT OR jailbreak OR prompt OR adversarial)'
+  - "prompt injection"
+  - "adversarial example"
+  # Commentary / marketing
+  - warontherocks.com
+  - madsciblog.tradoc.army.mil
+  - medium.com
+  - substack.com
+  - "press release"
+  - "blog post"
+  - newsletter
+  - "vendor case study"
+  - marketing
+  - podcast
+  # Social simulation
+  - "opinion dynamics"
+  - polarisation
+  - politics
+  - democracy
+  - governance
+  # Surveys & alignment (conditional block in §4)
+  - "hallucination survey"
+  - "alignment roadmap"
+  # Medical simulation noise
+  - hospital
+  - medical
+  - doctor
+  - nurse
 
-    # Military/defense specific
-    - "military exercise"
-    - "defense exercise"
-    - "red team"
-    - "red teaming"
-    - "blue team"
-    - "operational planning"
-    - "strategic planning exercise"
-    - "threat assessment"
+# ============================================================================
+# 4.  Disambiguation rules (post-search regex) -------------------------------
+disambiguation:
+  matrix_game:
+    negative_context: [Nash, equilibrium, payoff, "normal form", "game theory"]
+  red_teaming:
+    negative_context: [LLM, ChatGPT, jailbreak, prompt, "adversarial example", "prompt injection"]
+  rl_board_game:
+    negative_context: [AlphaZero, "board game", "Go game", chess, Atari]
+  generic_surveys:
+    negative_context: [survey, roadmap, hallucination, alignment]
+    positive_required: [wargame, simulation, exercise, crisis, military]
 
-    # Decision-making contexts
-    - "military decision-making"
-    - "diplomatic decision-making"
-    - "strategic decision-making"
-    - "crisis decision-making"
+# ============================================================================
+# 5.  Grey-literature tagging -------------------------------------------------
+grey_lit_sources:
+  # Government domains
+  - ".mil"
+  - ".gov"
+  - ".gov.uk"
+  - ".gov.au"
+  - ".gov.ca"
+  - ".gc.ca"
+  - ".gouv.fr"
+  - ".europa.eu"
+  - ".oecd.org"
+  - ".un.org"
+  - ".nato.int"
+  # Think tanks and research institutes
+  - "rand.org"
+  - "brookings.edu"
+  - "csis.org"
+  - "cfr.org"
+  - "iiss.org"
+  - "carnegieendowment.org"
+  - "chathamhouse.org"
+  # Defense and policy blogs
+  - warontherocks.com
+  - madsciblog.tradoc.army.mil
+  - paxsims.wordpress.com
+  - think-tank
 
-    # Specific games/frameworks
-    - "Diplomacy game"
-    - "Snow Globe"
-    - "WarAgent"
-
-  # LLM and AI terms - comprehensive coverage
-  llm_terms:
-    # Core LLM terms
-    - "large language model"
-    - "LLM"
-    - "LLMs"
-    - "language model"
-    - "foundation model"
-    - "transformer model"
-    - "neural language model"
-    - "generative AI"
-    - "generative artificial intelligence"
-
-    # Specific models
-    - "GPT"
-    - "GPT-3"
-    - "GPT-3.5"
-    - "GPT-4"
-    - "ChatGPT"
-    - "InstructGPT"
-    - "Claude"
-    - "Claude-2"
-    - "Claude-3"
-    - "Anthropic"
-    - "PaLM"
-    - "PaLM-2"
-    - "Gemini"
-    - "Bard"
-    - "LLaMA"
-    - "LLaMA-2"
-    - "Llama"
-    - "Llama-2"
-    - "Alpaca"
-    - "Vicuna"
-    - "BERT"
-    - "T5"
-    - "Cicero"
-
-    # AI agent terms
-    - "AI agent"
-    - "artificial intelligence agent"
-    - "autonomous agent"
-    - "multi-agent"
-    - "multi-agent system"
-    - "agent-based"
-    - "LLM agent"
-    - "LLM-based agent"
-    - "LLM-powered agent"
-
-    # Related AI terms
-    - "artificial intelligence"
-    - "machine learning"
-    - "deep learning"
-    - "natural language processing"
-    - "NLP"
-    - "strategic reasoning"
-    - "automated reasoning"
-    - "transformer"
-    - "attention mechanism"
-
-  # Action and role terms
-  action_terms:
-    # Core actions
-    - "simulation"
-    - "simulate"
-    - "simulating"
-    - "play"
-    - "playing"
-    - "player"
-    - "participant"
-    - "agent"
-
-    # Analysis and support
-    - "analysis"
-    - "analyze"
-    - "evaluation"
-    - "evaluate"
-    - "assessment"
-    - "decision support"
-    - "decision-making support"
-    - "planning"
-    - "strategy"
-    - "modeling"
-    - "prediction"
-    - "benchmark"
-
-    # Generation and creation
-    - "scenario generation"
-    - "scenario creation"
-    - "narrative generation"
-    - "strategy generation"
-
-    # Specific roles
-    - "facilitator"
-    - "moderator"
-    - "adjudicator"
-    - "opponent"
-    - "advisor"
-    - "assistant"
-
-    # Behavioral terms
-    - "escalation"
-    - "de-escalation"
-    - "negotiation"
-    - "diplomacy"
-    - "strategic planning"
-    - "strategic reasoning"
-    - "human-AI team"
-    - "human-machine team"
-
-  # Inclusion indicators - must have at least one
-  inclusion_indicators:
-    # Military/defense context
-    - "military"
-    - "defense"
-    - "defence"
-    - "national security"
-    - "international security"
-    - "strategic"
-    - "tactical"
-    - "operational"
-
-    # Crisis and conflict
-    - "crisis"
-    - "conflict"
-    - "escalation"
-    - "deterrence"
-    - "nuclear"
-    - "cyber"
-    - "hybrid warfare"
-
-    # Specific methodologies
-    - "red team"
-    - "tabletop exercise"
-    - "after action"
-    - "lessons learned"
-    - "course of action"
-    - "COA"
-
-    # Research contexts
-    - "human-AI team"
-    - "human-machine team"
-    - "comparative study"
-    - "empirical study"
-    - "experimental study"
-
-  # Exclusion terms - filter out non-relevant papers
-  exclusion_terms:
-    # Entertainment/commercial games
-    - "video game"
-    - "computer game"
-    - "entertainment"
-    - "esports"
-    - "e-sports"
-    - "gaming industry"
-    - "game development"
-    - "game design tutorial"
-    - "Unity engine"
-    - "Unreal engine"
-
-    # Specific non-relevant games
-    - "chess"
-    - "chess engine"
-    - "Go game"
-    - "Go engine"
-    - "AlphaGo"
-    - "poker"
-    - "Texas Hold'em"
-    - "blackjack"
-    - "board game review"
-    - "Dungeons Dragons"
-    - "D&D"
-    - "Magic the Gathering"
-
-    # Video game titles
-    - "StarCraft"
-    - "Minecraft"
-    - "Fortnite"
-    - "League of Legends"
-    - "Dota"
-    - "Call of Duty"
-    - "Battlefield"
-    - "Grand Theft Auto"
-    - "Assassin's Creed"
-    - "World of Warcraft"
-    - "Civilization VI"
-    - "Total War"
-    - "Atari"
-
-    # Non-relevant AI applications
-    - "game engine AI"
-    - "NPC behavior"
-    - "pathfinding"
-    - "procedural generation"
-    - "game balance"
-
-# Query optimization strategies
+# ============================================================================
+# 6.  Query strategies --------------------------------------------------------
 query_strategies:
-  # Primary strategy: Comprehensive boolean search
   primary:
-    description: "Broad search combining wargame AND LLM terms"
-    template: "({wargame_terms}) AND ({llm_terms})"
+    description: "Core Wargame × LLM query"
+    template: |
+      ({wargame_terms}) AND ({llm_terms}) NOT ({exclusion_terms})
 
-  # Secondary strategies for better recall
   secondary:
-    - description: "LLM agents in strategic contexts"
-      template: "({llm_terms}) AND (strategic OR military OR defense) AND (simulation OR game OR exercise)"
+    - description: "Policy / diplomacy simulations"
+      template: |
+        ("policy simulation*" OR "negotiation game*" OR "Model Diplomacy"
+         OR "diplomacy simulation*" OR "crisis-negotiation exercise*")
+        AND ({llm_terms}) NOT ({exclusion_terms})
 
-    - description: "Specific model applications"
-      template: "(GPT-4 OR GPT-3 OR Claude OR Gemini) AND (wargaming OR \"crisis simulation\" OR \"military planning\")"
+    - description: "Grey-lit NATO / GOV PDFs"
+      template: |
+        ("wargame*" OR "simulation" OR "exercise")
+        AND ("large language model" OR LLM OR ChatGPT OR GPT-4)
+        AND (site:.gov OR site:.mil OR site:.nato.int)
+        AND (filetype:pdf)
+        NOT ({exclusion_terms})
 
-    - description: "Multi-agent simulations"
-      template: "\"multi-agent\" AND ({llm_terms}) AND (conflict OR crisis OR strategic)"
-
-    - description: "Escalation and decision-making"
-      template: "({llm_terms}) AND escalation AND (military OR diplomatic) AND decision"
-
-    - description: "Human-AI teaming"
-      template: "(human-AI OR human-machine) AND team AND ({wargame_terms})"
-
-# Source-specific optimizations
+# ============================================================================
+# 7.  Source-specific limits --------------------------------------------------
 source_optimizations:
   arxiv:
-    # arXiv category filters
-    categories:
-      - "cs.AI"     # Artificial Intelligence
-      - "cs.GT"     # Computer Science and Game Theory
-      - "cs.MA"     # Multiagent Systems
-      - "cs.CL"     # Computation and Language
-      - "cs.CY"     # Computers and Society
-      - "cs.HC"     # Human-Computer Interaction
-
+    categories: [cs.AI, cs.CL, cs.MA, cs.GT, cs.CY]
   semantic_scholar:
-    # Field of study filters
-    fields:
-      - "Computer Science"
-      - "Political Science"
-      - "Military Science"
-      - "International Relations"
-
+    fields: ["Computer Science", "Political Science", "Military Science"]
   google_scholar:
-    # Include patents and theses
     include_patents: false
     include_citations: true
+
+# ============================================================================
+# 8.  Quality metrics ---------------------------------------------------------
+quality_metrics:
+  minimum_precision: 0.65
+  target_recall: 0.9
+
+# ============================================================================
+# Original Production Settings (preserved from v2.0.0) -----------------------
+
+# Action and role terms
+action_terms:
+  # Core actions
+  - "simulation"
+  - "simulate"
+  - "simulating"
+  - "play"
+  - "playing"
+  - "player"
+  - "participant"
+  - "agent"
+  # Analysis and support
+  - "analysis"
+  - "analyze"
+  - "evaluation"
+  - "evaluate"
+  - "assessment"
+  - "decision support"
+  - "decision-making support"
+  - "planning"
+  - "strategy"
+  - "modeling"
+  - "prediction"
+  - "benchmark"
+  # Generation and creation
+  - "scenario generation"
+  - "scenario creation"
+  - "narrative generation"
+  - "strategy generation"
+  # Specific roles
+  - "facilitator"
+  - "moderator"
+  - "adjudicator"
+  - "opponent"
+  - "advisor"
+  - "assistant"
+  # Behavioral terms
+  - "escalation"
+  - "de-escalation"
+  - "negotiation"
+  - "diplomacy"
+  - "strategic planning"
+  - "strategic reasoning"
+  - "human-AI team"
+  - "human-machine team"
 
 # Failure Mode Vocabulary
 failure_vocab:
@@ -416,14 +382,17 @@ llm:
     Return your response as a JSON object with these exact field names.
 
   awscale_prompt: |
-    Rate this paper on the AWScale (Analytical<>Creative Scale) from 1-5:
-    1 = Strictly analytic (deterministic tables, numeric payoff, no free narrative)
-    2 = Mostly analytic (limited free text, heavy scoring)
-    3 = Balanced (narrative <=> numeric balance)
-    4 = Mostly creative (free-form moves, light scoring)
-    5 = Wild-creative (storytelling, referee adjudication, emergent goals)
+    Rate this paper on the AWScale (Analytical<->Creative Scale) from 1-7:
+    1 = Ultra-Creative (unlimited proposals, pure expert storytelling, open-ended imagination)
+    2 = Strongly Creative (encouraged invention, expert narrative judgment, free-thinking creativity)
+    3 = Moderately Creative (many novel actions, free interpretation, narrative-driven)
+    4 = Balanced (equal creativity/rules, mixed models + judgment)
+    5 = Moderately Analytical (occasional novel ideas, rule-driven + minor calls)
+    6 = Strongly Analytical (narrow choices, detailed rules, minimal interpretation)
+    7 = Ultra-Analytical (fixed script/moves, deterministic tables only, rigid computation)
 
-    Return only the number (1-5).
+    Consider both the Agent role (players) and Adjudicator role (umpire/rules/software).
+    Return only the number (1-7) that best represents the overall approach.
 
 # Processing Configuration
 processing:
@@ -500,11 +469,13 @@ visualization:
       hybrid: "#d62728"
 
     awscale:
-      1: "#d62728"  # Red - Strictly analytic
-      2: "#ff7f0e"  # Orange
-      3: "#ffbb78"  # Light orange - Balanced
-      4: "#2ca02c"  # Green
-      5: "#1f77b4"  # Blue - Wild-creative
+      1: "#1f77b4"  # Blue - Ultra-Creative
+      2: "#2ca02c"  # Green - Strongly Creative
+      3: "#98df8a"  # Light green - Moderately Creative
+      4: "#ffbb78"  # Light orange - Balanced
+      5: "#ff9896"  # Light red - Moderately Analytical
+      6: "#ff7f0e"  # Orange - Strongly Analytical
+      7: "#d62728"  # Red - Ultra-Analytical
 
 # Export Configuration
 export:
@@ -568,7 +539,7 @@ quality:
     require_doi: false
     require_abstract: true
     min_abstract_length: 50
-    min_year: 2018
+    min_year: 2022
     max_year: 2025
     max_title_length: 500
 
@@ -660,24 +631,3 @@ key_contributors:
     - "Juan-Pablo Rivera"
     - "Harold Trinkunas"
     - "Oriana Skylar Mastro"
-
-# Metrics for search quality
-quality_metrics:
-  minimum_precision: 0.7  # At least 70% of results should be relevant
-  target_recall: 0.9      # Aim to find 90% of relevant papers
-
-  relevance_indicators:
-    high:
-      - '"military decision-making" AND "LLM"'
-      - '"crisis simulation" AND "GPT"'
-      - '"wargaming" AND "language model"'
-      - '"escalation" AND "AI agent"'
-
-    medium:
-      - '"strategic planning" AND "AI"'
-      - '"simulation" AND "transformer"'
-      - '"defense" AND "machine learning"'
-
-    low:
-      - '"game" AND "AI" (without military context)'
-      - '"simulation" (without LLM/AI context)'
