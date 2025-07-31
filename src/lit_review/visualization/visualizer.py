@@ -257,12 +257,12 @@ class Visualizer:
 
             # Get colors
             colors_map = self.colors.get("awscale", {})
-            bar_colors = [colors_map.get(str(i), "gray") for i in range(1, 6)]
+            bar_colors = [colors_map.get(str(i), "gray") for i in range(1, 8)]
 
             # Create histogram
-            counts = [sum(awscale_values == i) for i in range(1, 6)]
+            counts = [sum(awscale_values == i) for i in range(1, 8)]
             bars = ax.bar(
-                range(1, 6), counts, color=bar_colors, alpha=0.8, edgecolor="black"
+                range(1, 8), counts, color=bar_colors, alpha=0.8, edgecolor="black"
             )
 
             # Add value labels on bars
@@ -281,18 +281,20 @@ class Visualizer:
             ax.set_xlabel("AWScale Score", fontsize=12)
             ax.set_ylabel("Number of Papers", fontsize=12)
             ax.set_title(
-                "AWScale Distribution (Analytical<>Creative Scale)",
+                "AWScale Distribution (Creative<->Analytical Scale)",
                 fontsize=14,
                 fontweight="bold",
             )
-            ax.set_xticks(range(1, 6))
+            ax.set_xticks(range(1, 8))
             ax.set_xticklabels(
                 [
-                    "1\n(Strictly\nAnalytic)",
-                    "2\n(Mostly\nAnalytic)",
-                    "3\n(Balanced)",
-                    "4\n(Mostly\nCreative)",
-                    "5\n(Wild-\nCreative)",
+                    "1\n(Ultra-\nCreative)",
+                    "2\n(Strongly\nCreative)",
+                    "3\n(Moderately\nCreative)",
+                    "4\n(Balanced)",
+                    "5\n(Moderately\nAnalytical)",
+                    "6\n(Strongly\nAnalytical)",
+                    "7\n(Ultra-\nAnalytical)",
                 ]
             )
 

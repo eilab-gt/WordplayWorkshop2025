@@ -21,6 +21,9 @@ search:
   inclusion_flags:
     - open_ended
     - quantitative
+    - qualitative
+    - mixed_methods
+    - exploratory
 
 # ============================================================================
 # 2.  Positive vocabulary -----------------------------------------------------
@@ -58,9 +61,22 @@ wargame_terms:
   # Named LLM-wargame systems
   - "Snow Globe"
   - "WarAgent"
-  # Chinese
-  - "军事推演"        # military wargame
-  - "危机模拟"        # crisis simulation
+  # Business and corporate wargaming
+  - "business wargam*"
+  - "corporate wargam*"
+  - "commercial wargam*"
+  - "competitive simulation*"
+  - "market simulation*"
+  - "strategic simulation*"
+  - "business strategy game*"
+  - "competitive intelligence game*"
+  - "market wargam*"
+  # Named crisis simulations
+  - "Dark Winter"
+  - "Crimson Contagion"
+  - "Atlantic Storm"
+  - "Clade X"
+  - "Event 201"
 
 llm_terms:
   - "large language model*"
@@ -95,9 +111,6 @@ llm_terms:
   - "LLM agent"
   - "multi-agent"
   - "autonomous agent*"
-  # Chinese
-  - "大语言模型"
-  - "生成式人工智能"
 
 # ============================================================================
 # 3.  Exclusion vocabulary (hard filters) ------------------------------------
@@ -121,7 +134,7 @@ exclusion_terms:
   - "vendor case study"
   - marketing
   - podcast
-  # Social-sim & political noise
+  # Social simulation
   - "opinion dynamics"
   - polarisation
   - politics
@@ -152,9 +165,27 @@ disambiguation:
 # ============================================================================
 # 5.  Grey-literature tagging -------------------------------------------------
 grey_lit_sources:
+  # Government domains
   - ".mil"
   - ".gov"
+  - ".gov.uk"
+  - ".gov.au"
+  - ".gov.ca"
+  - ".gc.ca"
+  - ".gouv.fr"
+  - ".europa.eu"
+  - ".oecd.org"
+  - ".un.org"
   - ".nato.int"
+  # Think tanks and research institutes
+  - "rand.org"
+  - "brookings.edu"
+  - "csis.org"
+  - "cfr.org"
+  - "iiss.org"
+  - "carnegieendowment.org"
+  - "chathamhouse.org"
+  # Defense and policy blogs
   - warontherocks.com
   - madsciblog.tradoc.army.mil
   - paxsims.wordpress.com
@@ -351,14 +382,17 @@ llm:
     Return your response as a JSON object with these exact field names.
 
   awscale_prompt: |
-    Rate this paper on the AWScale (Analytical<>Creative Scale) from 1-5:
-    1 = Strictly analytic (deterministic tables, numeric payoff, no free narrative)
-    2 = Mostly analytic (limited free text, heavy scoring)
-    3 = Balanced (narrative <=> numeric balance)
-    4 = Mostly creative (free-form moves, light scoring)
-    5 = Wild-creative (storytelling, referee adjudication, emergent goals)
+    Rate this paper on the AWScale (Analytical<->Creative Scale) from 1-7:
+    1 = Ultra-Creative (unlimited proposals, pure expert storytelling, open-ended imagination)
+    2 = Strongly Creative (encouraged invention, expert narrative judgment, free-thinking creativity)
+    3 = Moderately Creative (many novel actions, free interpretation, narrative-driven)
+    4 = Balanced (equal creativity/rules, mixed models + judgment)
+    5 = Moderately Analytical (occasional novel ideas, rule-driven + minor calls)
+    6 = Strongly Analytical (narrow choices, detailed rules, minimal interpretation)
+    7 = Ultra-Analytical (fixed script/moves, deterministic tables only, rigid computation)
 
-    Return only the number (1-5).
+    Consider both the Agent role (players) and Adjudicator role (umpire/rules/software).
+    Return only the number (1-7) that best represents the overall approach.
 
 # Processing Configuration
 processing:
@@ -435,11 +469,13 @@ visualization:
       hybrid: "#d62728"
 
     awscale:
-      1: "#d62728"  # Red - Strictly analytic
-      2: "#ff7f0e"  # Orange
-      3: "#ffbb78"  # Light orange - Balanced
-      4: "#2ca02c"  # Green
-      5: "#1f77b4"  # Blue - Wild-creative
+      1: "#1f77b4"  # Blue - Ultra-Creative
+      2: "#2ca02c"  # Green - Strongly Creative
+      3: "#98df8a"  # Light green - Moderately Creative
+      4: "#ffbb78"  # Light orange - Balanced
+      5: "#ff9896"  # Light red - Moderately Analytical
+      6: "#ff7f0e"  # Orange - Strongly Analytical
+      7: "#d62728"  # Red - Ultra-Analytical
 
 # Export Configuration
 export:

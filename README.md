@@ -134,7 +134,7 @@ Generates:
 - Failure modes frequency
 - LLM families usage
 - Game types distribution
-- Analytical-Creative Scale distribution
+- Creative-Analytical Scale distribution (1-7)
 
 ### 5. Export Dataset
 

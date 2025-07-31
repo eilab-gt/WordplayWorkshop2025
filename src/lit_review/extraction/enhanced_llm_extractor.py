@@ -460,22 +460,45 @@ Abstract: {paper.get("abstract", "Not available")}
             return None
 
     def _assign_awscale(self, extracted: dict[str, Any]) -> int:
-        """Assign AWScale rating based on extracted information."""
-        score = 3  # Default
+        """Assign AWScale rating based on extracted information.
+        
+        Scale: 1 (Ultra-Creative) to 7 (Ultra-Analytical)
+        - 1: Ultra-Creative (unlimited proposals, pure expert storytelling)
+        - 2: Strongly Creative (encouraged invention, expert narrative judgment)
+        - 3: Moderately Creative (many novel actions, free interpretation)
+        - 4: Balanced (equal creativity/rules)
+        - 5: Moderately Analytical (occasional novel ideas, rule-driven)
+        - 6: Strongly Analytical (narrow choices, detailed rules)
+        - 7: Ultra-Analytical (fixed script/moves, deterministic tables)
+        """
+        score = 4  # Default: Balanced
 
         # Adjust based on simulation approach
         sim_approach = str(extracted.get("simulation_approach", "")).lower()
-        if any(term in sim_approach for term in ["matrix", "seminar", "tabletop"]):
-            score += 1
-        elif any(term in sim_approach for term in ["digital", "automated", "ai-only"]):
-            score -= 1
+        if any(term in sim_approach for term in ["seminar", "red team"]):
+            score = 2  # Strongly Creative
+        elif any(term in sim_approach for term in ["matrix", "tabletop"]):
+            score = 3  # Moderately Creative
+        elif any(term in sim_approach for term in ["course of action", "coa"]):
+            score = 5  # Moderately Analytical
+        elif any(term in sim_approach for term in ["digital", "automated", "computer", "ai-only"]):
+            score = 6  # Strongly Analytical
 
-        # Adjust based on human-LLM comparison
+        # Adjust based on adjudication method
+        game_type = str(extracted.get("game_type", "")).lower()
+        if "referee" in game_type or "facilitator" in game_type:
+            score = min(score - 1, 3)  # More creative if human-adjudicated
+        elif "algorithmic" in game_type or "deterministic" in game_type:
+            score = max(score + 1, 5)  # More analytical if rule-based
+
+        # Adjust based on human-LLM interaction
         human_llm = str(extracted.get("human_llm_comparison", "")).lower()
-        if "human" in human_llm and "llm" in human_llm:
-            score += 1
+        if "storytelling" in human_llm or "narrative" in human_llm:
+            score = min(score - 1, 3)  # More creative
+        elif "optimization" in human_llm or "calculation" in human_llm:
+            score = max(score + 1, 5)  # More analytical
 
-        return max(1, min(5, score))
+        return max(1, min(7, score))
 
     def _calculate_confidence(self, extracted: dict[str, Any]) -> float:
         """Calculate confidence score for extraction."""

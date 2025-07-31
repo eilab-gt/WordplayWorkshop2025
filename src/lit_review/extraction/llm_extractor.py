@@ -370,7 +370,7 @@ Full Text (truncated if needed):
             extracted: Already extracted information
 
         Returns:
-            AWScale rating (1-5)
+            AWScale rating (1-7) where 1=Ultra-Creative, 7=Ultra-Analytical
         """
         try:
             # Prepare focused context for AWScale
@@ -401,7 +401,7 @@ Relevant excerpt from paper:
             # Try to extract number
             try:
                 score = int(content[0])  # Get first character as number
-                if 1 <= score <= 5:
+                if 1 <= score <= 7:
                     self.stats["awscale_assignments"] += 1
                     return score
             except (ValueError, IndexError):
@@ -421,27 +421,33 @@ Relevant excerpt from paper:
             extracted: Extracted information
 
         Returns:
-            AWScale rating (1-5)
+            AWScale rating (1-7) where 1=Ultra-Creative, 7=Ultra-Analytical
         """
-        score = 3  # Default to balanced
+        score = 4  # Default to balanced
 
-        # Adjust based on game type
+        # Adjust based on game type (reversed: lower=creative, higher=analytical)
         game_type = extracted.get("game_type", "").lower()
-        if "matrix" in game_type or "seminar" in game_type:
-            score += 1
-        elif "digital" in game_type:
-            score -= 1
+        if "seminar" in game_type:
+            score = 2  # Strongly Creative
+        elif "matrix" in game_type:
+            score = 3  # Moderately Creative
+        elif "digital" in game_type or "computer" in game_type:
+            score = 6  # Strongly Analytical
 
         # Adjust based on quantitative nature
         if extracted.get("quantitative") == "yes":
-            score -= 1
+            score = min(score + 1, 7)  # More analytical
+        elif extracted.get("quantitative") == "no":
+            score = max(score - 1, 1)  # More creative
 
         # Adjust based on open-ended nature
         if extracted.get("open_ended") == "yes":
-            score += 1
+            score = max(score - 1, 1)  # More creative
+        elif extracted.get("open_ended") == "no":
+            score = min(score + 1, 7)  # More analytical
 
         # Ensure score is in valid range
-        return max(1, min(5, score))
+        return max(1, min(7, score))
 
     def _calculate_confidence(self, extracted: dict[str, Any]) -> float:
         """Calculate confidence score for extraction.

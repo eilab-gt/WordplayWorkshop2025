@@ -56,7 +56,7 @@
 | `llm_role` | player | player / generator / analyst |
 | `eval_metrics` | SME ratings; win-rate | free text |
 | `failure_modes` | escalation; hallucination | pipe-separated list |
-| `awscale` | 3 | 1-5 analytical-creative |
+| `awscale` | 4 | 1-7 creative-analytical |
 | `code_release` | github.com/xyz | "none" if absent |
 | `grey_lit_flag` | true | |
 | `language` | English | after translation if needed |
@@ -65,15 +65,17 @@
 
 ---
 
-## D. AWScale (Analytical<>Creative Scale)
+## D. AWScale (Creative<->Analytical Scale)
 
 | Score | Descriptor | Cue words / signals |
 |-------|------------|---------------------|
-| 1 | Strictly analytical | Deterministic tables, numeric pay-off, no free narrative |
-| 2 | Mostly analytical | Limited free text, heavy scoring |
-| 3 | Balanced | Narrative <=> numeric balance |
-| 4 | Mostly creative | Free-form moves, light scoring |
-| 5 | Highly creative | Storytelling, referee adjudication, emergent goals |
+| 1 | Ultra-Creative | Unlimited proposals, pure expert storytelling, open-ended imagination |
+| 2 | Strongly Creative | Encouraged invention, expert narrative judgment, free-thinking creativity |
+| 3 | Moderately Creative | Many novel actions, free interpretation, narrative-driven |
+| 4 | Balanced | Equal creativity/rules, mixed models + judgment |
+| 5 | Moderately Analytical | Occasional novel ideas, rule-driven + minor calls |
+| 6 | Strongly Analytical | Narrow choices, detailed rules, minimal interpretation |
+| 7 | Ultra-Analytical | Fixed script/moves, deterministic tables only, rigid computation |
 
 ---
 
