@@ -158,8 +158,22 @@ class PDFFetcher:
 
         # 2. Try arXiv if we have an ID
         elif paper.get("arxiv_id") and isinstance(paper.get("arxiv_id"), str):
-            pdf_url = f"https://arxiv.org/pdf/{paper['arxiv_id']}.pdf"
-            source = "arxiv"
+            # Fix malformed arxiv_id that concatenates version without 'v'
+            arxiv_id = paper['arxiv_id']
+            # Check if the ID looks like it has a concatenated version (YYMM.NNNNNX format)
+            if len(arxiv_id) > 10 and arxiv_id[-1].isdigit() and '.' in arxiv_id:
+                # Split into base ID and version
+                base_id = arxiv_id[:10]  # YYMM.NNNNN format
+                version = arxiv_id[10:]  # Version number
+                if version:
+                    arxiv_id = f"{base_id}v{version}"
+            
+            # Try the specific version first, then fall back to base ID if withdrawn
+            pdf_url = self._get_arxiv_pdf_url(arxiv_id)
+            if pdf_url:
+                source = "arxiv"
+            else:
+                pdf_url = None
 
         # 3. Try Unpaywall if we have a DOI
         elif paper.get("doi") and self.email and isinstance(paper.get("doi"), str):
@@ -288,6 +302,73 @@ class PDFFetcher:
         base_name = base_name[:100]
 
         return f"{base_name}.pdf"
+
+    def _get_arxiv_pdf_url(self, arxiv_id: str) -> str | None:
+        """Get working arXiv PDF URL, handling withdrawn versions.
+        
+        Args:
+            arxiv_id: arXiv ID with or without version
+            
+        Returns:
+            Working PDF URL or None if not found
+        """
+        # Extract base ID and version if present
+        if 'v' in arxiv_id:
+            base_id, version = arxiv_id.split('v', 1)
+            version_num = int(version) if version.isdigit() else None
+        else:
+            base_id = arxiv_id
+            version_num = None
+            
+        # Try the specific version first
+        if version_num:
+            url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+            if self._test_arxiv_url(url):
+                return url
+                
+            # If specific version fails, try earlier versions
+            logger.info(f"arXiv version {arxiv_id} not found, trying earlier versions")
+            for v in range(version_num - 1, 0, -1):
+                url = f"https://arxiv.org/pdf/{base_id}v{v}.pdf"
+                if self._test_arxiv_url(url):
+                    logger.info(f"Found available version: {base_id}v{v}")
+                    return url
+        
+        # Try without version (gets latest available)
+        url = f"https://arxiv.org/pdf/{base_id}.pdf"
+        if self._test_arxiv_url(url):
+            return url
+            
+        logger.warning(f"No available version found for arXiv ID: {arxiv_id}")
+        return None
+    
+    def _test_arxiv_url(self, url: str) -> bool:
+        """Test if an arXiv URL returns a valid PDF.
+        
+        Args:
+            url: arXiv PDF URL to test
+            
+        Returns:
+            True if URL returns a PDF
+        """
+        try:
+            # Do a HEAD request first to check without downloading
+            response = self.session.head(url, timeout=5, allow_redirects=True)
+            
+            # If HEAD doesn't give us enough info, do a small GET
+            if response.status_code == 200:
+                # Get first 1KB to check if it's a PDF
+                response = self.session.get(url, timeout=5, stream=True)
+                response.raise_for_status()
+                
+                # Read first chunk
+                first_chunk = next(response.iter_content(1024))
+                return first_chunk.startswith(b'%PDF-')
+                
+        except Exception as e:
+            logger.debug(f"arXiv URL test failed for {url}: {e}")
+            
+        return False
 
     def _get_unpaywall_url(self, doi: str) -> str | None:
         """Get PDF URL from Unpaywall.
