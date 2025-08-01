@@ -76,17 +76,27 @@ cp config/config.yaml.example config/config.yaml
 
 ## Quick Start
 
+⚠️ **Important**: Always use `run.py` as the main entry point. Do NOT use scripts in the `scripts/` directory for pipeline execution - they are deprecated and may use incorrect settings (like limiting sources).
+
 ### 1. Harvest Papers
 
-Search for papers across multiple academic databases:
+Search for papers from ALL configured sources (arXiv, Semantic Scholar, Google Scholar, CrossRef):
 
 ```bash
-python run.py harvest --query preset1
+python run.py harvest
+```
+
+Or specify sources explicitly:
+
+```bash
+python run.py harvest --sources arxiv semantic_scholar google_scholar crossref
 ```
 
 Options:
-- `--query`: Use preset queries or provide custom search string
-- `--sources`: Specify sources (default: all enabled in config)
+- `--query`: Use preset queries or provide custom search string (default: uses query from config)
+- `--sources`: Specify sources (default: ALL configured sources)
+
+**Note**: The harvest command now automatically saves a snapshot of your configuration alongside the results for reproducibility.
 - `--max-results`: Maximum results per source (default: 100)
 - `--parallel/--no-parallel`: Enable parallel searching
 
@@ -182,6 +192,16 @@ failure_vocabularies:
   bias: [bias, biased, unfair, skew]
   hallucination: [hallucination, confabulate, fabricate]
 ```
+
+## Important: Avoid Using Individual Scripts
+
+The `scripts/` directory contains various utility and test scripts, but **DO NOT** use them for running the pipeline. These scripts may:
+- Use hardcoded source lists (e.g., only arxiv + semantic_scholar)
+- Skip important sources like Google Scholar and CrossRef
+- Not save configuration for reproducibility
+- Create inconsistent results
+
+Always use the main `run.py` CLI or `python -m src.lit_review` for all pipeline operations.
 
 ## Advanced Usage
 

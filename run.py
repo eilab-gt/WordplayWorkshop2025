@@ -208,9 +208,21 @@ def harvest(
 
     # Save results
     output_path = Path(output) if output else config.raw_papers_path
-
+    
+    # Ensure output directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Save results
     harvester.save_results(df, output_path)
     console.print(f"\n[green]✓[/green] Results saved to: {output_path}")
+    
+    # Save config snapshot alongside results for reproducibility
+    from datetime import datetime
+    import shutil
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    config_backup = output_path.parent / f"config_used_{timestamp}.yaml"
+    shutil.copy2("config/config.yaml", config_backup)
+    console.print(f"[green]✓[/green] Config snapshot saved to: {config_backup}")
 
 
 @cli.command("prepare-screen")

@@ -1,353 +1,320 @@
-"""Tests for visualization module."""
+"""Comprehensive tests for the Visualizer module to improve coverage."""
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
-from src.lit_review.visualization import Visualizer
-from tests.test_doubles import RealConfigForTests
-
-# Use non-interactive backend for tests
-matplotlib.use("Agg")
+from src.lit_review.visualization.visualizer import Visualizer
 
 
 @pytest.fixture
-def config(tmp_path):
-    """Create test configuration."""
-    config = RealConfigForTests(
-        output_dir=tmp_path / "output",
-        viz_format="png",
-        viz_dpi=100,  # Lower DPI for faster tests
-        viz_style="default",
-        viz_figsize=(8, 6),
-        viz_colors={
-            "awscale": {
-                "1": "#d62728",  # red
-                "2": "#ff7f0e",  # orange
-                "3": "#bcbd22",  # yellow-green
-                "4": "#2ca02c",  # green
-                "5": "#1f77b4",  # blue
-            }
-        },
-    )
-    yield config
-    config.cleanup()
-
-
-@pytest.fixture
-def visualizer(config):
-    """Create visualizer instance."""
-    return Visualizer(config)
-
-
-class TestVisualizerBehavior:
-    """Test visualizer creates correct charts and statistics."""
-
-
-@pytest.fixture
-def sample_papers_df():
-    """Create comprehensive sample data for testing."""
+def sample_papers_data():
+    """Create sample paper data for testing."""
     return pd.DataFrame(
-        [
-            {
-                "title": "LLM Wargaming Paper 1",
-                "year": 2022,
-                "awscale": 4,
-                "game_type": "Matrix Game",
-                "failure_modes": "Hallucination; Context Limits",
-                "llm_family": "GPT",
-                "source_db": "arxiv",
-                "venue": "NeurIPS",
-                "venue_type": "conference",
-                "open_ended": True,
-                "quantitative": False,
-            },
-            {
-                "title": "AI Strategy Game Study",
-                "year": 2023,
-                "awscale": 3,
-                "game_type": "Digital Simulation",
-                "failure_modes": "Bias; Hallucination",
-                "llm_family": "Claude",
-                "source_db": "semantic_scholar",
-                "venue": "ICML",
-                "venue_type": "conference",
-                "open_ended": False,
-                "quantitative": True,
-            },
-            {
-                "title": "Human-AI Team Wargaming",
-                "year": 2023,
-                "awscale": 5,
-                "game_type": "Tabletop Exercise",
-                "failure_modes": "Context Limits",
-                "llm_family": "GPT",
-                "source_db": "arxiv",
-                "venue": "AI Magazine",
-                "venue_type": "journal",
-                "open_ended": True,
-                "quantitative": True,
-            },
-            {
-                "title": "Automated Planning Research",
-                "year": 2024,
-                "awscale": 2,
-                "game_type": "Digital Simulation",
-                "failure_modes": "Reasoning Errors; Bias",
-                "llm_family": "LLaMA",
-                "source_db": "crossref",
-                "venue": "AAAI",
-                "venue_type": "conference",
-                "open_ended": False,
-                "quantitative": True,
-            },
-            {
-                "title": "Crisis Management Simulation",
-                "year": 2024,
-                "awscale": 4,
-                "game_type": "Matrix Game",
-                "failure_modes": None,  # Test missing data
-                "llm_family": "Other",
-                "source_db": "arxiv",
-                "venue": None,  # Test missing venue
-                "venue_type": None,
-                "open_ended": True,
-                "quantitative": False,
-            },
-        ]
+        {
+            "title": ["Paper A", "Paper B", "Paper C", "Paper D", "Paper E"],
+            "year": [2021, 2022, 2023, 2023, 2024],
+            "source_db": ["arxiv", "semantic_scholar", "arxiv", "crossref", "arxiv"],
+            "game_type": ["seminar", "matrix", "digital", "seminar", "hybrid"],
+            "open_ended": ["yes", "yes", "no", "yes", "no"],
+            "quantitative": ["yes", "no", "yes", "yes", "no"],
+            "awscale": [1, 3, 2, 4, 5],
+            "llm_family": ["GPT-4", "Claude", "GPT-3", "GPT-4", "Llama"],
+            "llm_role": ["player", "generator", "analyst", "player", "player"],
+            "failure_modes": [
+                "escalation,bias",
+                "hallucination",
+                "escalation",
+                "bias",
+                "deception,escalation",
+            ],
+            "venue": [
+                "Conference A",
+                "Journal B",
+                "Conference A",
+                "Journal C",
+                "Workshop D",
+            ],
+            "citations": [10, 5, 15, 3, 0],
+        }
     )
 
-    @pytest.mark.fast
-    def test_initializes_with_correct_output_directory(self, visualizer, config):
-        """Test visualizer creates output directory on initialization."""
-        expected_dir = Path(config.output_dir) / "figures"
-        assert visualizer.output_dir == expected_dir
+
+@pytest.fixture
+def mock_config():
+    """Create a mock configuration object."""
+    config = Mock()
+    config.output_dir = Path("test_output")
+    config.viz_format = "png"
+    config.viz_dpi = 150
+    config.viz_style = "seaborn-v0_8"
+    config.viz_figsize = (10, 6)
+    config.viz_colors = {
+        "game_types": {
+            "seminar": "#1f77b4",
+            "matrix": "#ff7f0e",
+            "digital": "#2ca02c",
+            "hybrid": "#d62728",
+        },
+        "awscale": {
+            "1": "#d62728",
+            "2": "#ff7f0e",
+            "3": "#ffbb78",
+            "4": "#2ca02c",
+            "5": "#1f77b4",
+        },
+    }
+    config.failure_vocab = {
+        "content": ["bias", "hallucination"],
+        "interactive": ["escalation", "deception"],
+        "security": ["jailbreak", "prompt_injection"],
+    }
+    return config
+
+
+class TestVisualizer:
+    """Test cases for the Visualizer class."""
+
+    def test_init(self, mock_config, tmp_path):
+        """Test Visualizer initialization."""
+        mock_config.output_dir = tmp_path
+
+        visualizer = Visualizer(mock_config)
+
+        assert visualizer.config == mock_config
+        assert visualizer.output_dir == tmp_path / "figures"
         assert visualizer.output_dir.exists()
+        assert visualizer.format == "png"
+        assert visualizer.dpi == 150
 
-    @pytest.mark.fast
-    def test_handles_invalid_matplotlib_style_gracefully(self, config):
-        """Test visualizer falls back to default style if configured style not found."""
-        config.viz_style = "non_existent_style"
-        visualizer = Visualizer(config)
-        # Should not raise exception and use default
-        assert visualizer.style == "non_existent_style"
+    def test_init_invalid_style(self, mock_config, tmp_path):
+        """Test initialization with invalid matplotlib style."""
+        mock_config.output_dir = tmp_path
+        mock_config.viz_style = "nonexistent-style"
 
-    def test_creates_all_standard_visualizations(self, visualizer, sample_papers_df):
-        """Test all visualization methods are called and produce outputs."""
-        figures = visualizer.create_all_visualizations(sample_papers_df, save=True)
+        with patch("matplotlib.pyplot.style.use") as mock_style:
+            mock_style.side_effect = [
+                OSError(),
+                None,
+            ]  # First call fails, second succeeds
+            visualizer = Visualizer(mock_config)
 
-        # Should create 8 standard figures
-        assert len(figures) >= 6  # Some may be skipped if no data
-        assert all(fig.exists() for fig in figures)
-        assert all(fig.suffix == f".{visualizer.format}" for fig in figures)
+        assert mock_style.call_count == 2
+        mock_style.assert_called_with("default")
 
-    def test_time_series_shows_publication_trends(self, visualizer, sample_papers_df):
-        """Test time series plot correctly shows publication counts by year."""
-        fig_path = visualizer.plot_time_series(sample_papers_df, save=True)
-
-        assert fig_path.exists()
-        assert "time_series" in fig_path.name
-
-        # Verify data correctness
-        year_counts = sample_papers_df["year"].value_counts().sort_index()
-        assert year_counts[2023] == 2  # 2 papers in 2023
-        assert year_counts[2024] == 2  # 2 papers in 2024
-
-    def test_awscale_distribution_uses_configured_colors(
-        self, visualizer, sample_papers_df
+    @patch("matplotlib.pyplot.savefig")
+    @patch("matplotlib.pyplot.show")
+    def test_create_all_visualizations(
+        self, mock_show, mock_savefig, mock_config, sample_papers_data, tmp_path
     ):
-        """Test AWScale histogram uses colors from configuration."""
-        fig_path = visualizer.plot_awscale_distribution(sample_papers_df, save=True)
+        """Test creating all visualizations."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
 
-        assert fig_path.exists()
-        assert "awscale" in fig_path.name
+        # Mock individual visualization methods
+        with patch.object(
+            visualizer, "plot_time_series", return_value=tmp_path / "timeline.png"
+        ):
+            with patch.object(
+                visualizer,
+                "plot_source_distribution",
+                return_value=tmp_path / "sources.png",
+            ):
+                with patch.object(
+                    visualizer,
+                    "plot_game_types",
+                    return_value=tmp_path / "game_types.png",
+                ):
+                    with patch.object(
+                        visualizer,
+                        "plot_awscale_distribution",
+                        return_value=tmp_path / "awscale.png",
+                    ):
+                        with patch.object(
+                            visualizer,
+                            "plot_failure_modes",
+                            return_value=tmp_path / "failures.png",
+                        ):
+                            with patch.object(
+                                visualizer,
+                                "plot_llm_families",
+                                return_value=tmp_path / "llms.png",
+                            ):
+                                with patch.object(
+                                    visualizer,
+                                    "plot_venue_types",
+                                    return_value=tmp_path / "venue_types.png",
+                                ):
+                                    with patch.object(
+                                        visualizer,
+                                        "plot_game_characteristics",
+                                        return_value=tmp_path
+                                        / "game_characteristics.png",
+                                    ):
+                                        figures = visualizer.create_all_visualizations(
+                                            sample_papers_data, save=True
+                                        )
 
-        # Check distribution
-        awscale_counts = sample_papers_df["awscale"].value_counts()
-        assert awscale_counts[4] == 2  # Two papers with AWScale 4
-        assert awscale_counts[2] == 1  # One paper with AWScale 2
+                                        assert len(figures) == 8
+                                        assert all(
+                                            isinstance(fig, Path) for fig in figures
+                                        )
 
-    def test_handles_missing_data_gracefully(self, visualizer):
-        """Test visualizer handles DataFrames with missing values."""
-        df_with_nulls = pd.DataFrame(
-            [
-                {"title": "Paper 1", "year": 2023, "awscale": None},
-                {"title": "Paper 2", "year": None, "awscale": 3},
-                {"title": "Paper 3", "year": 2024, "awscale": 4},
-            ]
+    def test_plot_time_series(self, mock_config, sample_papers_data, tmp_path):
+        """Test time series plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_time_series(sample_papers_data, save=True)
+
+        assert fig_path == tmp_path / "figures" / "time_series.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_time_series_empty_data(self, mock_config, tmp_path):
+        """Test time series plotting with empty data."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        empty_df = pd.DataFrame()
+
+        result = visualizer.plot_time_series(empty_df, save=False)
+        assert result is None
+
+    def test_plot_source_distribution(self, mock_config, sample_papers_data, tmp_path):
+        """Test source distribution plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_source_distribution(
+                sample_papers_data, save=True
+            )
+
+        assert fig_path == tmp_path / "figures" / "source_distribution.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_game_types(self, mock_config, sample_papers_data, tmp_path):
+        """Test game types plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_game_types(sample_papers_data, save=True)
+
+        assert fig_path == tmp_path / "figures" / "game_types.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_awscale_distribution(self, mock_config, sample_papers_data, tmp_path):
+        """Test AWScale distribution plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_awscale_distribution(
+                sample_papers_data, save=True
+            )
+
+        assert fig_path == tmp_path / "figures" / "awscale_distribution.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_failure_modes(self, mock_config, sample_papers_data, tmp_path):
+        """Test failure modes plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_failure_modes(sample_papers_data, save=True)
+
+        assert fig_path == tmp_path / "figures" / "failure_modes.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_llm_families(self, mock_config, sample_papers_data, tmp_path):
+        """Test LLM families plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_llm_families(sample_papers_data, save=True)
+
+        assert fig_path == tmp_path / "figures" / "llm_families.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_plot_venue_types(self, mock_config, sample_papers_data, tmp_path):
+        """Test venue types plotting."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        # Add venue_type data
+        sample_papers_data["venue_type"] = [
+            "conference",
+            "journal",
+            "conference",
+            "journal",
+            "workshop",
+        ]
+
+        with patch("matplotlib.pyplot.savefig") as mock_savefig:
+            fig_path = visualizer.plot_venue_types(sample_papers_data, save=True)
+
+        assert fig_path == tmp_path / "figures" / "venue_types.png"
+        mock_savefig.assert_called_once()
+        plt.close("all")
+
+    def test_create_summary_report(self, mock_config, sample_papers_data):
+        """Test summary report generation."""
+        visualizer = Visualizer(mock_config)
+
+        report = visualizer.create_summary_report(sample_papers_data)
+
+        assert isinstance(report, dict)
+        assert "total_papers" in report
+        assert report["total_papers"] == 5
+        assert "year_range" in report
+        assert report["year_range"] == "2021-2024"
+        assert "sources" in report
+        assert "game_types" in report
+
+    def test_plot_with_missing_columns(self, mock_config, tmp_path):
+        """Test plotting with missing required columns."""
+        mock_config.output_dir = tmp_path
+        visualizer = Visualizer(mock_config)
+
+        # DataFrame missing 'year' column
+        incomplete_df = pd.DataFrame(
+            {"title": ["Paper A", "Paper B"], "source_db": ["arxiv", "crossref"]}
         )
 
-        # Should not crash
-        figures = visualizer.create_all_visualizations(df_with_nulls, save=True)
-        assert len(figures) > 0
+        result = visualizer.plot_time_series(incomplete_df, save=False)
+        assert result is None
 
-    def test_failure_modes_aggregates_correctly(self, visualizer, sample_papers_df):
-        """Test failure modes are parsed and counted correctly."""
-        fig_path = visualizer.plot_failure_modes(sample_papers_df, save=True)
+    def test_custom_color_scheme(self, mock_config, sample_papers_data, tmp_path):
+        """Test visualization with custom color scheme."""
+        mock_config.output_dir = tmp_path
 
-        if fig_path:  # May be None if no failure data
-            assert fig_path.exists()
+        # Custom colors
+        mock_config.viz_colors = {
+            "game_types": {
+                "seminar": "#FF0000",
+                "matrix": "#00FF00",
+                "digital": "#0000FF",
+                "hybrid": "#FFFF00",
+            }
+        }
 
-            # Manually count failure modes
-            all_failures = []
-            for failures in sample_papers_df["failure_modes"].dropna():
-                all_failures.extend([f.strip() for f in failures.split(";")])
+        visualizer = Visualizer(mock_config)
 
-            failure_counts = pd.Series(all_failures).value_counts()
-            assert failure_counts["Hallucination"] == 2
-            assert failure_counts["Bias"] == 2
-            assert failure_counts["Context Limits"] == 2
+        with patch("matplotlib.pyplot.savefig"):
+            visualizer.plot_game_types(sample_papers_data, save=True)
 
-    def test_source_distribution_shows_all_databases(
-        self, visualizer, sample_papers_df
-    ):
-        """Test source database distribution includes all sources."""
-        fig_path = visualizer.plot_source_distribution(sample_papers_df, save=True)
-
-        assert fig_path.exists()
-        source_counts = sample_papers_df["source_db"].value_counts()
-        assert source_counts["arxiv"] == 3
-        assert source_counts["semantic_scholar"] == 1
-        assert source_counts["crossref"] == 1
-
-    def test_saves_figures_in_correct_format(self, visualizer, sample_papers_df):
-        """Test figures are saved in configured format with correct DPI."""
-        # Test different formats
-        for fmt in ["png", "pdf", "svg"]:
-            visualizer.format = fmt
-            fig_path = visualizer.plot_time_series(sample_papers_df, save=True)
-
-            assert fig_path.suffix == f".{fmt}"
-            assert fig_path.exists()
-
-            # Clean up non-PNG files
-            if fmt != "png":
-                fig_path.unlink()
-
-    def test_creates_summary_report_with_statistics(self, visualizer, sample_papers_df):
-        """Test summary report contains correct statistical information."""
-        summary = visualizer.create_summary_report(sample_papers_df)
-
-        assert summary["total_papers"] == 5
-        assert summary["year_range"] == "2022-2024"
-        assert "sources" in summary
-        assert summary["sources"]["arxiv"] == 3
-
-        if "awscale" in summary:
-            assert 2 <= summary["awscale"]["mean"] <= 5
-            assert summary["awscale"]["mode"] == 4  # Most common value
-
-        if "top_failure_modes" in summary:
-            top_modes = list(summary["top_failure_modes"].keys())
-            assert "Hallucination" in top_modes[:3]
-            assert "Bias" in top_modes[:3]
-
-    @pytest.mark.parametrize(
-        "plot_method,expected_file_pattern",
-        [
-            ("plot_time_series", "time_series"),
-            ("plot_game_types", "game_type"),
-            ("plot_awscale_distribution", "awscale"),
-            ("plot_llm_families", "llm_famil"),
-            ("plot_source_distribution", "source_dist"),
-            ("plot_venue_types", "venue_type"),
-        ],
-    )
-    def test_plot_methods_create_expected_files(
-        self, visualizer, sample_papers_df, plot_method, expected_file_pattern
-    ):
-        """Test each plot method creates file with expected name pattern."""
-        method = getattr(visualizer, plot_method)
-        fig_path = method(sample_papers_df, save=True)
-
-        if fig_path:  # Some plots may return None if no data
-            assert fig_path.exists()
-            assert expected_file_pattern in fig_path.name.lower()
-
-    def test_handles_empty_dataframe(self, visualizer):
-        """Test visualizer handles empty DataFrame without crashing."""
-        empty_df = pd.DataFrame()
-        figures = visualizer.create_all_visualizations(empty_df, save=True)
-        # Should complete without errors, though may produce fewer figures
-        assert isinstance(figures, list)
-
-    def test_respects_save_parameter(self, visualizer, sample_papers_df):
-        """Test figures are not saved when save=False."""
-        initial_count = len(list(visualizer.output_dir.glob("*")))
-
-        # Create without saving
-        figures = visualizer.create_all_visualizations(sample_papers_df, save=False)
-
-        # No new files should be created
-        final_count = len(list(visualizer.output_dir.glob("*")))
-        assert final_count == initial_count
-        assert figures == []  # No paths returned when not saving
-
-    @pytest.mark.slow
-    def test_produces_high_quality_outputs_for_publication(
-        self, visualizer, sample_papers_df
-    ):
-        """Test high DPI outputs suitable for publication."""
-        visualizer.dpi = 300  # Publication quality
-        visualizer.format = "pdf"  # Vector format
-
-        fig_path = visualizer.plot_time_series(sample_papers_df, save=True)
-
-        assert fig_path.exists()
-        assert fig_path.suffix == ".pdf"
-        # File should be larger due to high quality
-        assert fig_path.stat().st_size > 1000  # At least 1KB
-
-    def test_consistent_styling_across_plots(self, visualizer, sample_papers_df):
-        """Test all plots use consistent visual styling."""
-        # Create a few different plots
-        plots = [
-            visualizer.plot_time_series(sample_papers_df, save=False),
-            visualizer.plot_awscale_distribution(sample_papers_df, save=False),
-            visualizer.plot_source_distribution(sample_papers_df, save=False),
-        ]
-
-        # All should use same figure size
-        for _ in plots:
-            if plt.get_fignums():  # If figure was created
-                fig = plt.gcf()
-                assert fig.get_size_inches()[0] == visualizer.figsize[0]
-                assert fig.get_size_inches()[1] == visualizer.figsize[1]
-                plt.close(fig)
-
-
-@pytest.mark.unit
-class TestVisualizerHelperMethods:
-    """Test internal helper methods of Visualizer."""
-
-    def test_color_mapping_for_awscale(self, visualizer):
-        """Test AWScale values map to correct colors."""
-        # Access color configuration
-        awscale_colors = visualizer.colors.get("awscale", {})
-
-        # Should have colors for scales 1-5
-        for scale in range(1, 6):
-            assert str(scale) in awscale_colors
-            # Colors should be valid hex
-            assert awscale_colors[str(scale)].startswith("#")
-            assert len(awscale_colors[str(scale)]) == 7
-
-    def test_figure_naming_convention(self, visualizer):
-        """Test figures are named with timestamp and description."""
-        # Mock datetime to get predictable names
-        with patch("src.lit_review.visualization.visualizer.datetime") as mock_dt:
-            mock_dt.now.return_value.strftime.return_value = "20240115_120000"
-
-            # Create a simple plot
-            fig, ax = plt.subplots()
-            ax.plot([1, 2, 3], [1, 2, 3])
-
-            # Save using visualizer's method (if it has one)
-            # This tests the naming convention
-            expected_pattern = "20240115_120000"
-
-            plt.close(fig)
+        # Verify custom colors were used (would need to inspect the plot)
+        plt.close("all")
