@@ -4,6 +4,7 @@ import hashlib
 import logging
 import re
 import unicodedata
+from typing import Any
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class Normalizer:
     """Normalizes and deduplicates papers from multiple sources."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize the normalizer.
 
         Args:
@@ -497,7 +498,7 @@ class Normalizer:
 
         return df
 
-    def _log_statistics(self):
+    def _log_statistics(self) -> None:
         """Log deduplication statistics."""
         logger.info("Normalization statistics:")
         logger.info(f"  Total input papers: {self.stats['total_input']}")

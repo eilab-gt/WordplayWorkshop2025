@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class Disambiguator:
     """Apply disambiguation rules to filter out false positive papers."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize disambiguator with configuration.
 
         Args:
@@ -190,7 +190,7 @@ class Disambiguator:
         """
         return df[df["disambiguation_status"] == "excluded"].copy()
 
-    def _log_statistics(self):
+    def _log_statistics(self) -> None:
         """Log disambiguation statistics."""
         logger.info("Disambiguation statistics:")
         logger.info(f"  Total papers: {self.stats['total_papers']}")
@@ -246,9 +246,9 @@ class Disambiguator:
                 ].head(2)
                 report["examples"][reason] = [
                     {
-                        "title": row["title"],
-                        "year": row.get("year", ""),
-                        "abstract_snippet": row.get("abstract", "")[:200] + "...",
+                        "title": str(row["title"]),
+                        "year": str(row.get("year", "")),
+                        "abstract_snippet": str(row.get("abstract", ""))[:200] + "...",
                     }
                     for _, row in examples.iterrows()
                 ]

@@ -6,6 +6,7 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class QueryOptimizer:
     """Intelligent query optimization system for maximizing paper discovery."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize query optimizer with configuration."""
         self.config = config
         self.optimization_db = Path(config.data_dir) / "query_optimization.db"
@@ -26,12 +27,12 @@ class QueryOptimizer:
         self.exclusion_terms = getattr(config, "exclusion_terms", [])
 
         # Query performance tracking
-        self.query_performance = {}
+        self.query_performance: dict[str, Any] = {}
 
         # Expanded term sets for production
         self.expanded_terms = self._build_expanded_terms()
 
-    def _init_optimization_db(self):
+    def _init_optimization_db(self) -> None:
         """Initialize database for tracking query performance."""
         self.optimization_db.parent.mkdir(parents=True, exist_ok=True)
 
@@ -559,7 +560,7 @@ class QueryOptimizer:
             # No historical data, score based on query complexity and breadth
             score = self._estimate_query_potential(query)
 
-        return score
+        return float(score)
 
     def _estimate_query_potential(self, query: str) -> float:
         """Estimate query potential based on structure and terms."""
@@ -602,7 +603,7 @@ class QueryOptimizer:
         papers_found: int,
         execution_time: float,
         relevance_score: float = 0.5,
-    ):
+    ) -> None:
         """Record query performance for future optimization."""
         query_hash = hashlib.md5(query.encode()).hexdigest()
 
@@ -633,11 +634,11 @@ class QueryOptimizer:
         conn.commit()
         conn.close()
 
-    def get_optimization_stats(self) -> dict[str, any]:
+    def get_optimization_stats(self) -> dict[str, Any]:
         """Get query optimization statistics."""
         conn = sqlite3.connect(str(self.optimization_db))
 
-        stats = {}
+        stats: dict[str, Any] = {}
 
         # Overall performance
         cursor = conn.cursor()
@@ -669,7 +670,7 @@ class QueryOptimizer:
         """
         )
 
-        top_queries = []
+        top_queries: list[dict[str, Any]] = []
         for query, source, papers, relevance in cursor.fetchall():
             top_queries.append(
                 {

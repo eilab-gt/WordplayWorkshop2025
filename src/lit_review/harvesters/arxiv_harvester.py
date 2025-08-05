@@ -3,6 +3,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
+from typing import Any
 
 import arxiv
 import requests
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class ArxivHarvester(BaseHarvester):
     """Harvester for arXiv papers."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize arXiv harvester.
 
         Args:

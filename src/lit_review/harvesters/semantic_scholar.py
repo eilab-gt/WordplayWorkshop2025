@@ -17,7 +17,7 @@ class SemanticScholarHarvester(BaseHarvester):
 
     BASE_URL = "https://api.semanticscholar.org/graph/v1"
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize Semantic Scholar harvester.
 
         Args:

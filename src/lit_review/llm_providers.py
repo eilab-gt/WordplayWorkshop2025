@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import litellm
 from litellm import completion
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class LLMProvider:
     """Unified LLM provider interface using LiteLLM."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize LLM provider with configuration.
 
         Args:
@@ -35,7 +35,7 @@ class LLMProvider:
             f"Initialized LLM provider: {self.provider} with model: {self.model}"
         )
 
-    def _configure_litellm(self):
+    def _configure_litellm(self) -> None:
         """Configure LiteLLM settings."""
         # Enable caching for cost optimization
         litellm.cache = litellm.Cache()
@@ -50,7 +50,7 @@ class LLMProvider:
         if self.config.debug:
             litellm.set_verbose = True
 
-    def _setup_provider(self):
+    def _setup_provider(self) -> None:
         """Set up provider-specific configuration."""
         provider_config = self.config.llm_provider_configs.get(self.provider, {})
 
@@ -93,10 +93,12 @@ class LLMProvider:
         """
         # LiteLLM uses provider prefixes for non-OpenAI models
         if self.provider == "openai":
-            return self.model
+            return str(self.model)
         elif self.provider == "anthropic":
             return (
-                "claude-3-sonnet-20240229" if "claude" not in self.model else self.model
+                "claude-3-sonnet-20240229"
+                if "claude" not in str(self.model)
+                else str(self.model)
             )
         elif self.provider == "google":
             return (
@@ -112,14 +114,14 @@ class LLMProvider:
             )
         else:
             # Default to using model as-is
-            return self.model
+            return str(self.model)
 
     def chat_completion(
         self,
         messages: list[dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        response_format: Optional[dict] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        response_format: dict | None = None,
     ) -> dict[str, Any]:
         """Create a chat completion using the configured provider.
 
@@ -159,7 +161,7 @@ class LLMProvider:
                     f"Total: {response.usage.total_tokens}"
                 )
 
-            return response
+            return dict(response)
 
         except Exception as e:
             logger.error(f"Error in chat completion: {e}")
@@ -187,8 +189,8 @@ class LLMProvider:
     def extract_with_fallback(
         self,
         messages: list[dict[str, str]],
-        fallback_provider: Optional[str] = None,
-    ) -> Optional[dict[str, Any]]:
+        fallback_provider: str | None = None,
+    ) -> dict[str, Any] | None:
         """Try extraction with fallback to another provider on failure.
 
         Args:

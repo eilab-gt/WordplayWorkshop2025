@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 class QueryBuilder:
     """Build and translate queries with NEAR operators and wildcards for different search engines."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the query builder."""
-        self.parsed_terms = {}
+        self.parsed_terms: dict[str, Any] = {}
 
     def normalize_encoding(self, text: str) -> str:
         """Normalize character encoding, particularly non-standard hyphens.
@@ -83,7 +83,7 @@ class QueryBuilder:
                 terms.append(cleaned)
         return terms
 
-    def build_query_from_config(self, config) -> str:
+    def build_query_from_config(self, config: Any) -> str:
         """Build a query string from configuration with proper handling of advanced operators.
 
         Args:
@@ -122,7 +122,7 @@ class QueryBuilder:
 
         return query
 
-    def build_secondary_queries(self, config) -> list[dict[str, str]]:
+    def build_secondary_queries(self, config: Any) -> list[dict[str, str]]:
         """Build secondary queries from configuration templates.
 
         Args:
@@ -209,13 +209,13 @@ class QueryBuilder:
 
         elif parsed_term["type"] == "wildcard":
             # Keep wildcard as-is for now
-            return parsed_term["pattern"]
+            return str(parsed_term["pattern"])
 
         elif parsed_term["type"] == "phrase":
             return f'"{parsed_term["text"]}"'
 
         else:  # regular term
-            return parsed_term["text"]
+            return str(parsed_term["text"])
 
     def translate_for_google_scholar(self, query: str) -> str:
         """Translate query for Google Scholar syntax.
@@ -234,7 +234,7 @@ class QueryBuilder:
         # Find all NEAR patterns and replace them
         near_pattern = r'"([^"]+)"\s*NEAR/\d+\s*\(([^)]+)\)'
 
-        def replace_near(match):
+        def replace_near(match: re.Match[str]) -> str:
             term1 = match.group(1)
             term2_group = match.group(2)
             # For Google Scholar, convert NEAR to quoted phrases with all combinations
@@ -266,7 +266,7 @@ class QueryBuilder:
 
         near_pattern = r'"([^"]+)"\s*NEAR/\d+\s*\(([^)]+)\)'
 
-        def replace_near(match):
+        def replace_near(match: re.Match[str]) -> str:
             term1 = match.group(1)
             term2_group = match.group(2)
             terms = self._parse_or_group(term2_group)
@@ -307,7 +307,7 @@ class QueryBuilder:
         # Remove NEAR patterns and convert to simple terms
         near_pattern = r'"([^"]+)"\s*NEAR/\d+\s*\(([^)]+)\)'
 
-        def replace_near(match):
+        def replace_near(match: re.Match[str]) -> str:
             term1 = match.group(1)
             term2_group = match.group(2)
             terms = self._parse_or_group(term2_group)
@@ -346,7 +346,7 @@ class QueryBuilder:
         # Remove NEAR patterns
         near_pattern = r'"([^"]+)"\s*NEAR/\d+\s*\(([^)]+)\)'
 
-        def replace_near(match):
+        def replace_near(match: re.Match[str]) -> str:
             term1 = match.group(1)
             # For CrossRef, just use the primary term
             return term1

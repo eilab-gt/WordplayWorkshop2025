@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import Any
 
 from requests.exceptions import RequestException
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class GoogleScholarHarvester(BaseHarvester):
     """Harvester for Google Scholar using scholarly library."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize Google Scholar harvester.
 
         Args:
@@ -31,7 +32,7 @@ class GoogleScholarHarvester(BaseHarvester):
         if self.use_proxy:
             self._setup_proxy()
 
-    def _setup_proxy(self):
+    def _setup_proxy(self) -> None:
         """Set up proxy for Google Scholar if needed."""
         if self._proxy_initialized:
             return

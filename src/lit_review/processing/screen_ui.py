@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class ScreenUI:
     """Generates screening sheets for manual paper review."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize screening UI generator.
 
         Args:
@@ -25,7 +25,7 @@ class ScreenUI:
     def prepare_screening_sheet(
         self,
         df: pd.DataFrame,
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
         include_asreview: bool = False,
     ) -> pd.DataFrame:
         """Prepare a screening sheet from paper data.
@@ -266,7 +266,7 @@ class ScreenUI:
 
         return df[cols]
 
-    def _save_screening_sheet(self, df: pd.DataFrame, output_path: Path):
+    def _save_screening_sheet(self, df: pd.DataFrame, output_path: Path) -> None:
         """Save screening sheet to CSV.
 
         Args:
@@ -284,7 +284,7 @@ class ScreenUI:
         excel_path = output_path.with_suffix(".xlsx")
         self._save_excel_version(df, excel_path)
 
-    def _save_excel_version(self, df: pd.DataFrame, excel_path: Path):
+    def _save_excel_version(self, df: pd.DataFrame, excel_path: Path) -> None:
         """Save an Excel version with formatting.
 
         Args:
@@ -402,7 +402,7 @@ class ScreenUI:
 
         return pd.DataFrame(reasons)
 
-    def _prepare_asreview_format(self, df: pd.DataFrame, base_path: Path):
+    def _prepare_asreview_format(self, df: pd.DataFrame, base_path: Path) -> None:
         """Prepare data for ASReview active learning.
 
         Args:
@@ -440,7 +440,7 @@ class ScreenUI:
         except Exception as e:
             logger.warning(f"Could not prepare ASReview format: {e}")
 
-    def load_screening_progress(self, path: Optional[Path] = None) -> pd.DataFrame:
+    def load_screening_progress(self, path: Path | None = None) -> pd.DataFrame:
         """Load existing screening progress.
 
         Args:

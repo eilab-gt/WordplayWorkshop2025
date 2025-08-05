@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class ContentCache:
     """Unified caching system for all content types (PDF, HTML, TeX)."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize the content cache.
 
         Args:
@@ -49,10 +49,10 @@ class ContentCache:
         }
 
         # Lock for concurrent access
-        self._locks = {}
+        self._locks: dict[str, threading.Lock] = {}
         self._lock_mutex = threading.Lock()
 
-    def _init_cache_db(self):
+    def _init_cache_db(self) -> None:
         """Initialize the cache metadata database."""
         conn = sqlite3.connect(str(self.cache_db))
         cursor = conn.cursor()
@@ -96,9 +96,9 @@ class ContentCache:
         self,
         paper_id: str,
         content_type: str,
-        fetch_func: Callable[[], Optional[Any]],
-        source_url: Optional[str] = None,
-    ) -> tuple[Optional[Path], bool]:
+        fetch_func: Callable[[], Any | None],
+        source_url: str | None = None,
+    ) -> tuple[Path | None, bool]:
         """Get content from cache or fetch if not present.
 
         Args:
@@ -190,7 +190,7 @@ class ContentCache:
         else:
             raise ValueError(f"Unknown content type: {content_type}")
 
-    def _save_content(self, path: Path, content: Any, content_type: str):
+    def _save_content(self, path: Path, content: Any, content_type: str) -> None:
         """Save content to cache file."""
         if content_type in ["html", "tex"]:
             # Text content
@@ -211,7 +211,7 @@ class ContentCache:
                 md5.update(chunk)
         return md5.hexdigest()
 
-    def _get_cache_entry(self, paper_id: str, content_type: str) -> Optional[dict]:
+    def _get_cache_entry(self, paper_id: str, content_type: str) -> dict | None:
         """Get cache entry from database."""
         conn = sqlite3.connect(str(self.cache_db))
         conn.row_factory = sqlite3.Row
@@ -237,8 +237,8 @@ class ContentCache:
         file_path: Path,
         file_hash: str,
         file_size: int,
-        source_url: Optional[str],
-    ):
+        source_url: str | None,
+    ) -> None:
         """Save or update cache entry in database."""
         conn = sqlite3.connect(str(self.cache_db))
         cursor = conn.cursor()
@@ -256,7 +256,7 @@ class ContentCache:
         conn.commit()
         conn.close()
 
-    def _update_access_stats(self, entry_id: int):
+    def _update_access_stats(self, entry_id: int) -> None:
         """Update access statistics for cache entry."""
         conn = sqlite3.connect(str(self.cache_db))
         cursor = conn.cursor()
@@ -292,7 +292,7 @@ class ContentCache:
 
         return True
 
-    def _remove_cache_entry(self, entry_id: int):
+    def _remove_cache_entry(self, entry_id: int) -> None:
         """Remove cache entry from database."""
         conn = sqlite3.connect(str(self.cache_db))
         cursor = conn.cursor()
@@ -300,7 +300,7 @@ class ContentCache:
         conn.commit()
         conn.close()
 
-    def get_statistics(self) -> dict:
+    def get_statistics(self) -> dict[str, Any]:
         """Get cache statistics."""
         conn = sqlite3.connect(str(self.cache_db))
         cursor = conn.cursor()
@@ -315,7 +315,7 @@ class ContentCache:
         """
         )
 
-        stats = dict(self.stats)
+        stats: dict[str, Any] = dict(self.stats)
         stats["by_type"] = {}
 
         for row in cursor.fetchall():
@@ -341,14 +341,14 @@ class ContentCache:
 
         # Calculate hit rate
         total_requests = stats["cache_hits"] + stats["cache_misses"]
-        stats["hit_rate"] = (
+        stats["hit_rate"] = float(
             stats["cache_hits"] / total_requests * 100 if total_requests > 0 else 0
         )
 
         conn.close()
         return stats
 
-    def cleanup_old_entries(self, days: Optional[int] = None) -> int:
+    def cleanup_old_entries(self, days: int | None = None) -> int:
         """Remove cache entries older than specified days.
 
         Args:
@@ -389,7 +389,7 @@ class ContentCache:
         logger.info(f"Removed {len(entries_to_remove)} old cache entries")
         return len(entries_to_remove)
 
-    def clear_cache(self, content_type: Optional[str] = None) -> int:
+    def clear_cache(self, content_type: str | None = None) -> int:
         """Clear cache entries.
 
         Args:

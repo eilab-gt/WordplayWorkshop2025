@@ -8,7 +8,7 @@ import sqlite3
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class SQLiteHandler(logging.Handler):
@@ -31,7 +31,7 @@ class SQLiteHandler(logging.Handler):
         # Initialize database
         self._init_database()
 
-    def _init_database(self):
+    def _init_database(self) -> None:
         """Initialize the database table."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -78,7 +78,7 @@ class SQLiteHandler(logging.Handler):
         conn.commit()
         conn.close()
 
-    def emit(self, record: logging.LogRecord):
+    def emit(self, record: logging.LogRecord) -> None:
         """Emit a log record to the database.
 
         Args:
@@ -180,11 +180,11 @@ class LoggingDatabase:
 
     def query_logs(
         self,
-        module: Optional[str] = None,
-        level: Optional[str] = None,
-        status: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        module: str | None = None,
+        level: str | None = None,
+        status: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Query logs with filters.
@@ -229,7 +229,7 @@ class LoggingDatabase:
             params.append(end_time.isoformat())
 
         query += " ORDER BY timestamp DESC LIMIT ?"
-        params.append(limit)
+        params.append(str(limit))
 
         cursor.execute(query, params)
 
@@ -328,7 +328,9 @@ class LoggingDatabase:
         """
         return self.query_logs(level="ERROR", limit=limit)
 
-    def export_to_csv(self, output_path: Path, filters: Optional[dict[str, Any]] = None):
+    def export_to_csv(
+        self, output_path: Path, filters: dict[str, Any] | None = None
+    ) -> None:
         """Export logs to CSV file.
 
         Args:
@@ -346,7 +348,7 @@ class LoggingDatabase:
         # Save to CSV
         df.to_csv(output_path, index=False)
 
-    def cleanup_old_logs(self, days_to_keep: int = 30):
+    def cleanup_old_logs(self, days_to_keep: int = 30) -> int:
         """Remove logs older than specified days.
 
         Args:
@@ -376,7 +378,7 @@ class LoggingDatabase:
         return deleted_count
 
 
-def setup_db_logging(config) -> SQLiteHandler:
+def setup_db_logging(config: Any) -> SQLiteHandler:
     """Set up database logging for the pipeline.
 
     Args:

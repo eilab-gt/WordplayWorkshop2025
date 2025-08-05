@@ -16,7 +16,7 @@ class CrossrefHarvester(BaseHarvester):
 
     BASE_URL = "https://api.crossref.org"
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize Crossref harvester.
 
         Args:

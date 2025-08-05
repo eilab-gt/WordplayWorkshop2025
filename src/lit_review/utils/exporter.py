@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class Exporter:
     """Exports results in various formats and to external services."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize exporter with configuration.
 
         Args:
@@ -129,7 +129,7 @@ class Exporter:
                 shutil.rmtree(temp_dir)
             raise
 
-    def _save_data_files(self, df: pd.DataFrame, output_dir: Path):
+    def _save_data_files(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Save data files in multiple formats.
 
         Args:
@@ -201,7 +201,7 @@ class Exporter:
 
         logger.debug(f"Saved Excel: {excel_path}")
 
-    def _copy_figures(self, figures: list[Path], output_dir: Path):
+    def _copy_figures(self, figures: list[Path], output_dir: Path) -> None:
         """Copy figures to export directory.
 
         Args:
@@ -222,7 +222,7 @@ class Exporter:
                 shutil.copy2(fig_path, dest_path)
                 logger.debug(f"Copied figure: {fig_path.name}")
 
-    def _save_summary(self, summary: dict[str, Any], output_dir: Path):
+    def _save_summary(self, summary: dict[str, Any], output_dir: Path) -> None:
         """Save summary report.
 
         Args:
@@ -234,7 +234,7 @@ class Exporter:
             json.dump(summary, f, indent=2)
         logger.debug(f"Saved summary: {summary_path}")
 
-    def _create_metadata(self, df: pd.DataFrame, output_dir: Path):
+    def _create_metadata(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Create metadata file for the export.
 
         Args:
@@ -282,7 +282,7 @@ class Exporter:
             json.dump(metadata, f, indent=2)
         logger.debug(f"Created metadata: {metadata_path}")
 
-    def _copy_pdfs(self, df: pd.DataFrame, output_dir: Path):
+    def _copy_pdfs(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Copy PDFs to export directory.
 
         Args:
@@ -308,7 +308,7 @@ class Exporter:
 
         logger.info(f"Copied {pdf_count} PDFs to export")
 
-    def _copy_logs(self, output_dir: Path):
+    def _copy_logs(self, output_dir: Path) -> None:
         """Copy log files to export.
 
         Args:
@@ -335,7 +335,9 @@ class Exporter:
                 dest_path = logs_dir / log_file.name
                 shutil.copy2(log_file, dest_path)
 
-    def _save_excluded_papers(self, excluded_df: pd.DataFrame, output_dir: Path):
+    def _save_excluded_papers(
+        self, excluded_df: pd.DataFrame, output_dir: Path
+    ) -> None:
         """Save excluded papers data.
 
         Args:
@@ -375,7 +377,9 @@ class Exporter:
             json.dump(summary_data, f, indent=2)
         logger.debug(f"Saved excluded papers summary: {summary_path}")
 
-    def _save_disambiguation_report(self, report: dict[str, Any], output_dir: Path):
+    def _save_disambiguation_report(
+        self, report: dict[str, Any], output_dir: Path
+    ) -> None:
         """Save disambiguation report.
 
         Args:
@@ -393,7 +397,7 @@ class Exporter:
         output_dir: Path,
         excluded_df: pd.DataFrame | None = None,
         disambiguation_report: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Create README file for the export.
 
         Args:
@@ -506,7 +510,7 @@ If you use this data, please cite:
 
         return archive_path
 
-    def _upload_to_zenodo(self, archive_path: Path, df: pd.DataFrame):
+    def _upload_to_zenodo(self, archive_path: Path, df: pd.DataFrame) -> None:
         """Upload archive to Zenodo.
 
         Args:

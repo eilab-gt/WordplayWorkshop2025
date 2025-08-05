@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SearchHarvester:
     """Main harvester that combines results from multiple sources."""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """Initialize the search harvester.
 
         Args:
@@ -58,7 +58,7 @@ class SearchHarvester:
         """Check if a harvester is available."""
         return key in self._harvester_classes
 
-    def keys(self):
+    def keys(self) -> Any:
         """Get available harvester names."""
         return self._harvester_classes.keys()
 
@@ -126,7 +126,7 @@ class SearchHarvester:
 
     def _run_secondary_queries(
         self, sources: list[str], max_results: int, parallel: bool
-    ):
+    ) -> None:
         """Run secondary query strategies.
 
         Args:
@@ -169,7 +169,9 @@ class SearchHarvester:
                 else:
                     self._search_sequential(sources, query, max_results // 2)
 
-    def _search_sequential(self, sources: list[str], query: str, max_results: int):
+    def _search_sequential(
+        self, sources: list[str], query: str, max_results: int
+    ) -> None:
         """Search sources sequentially.
 
         Args:
@@ -187,7 +189,9 @@ class SearchHarvester:
             except Exception as e:
                 logger.error(f"Error searching {source}: {e}")
 
-    def _search_parallel(self, sources: list[str], query: str, max_results: int):
+    def _search_parallel(
+        self, sources: list[str], query: str, max_results: int
+    ) -> None:
         """Search sources in parallel.
 
         Args:
@@ -284,7 +288,7 @@ class SearchHarvester:
 
         return df_dedup
 
-    def save_results(self, df: pd.DataFrame, output_path: str | None = None):
+    def save_results(self, df: pd.DataFrame, output_path: Any | None = None) -> None:
         """Save search results to CSV file.
 
         Args:
